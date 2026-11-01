@@ -6,7 +6,9 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde_json::{json, Map, Value};
 
-use crate::linker::{LinkerConfig, PageConfig, ProtocolConfig};
+use crate::linker::{
+    AppIdentity, ByrustConfig, LinkerConfig, PageConfig, ProtocolConfig, TrustLevel,
+};
 use crate::{parser, render, Error};
 
 #[derive(Debug, Clone, Copy)]
@@ -42,6 +44,7 @@ pub struct BundleInfo {
     pub title: Option<String>,
     pub version: Option<String>,
     pub protocol: Option<ProtocolConfig>,
+    pub app: Option<AppIdentity>,
     pub routes: Vec<(String, Option<String>)>,
     pub bytes: usize,
 }
@@ -80,6 +83,11 @@ pub fn build_from_config(
 ) -> Result<CompiledBundle, Error> {
     config.validate()?;
     let root = fs::canonicalize(root)?;
+    let app = config
+        .app
+        .as_ref()
+        .map(|app| AppIdentity::resolve_with_seed(app, &root.to_string_lossy()))
+        .transpose()?;
     let mut source_bytes = 0usize;
 
     let mut assets = Vec::new();
@@ -104,6 +112,12 @@ pub fn build_from_config(
         css.push_str(&inline_css_assets(&source, &assets));
         css.push('\n');
     }
+
+    css.push_str(
+        ".byrust-warning{position:sticky;top:0;z-index:9999;padding:10px 16px;\
+         background:#7f1d1d;color:#fff;font:600 13px/1.4 system-ui,sans-serif;\
+         text-align:center}\n",
+    );
 
     let mut classic_scripts = String::new();
     let mut module_scripts = String::new();
@@ -147,7 +161,7 @@ pub fn build_from_config(
         source_bytes += source.len();
 
         let nodes = parser::parse(&source)?;
-        let context = page_context(config, page);
+        let context = page_context(config, page, app.as_ref());
         let mut rendered = String::new();
         render::render(&nodes, &context, &mut rendered, options.minify);
         let rendered = inline_html_assets(&rendered, &assets);
@@ -171,23 +185,50 @@ pub fn build_from_config(
         templates.push_str("</template>\n");
     }
 
-    let protocol_meta = match &config.protocol {
-        Some(protocol) => {
-            let json = serde_json::to_string(protocol)?.replace("</", "<\\/");
-            format!(
-                "<meta name=\"byrust\" content=\"{}\">\n\
+    let mut byrust_meta = String::new();
+    if let Some(protocol) = &config.protocol {
+        byrust_meta.push_str(&format!(
+            "<meta name=\"byrust\" content=\"{}\">\n\
 <meta name=\"byrust-version\" content=\"{}\">\n\
 <meta name=\"byrust-https\" content=\"{}\">\n\
-<meta name=\"byrust-alias\" content=\"{}\">\n\
-<script type=\"application/json\" id=\"byrust-config\">{}</script>\n",
-                escape_html(&protocol.name),
-                protocol.version,
-                protocol.https,
-                escape_html(protocol.alias.as_deref().unwrap_or("")),
-                json
-            )
-        }
-        None => String::new(),
+<meta name=\"byrust-alias\" content=\"{}\">\n",
+            escape_html(&protocol.name),
+            protocol.version,
+            protocol.https,
+            escape_html(protocol.alias.as_deref().unwrap_or("")),
+        ));
+    }
+    if let Some(app) = &app {
+        byrust_meta.push_str(&format!(
+            "<meta name=\"byrust-app\" content=\"{}\">\n\
+<meta name=\"byrust-uuid\" content=\"{}\">\n\
+<meta name=\"byrust-trust\" content=\"{}\">\n",
+            escape_html(&app.name),
+            escape_html(&app.uuid),
+            match app.trust {
+                TrustLevel::App => "app",
+                TrustLevel::Universal => "universal",
+            }
+        ));
+    }
+    if config.protocol.is_some() || app.is_some() {
+        let config_json = ByrustConfig {
+            protocol: config.protocol.clone(),
+            app: app.clone(),
+        };
+        let json = serde_json::to_string(&config_json)?.replace("</", "<\\/");
+        byrust_meta.push_str(&format!(
+            "<script type=\"application/json\" id=\"byrust-config\">{json}</script>\n"
+        ));
+    }
+
+    let warning = if app
+        .as_ref()
+        .is_some_and(|app| app.trust == TrustLevel::Universal)
+    {
+        "<div class=\"byrust-warning\" role=\"alert\">Page is not safe — universal Byrust UUID</div>\n"
+    } else {
+        ""
     };
 
     let mut script_tags = String::new();
@@ -213,21 +254,22 @@ pub fn build_from_config(
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <meta name=\"rweb-version\" content=\"{version}\">\n\
 <meta name=\"description\" content=\"{description}\">\n\
-{protocol_meta}\
+{byrust_meta}\
 <title>{title}</title>\n\
 <style>{css}</style>\n\
 </head>\n\
 <body>\n\
-<div id=\"rweb-app\"></div>\n\
+{warning}<div id=\"rweb-app\"></div>\n\
 <noscript>This MHTML app needs JavaScript for client-side routing.</noscript>\n\
 {templates}{script_tags}</body>\n\
 </html>\n",
         lang = escape_html(&config.lang),
-        protocol_meta = protocol_meta,
+        byrust_meta = byrust_meta,
         version = escape_html(&config.site.version),
         description = escape_html(&config.site.description),
         title = escape_html(&home_title),
         css = css,
+        warning = warning,
         templates = templates,
         script_tags = script_tags,
     );
@@ -260,19 +302,20 @@ pub fn inspect(html: &str) -> BundleInfo {
         }
     }
 
-    let protocol = extract_script_json(html, "byrust-config")
+    let byrust: Option<ByrustConfig> = extract_script_json(html, "byrust-config")
         .and_then(|source| serde_json::from_str(&source).ok());
 
     BundleInfo {
         title,
         version,
-        protocol,
+        protocol: byrust.as_ref().and_then(|config| config.protocol.clone()),
+        app: byrust.and_then(|config| config.app),
         routes,
         bytes: html.len(),
     }
 }
 
-fn page_context(config: &LinkerConfig, page: &PageConfig) -> Value {
+fn page_context(config: &LinkerConfig, page: &PageConfig, app: Option<&AppIdentity>) -> Value {
     let mut map = match &config.data {
         Value::Object(map) => map.clone(),
         _ => Map::new(),
@@ -302,6 +345,12 @@ fn page_context(config: &LinkerConfig, page: &PageConfig) -> Value {
         }),
     );
     map.insert("title".to_owned(), Value::String(title));
+    if let Some(app) = app {
+        map.insert(
+            "app".to_owned(),
+            serde_json::to_value(app).unwrap_or(Value::Null),
+        );
+    }
 
     Value::Object(map)
 }

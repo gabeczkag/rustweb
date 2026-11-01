@@ -72,6 +72,8 @@
       <p class="eyebrow">Protokół byrust</p>
       <h2>HTTPS, które mówi więcej</h2>
       <p><code>linker.json</code> ustawia <code>protocol.name = "byrust"</code>, wersję, wymóg HTTPS, alias i własne nagłówki. Kompilator wpisuje je do <code>.rweb</code> jako meta i <code>byrust-config</code>.</p>
+      <p>Tożsamość aplikacji: <code>{{ app.name }}</code> · <code>{{ app.uuid }}</code>. Puste <code>app.uuid</code> generuje stabilny UUID; <code>"universal"</code> oznacza niskie zaufanie i pokazuje „Page is not safe”.</p>
+      <p><code>rustweb</code> tworzy lokalne CA i podpisuje certyfikat per aplikacja/host. Universal UUID używa osobnego, celowo niezaufanego CA — przeglądarka ostrzega, a strona pokazuje czerwony banner.</p>
       <p>Przeglądarka nadal widzi <code>https://</code> — tylko TLS z zaufanym certyfikatem daje bezpieczny kontekst. <code>byrust://</code> jest aliasem obsługiwanym przez router, a <code>web+byrust</code> może zarejestrować się jako handler w przeglądarce.</p>
       <p>Spróbuj: <a href="byrust://self/bench">byrust://self/bench</a></p>
     </div>

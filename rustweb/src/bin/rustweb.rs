@@ -1,22 +1,27 @@
-use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::env;
+use std::error::Error;
+use std::fs;
+use std::net::IpAddr;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::str::FromStr;
 
 use axum::http::{HeaderMap, HeaderName, HeaderValue};
 use clap::Parser;
+use rustweb::mhtml::{AppIdentity, TrustLevel};
 use rustweb::RustWeb;
 
 #[derive(Debug, Parser)]
 #[command(
     name = "rustweb",
     version,
-    about = "Serve a compiled .rweb single-file site"
+    about = "Serve a compiled .rweb single-file site with Byrust identity"
 )]
 struct Cli {
     /// Compiled .rweb file.
     file: PathBuf,
 
-    /// Host to bind.
+    /// Host to bind and include in the certificate SAN.
     #[arg(long, default_value = "127.0.0.1")]
     host: String,
 
@@ -24,11 +29,11 @@ struct Cli {
     #[arg(long, default_value_t = 3000)]
     port: u16,
 
-    /// TLS certificate chain in PEM format.
+    /// Use a production TLS certificate chain instead of the Byrust CA.
     #[arg(long, requires = "tls_key")]
     tls_cert: Option<PathBuf>,
 
-    /// TLS private key in PEM format.
+    /// Use a production TLS private key instead of the Byrust CA.
     #[arg(long, requires = "tls_cert")]
     tls_key: Option<PathBuf>,
 
@@ -38,9 +43,20 @@ struct Cli {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
-    let html = std::fs::read_to_string(&cli.file)?;
+    if cli
+        .host
+        .chars()
+        .any(|character| character.is_whitespace() || matches!(character, '/' | '\\'))
+    {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "host must not contain whitespace, `/`, or `\\`",
+        )
+        .into());
+    }
+    let html = fs::read_to_string(&cli.file)?;
     let info = rustweb::mhtml::inspect(&html);
     let title = info.title.clone().unwrap_or_else(|| "RustWeb".to_owned());
     let version = info
@@ -48,10 +64,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .clone()
         .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_owned());
 
-    let tls = match (cli.tls_cert, cli.tls_key) {
+    let manual_tls = match (cli.tls_cert.clone(), cli.tls_key.clone()) {
         (Some(cert), Some(key)) => Some((cert, key)),
         (None, None) => None,
         _ => unreachable!("clap requires both TLS flags"),
+    };
+
+    let tls = if cli.allow_http {
+        None
+    } else if manual_tls.is_some() {
+        manual_tls
+    } else if let Some(app) = &info.app {
+        Some(issue_app_certificate(app, &cli.host)?)
+    } else {
+        None
     };
 
     let requires_https = info
@@ -61,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if requires_https && tls.is_none() && !cli.allow_http {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            "byrust requires HTTPS: pass --tls-cert and --tls-key, or --allow-http for local development",
+            "byrust requires HTTPS: define app.name/app.uuid in linker.json, pass --tls-cert/--tls-key, or use --allow-http for local development",
         )
         .into());
     }
@@ -73,7 +99,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .rweb(html)
         .into_router();
 
-    let address: SocketAddr = format!("{}:{}", cli.host, cli.port).parse()?;
+    let address = tokio::net::lookup_host((cli.host.as_str(), cli.port))
+        .await?
+        .next()
+        .ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                format!("could not resolve {}:{}", cli.host, cli.port),
+            )
+        })?;
 
     if let Some(protocol) = &info.protocol {
         println!(
@@ -83,6 +117,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(alias) = &protocol.alias {
             println!("alias: {alias}://{}:{}/", cli.host, cli.port);
         }
+    }
+    if let Some(app) = &info.app {
+        println!(
+            "app: {}  uuid={}  trust={}",
+            app.name,
+            app.uuid,
+            trust_label(&app.trust)
+        );
     }
 
     if let Some((cert, key)) = tls {
@@ -107,7 +149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn build_headers(
     protocol: Option<&rustweb::mhtml::ProtocolConfig>,
     tls: bool,
-) -> Result<HeaderMap, Box<dyn std::error::Error>> {
+) -> Result<HeaderMap, Box<dyn Error>> {
     let mut headers = HeaderMap::new();
 
     if let Some(protocol) = protocol {
@@ -144,4 +186,211 @@ fn build_headers(
     }
 
     Ok(headers)
+}
+
+fn issue_app_certificate(
+    app: &AppIdentity,
+    host: &str,
+) -> Result<(PathBuf, PathBuf), Box<dyn Error>> {
+    let base = byrust_config_dir();
+    let universal = app.trust == TrustLevel::Universal;
+    let ca_key = base.join(if universal {
+        "universal-ca.key"
+    } else {
+        "ca.key"
+    });
+    let ca_crt = base.join(if universal {
+        "universal-ca.crt"
+    } else {
+        "ca.crt"
+    });
+
+    ensure_ca(&base, &ca_key, &ca_crt, universal)?;
+
+    let app_dir = base
+        .join("apps")
+        .join(format!("{}-{}", app.uuid, slug(host)));
+    fs::create_dir_all(&app_dir)?;
+
+    let key = app_dir.join("app.key");
+    let leaf = app_dir.join("app.crt");
+    let chain = app_dir.join("chain.crt");
+
+    if !key.exists() || !leaf.exists() || !chain.exists() {
+        let csr = app_dir.join("app.csr");
+        let extension = app_dir.join("ext.cnf");
+
+        run(Command::new("openssl")
+            .arg("genrsa")
+            .arg("-out")
+            .arg(&key)
+            .arg("2048"))?;
+
+        let subject = format!(
+            "/CN={}/OU=byrust-{}-{}",
+            slug(&app.name),
+            trust_label(&app.trust),
+            app.uuid
+        );
+        run(Command::new("openssl")
+            .args(["req", "-new", "-key"])
+            .arg(&key)
+            .arg("-subj")
+            .arg(subject)
+            .arg("-out")
+            .arg(&csr))?;
+
+        let mut san = String::from("subjectAltName=DNS:localhost,IP:127.0.0.1");
+        if host.parse::<IpAddr>().is_ok() {
+            if host != "127.0.0.1" {
+                san.push_str(&format!(",IP:{host}"));
+            }
+        } else if host != "localhost" {
+            san.push_str(&format!(",DNS:{host}"));
+        }
+
+        fs::write(
+            &extension,
+            format!(
+                "{san}\nbasicConstraints=CA:FALSE\nkeyUsage=digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n"
+            ),
+        )?;
+
+        run(Command::new("openssl")
+            .args(["x509", "-req", "-in"])
+            .arg(&csr)
+            .arg("-CA")
+            .arg(&ca_crt)
+            .arg("-CAkey")
+            .arg(&ca_key)
+            .arg("-CAcreateserial")
+            .arg("-out")
+            .arg(&leaf)
+            .arg("-days")
+            .arg("365")
+            .arg("-sha256")
+            .arg("-extfile")
+            .arg(&extension))?;
+
+        let chain_text = format!(
+            "{}{}",
+            fs::read_to_string(&leaf)?,
+            fs::read_to_string(&ca_crt)?
+        );
+        fs::write(&chain, chain_text)?;
+    }
+
+    Ok((chain, key))
+}
+
+fn ensure_ca(
+    base: &Path,
+    key: &Path,
+    certificate: &Path,
+    universal: bool,
+) -> Result<(), Box<dyn Error>> {
+    if key.exists() && certificate.exists() {
+        return Ok(());
+    }
+
+    fs::create_dir_all(base)?;
+
+    run(Command::new("openssl")
+        .arg("genrsa")
+        .arg("-out")
+        .arg(key)
+        .arg("2048"))?;
+
+    let subject = if universal {
+        "/CN=Byrust Universal CA (untrusted)"
+    } else {
+        "/CN=Byrust Local CA"
+    };
+
+    run(Command::new("openssl")
+        .args(["req", "-x509", "-new", "-nodes", "-key"])
+        .arg(key)
+        .arg("-sha256")
+        .arg("-days")
+        .arg("3650")
+        .arg("-subj")
+        .arg(subject)
+        .arg("-out")
+        .arg(certificate))?;
+
+    if universal {
+        eprintln!(
+            "created untrusted Byrust Universal CA at {}",
+            certificate.display()
+        );
+        eprintln!("universal UUID pages show 'Page is not safe' and browsers warn");
+    } else {
+        eprintln!("created Byrust Local CA at {}", certificate.display());
+        eprintln!("trust it once so browsers accept generated app certificates:");
+        eprintln!(
+            "  sudo cp {} /usr/local/share/ca-certificates/byrust.crt && sudo update-ca-certificates",
+            certificate.display()
+        );
+        eprintln!("  Firefox: Settings -> Certificates -> Import");
+    }
+
+    Ok(())
+}
+
+fn run(command: &mut Command) -> Result<(), Box<dyn Error>> {
+    let program = command.get_program().to_string_lossy().to_string();
+    let output = command.output().map_err(|error| {
+        std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("failed to run {program}: {error}; install OpenSSL"),
+        )
+    })?;
+
+    if !output.status.success() {
+        return Err(std::io::Error::other(format!(
+            "{program} failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))
+        .into());
+    }
+
+    Ok(())
+}
+
+fn byrust_config_dir() -> PathBuf {
+    if let Some(path) = env::var_os("XDG_CONFIG_HOME") {
+        return PathBuf::from(path).join("byrust");
+    }
+    if let Some(home) = env::var_os("HOME") {
+        return PathBuf::from(home).join(".config").join("byrust");
+    }
+    env::temp_dir().join("byrust")
+}
+
+fn trust_label(trust: &TrustLevel) -> &'static str {
+    match trust {
+        TrustLevel::App => "app",
+        TrustLevel::Universal => "universal",
+    }
+}
+
+fn slug(value: &str) -> String {
+    let mut output = String::new();
+
+    for character in value.chars() {
+        if character.is_ascii_alphanumeric() {
+            output.push(character.to_ascii_lowercase());
+        } else if matches!(character, '-' | '_' | '.') {
+            output.push(character);
+        } else if !output.ends_with('-') {
+            output.push('-');
+        }
+    }
+
+    let output = output.trim_matches('-');
+    if output.is_empty() {
+        "app".to_owned()
+    } else {
+        output.chars().take(40).collect()
+    }
 }

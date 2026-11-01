@@ -161,11 +161,13 @@ request path.
 
 ```bash
 bash site/build.sh
-rustweb site/site.rweb --allow-http   # local development
-# or, for real HTTPS:
-bash site/dev-cert.sh
-rustweb site/site.rweb --tls-cert certs/dev.crt --tls-key certs/dev.key
-# open https://127.0.0.1:3000
+rustweb site/site.rweb
+# first run creates ~/.config/byrust/ca.crt and a CA-signed app certificate
+# trust the CA once:
+sudo cp ~/.config/byrust/ca.crt /usr/local/share/ca-certificates/byrust.crt
+sudo update-ca-certificates
+# Firefox: Settings -> Certificates -> Import ~/.config/byrust/ca.crt
+# local dev without TLS: --allow-http
 ```
 
 `linker.json` links every page, stylesheet, script, and asset:
@@ -173,6 +175,7 @@ rustweb site/site.rweb --tls-cert certs/dev.crt --tls-key certs/dev.key
 ```json
 {
   "site": { "title": "RustWeb", "version": "0.1.0" },
+  "app": { "name": "RustWeb", "uuid": "" },
   "lang": "pl",
   "output": "site.rweb",
   "styles": ["assets/style.css"],
@@ -240,6 +243,29 @@ The browser still sees `https://`: only TLS with a trusted certificate creates
 a secure context. `byrust://` is an in-app alias and protocol profile, not a
 replacement for TLS. `--allow-http` exists for local development and does not
 make the browser treat the page as HTTPS.
+
+### App identity and certificates
+
+When a protocol profile is present, `linker.json` must also define an app:
+
+```json
+"app": { "name": "RustWeb", "uuid": "" }
+```
+
+- A blank `uuid` generates a stable UUID v5 from the app name and project path.
+- An explicit UUID is used as-is and treated as app-specific.
+- `"uuid": "universal"` (or the all-zero UUID) is the low-trust Universal UUID.
+
+`rustweb` creates a **Byrust Local CA** at `~/.config/byrust/ca.crt` and issues
+a CA-signed leaf certificate per app/host under `~/.config/byrust/apps/`. There
+are no per-app self-signed certificates; the leaf is signed by the CA. Trust
+the CA once (system and/or Firefox) and all app certificates become valid.
+
+Universal UUIDs use a separate, deliberately untrusted Universal CA. The
+browser warns, and the compiled page includes a sticky **“Page is not safe”**
+banner. The UUID alone does not create TLS trust — the CA does. For production,
+pass a real certificate with `--tls-cert` and `--tls-key` (for example from
+Let’s Encrypt).
 
 ## Benchmarks
 

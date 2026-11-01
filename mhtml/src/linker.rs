@@ -4,6 +4,9 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use uuid::Uuid;
+
+pub const UNIVERSAL_UUID: &str = "00000000-0000-0000-0000-000000000000";
 
 use crate::Error;
 
@@ -30,6 +33,75 @@ pub struct PageConfig {
 /// Contents of `linker.json`.
 ///
 /// All paths are relative to the directory containing `linker.json`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppConfig {
+    pub name: String,
+    #[serde(default)]
+    pub uuid: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum TrustLevel {
+    App,
+    Universal,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppIdentity {
+    pub name: String,
+    pub uuid: String,
+    pub trust: TrustLevel,
+}
+
+impl AppIdentity {
+    pub fn resolve(config: &AppConfig) -> Result<Self, Error> {
+        Self::resolve_with_seed(config, "")
+    }
+
+    pub fn resolve_with_seed(config: &AppConfig, seed: &str) -> Result<Self, Error> {
+        let name = config.name.trim();
+        if name.is_empty() {
+            return Err(Error::Linker("app.name must not be empty".to_owned()));
+        }
+        if name
+            .chars()
+            .any(|character| matches!(character, '\r' | '\n'))
+        {
+            return Err(Error::Linker(
+                "app.name must not contain newlines".to_owned(),
+            ));
+        }
+
+        let raw = config.uuid.as_deref().unwrap_or("").trim();
+
+        if raw.is_empty() {
+            let seed = format!("{name}:{seed}");
+            let uuid = Uuid::new_v5(&Uuid::NAMESPACE_OID, seed.as_bytes()).to_string();
+            Ok(Self {
+                name: name.to_owned(),
+                uuid,
+                trust: TrustLevel::App,
+            })
+        } else if raw.eq_ignore_ascii_case("universal") || raw == UNIVERSAL_UUID {
+            Ok(Self {
+                name: name.to_owned(),
+                uuid: UNIVERSAL_UUID.to_owned(),
+                trust: TrustLevel::Universal,
+            })
+        } else {
+            let uuid = Uuid::parse_str(raw).map_err(|_| {
+                Error::Linker("app.uuid must be a valid UUID, `universal`, or blank".to_owned())
+            })?;
+            Ok(Self {
+                name: name.to_owned(),
+                uuid: uuid.to_string(),
+                trust: TrustLevel::App,
+            })
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProtocolConfig {
     #[serde(default = "default_protocol_name")]
@@ -78,6 +150,8 @@ pub struct LinkerConfig {
     pub output: Option<String>,
     #[serde(default)]
     pub protocol: Option<ProtocolConfig>,
+    #[serde(default)]
+    pub app: Option<AppConfig>,
 }
 
 impl LinkerConfig {
@@ -184,6 +258,16 @@ impl LinkerConfig {
             protocol.validate()?;
         }
 
+        if let Some(app) = &self.app {
+            AppIdentity::resolve(app)?;
+        }
+
+        if self.protocol.is_some() && self.app.is_none() {
+            return Err(Error::Linker(
+                "a protocol profile requires an app identity (app.name + app.uuid)".to_owned(),
+            ));
+        }
+
         Ok(())
     }
 }
@@ -254,6 +338,14 @@ impl ProtocolConfig {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ByrustConfig {
+    #[serde(default)]
+    pub protocol: Option<ProtocolConfig>,
+    #[serde(default)]
+    pub app: Option<AppIdentity>,
+}
+
 fn default_protocol_name() -> String {
     "byrust".to_owned()
 }
@@ -268,4 +360,46 @@ fn default_true() -> bool {
 
 fn default_lang() -> String {
     "en".to_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn blank_uuid_is_stable_and_app_trusted() {
+        let config = AppConfig {
+            name: "RustWeb".to_owned(),
+            uuid: None,
+        };
+        let first = AppIdentity::resolve(&config).unwrap();
+        let second = AppIdentity::resolve(&config).unwrap();
+
+        assert_eq!(first.uuid, second.uuid);
+        assert_eq!(first.trust, TrustLevel::App);
+        assert!(!first.uuid.is_empty());
+    }
+
+    #[test]
+    fn universal_uuid_is_low_trust() {
+        let identity = AppIdentity::resolve(&AppConfig {
+            name: "RustWeb".to_owned(),
+            uuid: Some("universal".to_owned()),
+        })
+        .unwrap();
+
+        assert_eq!(identity.uuid, UNIVERSAL_UUID);
+        assert_eq!(identity.trust, TrustLevel::Universal);
+    }
+
+    #[test]
+    fn invalid_uuid_is_rejected() {
+        let error = AppIdentity::resolve(&AppConfig {
+            name: "RustWeb".to_owned(),
+            uuid: Some("not-a-uuid".to_owned()),
+        })
+        .unwrap_err();
+
+        assert!(matches!(error, Error::Linker(_)));
+    }
 }

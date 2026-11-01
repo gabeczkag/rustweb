@@ -4,6 +4,10 @@
     "version": "0.1.0",
     "description": "FastAPI-style web framework for Rust with MHTML single-file sites."
   },
+  "app": {
+    "name": "RustWeb",
+    "uuid": ""
+  },
   "lang": "pl",
   "output": "site.rweb",
   "protocol": {

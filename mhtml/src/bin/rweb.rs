@@ -89,6 +89,13 @@ fn main() -> Result<(), mhtml::Error> {
                     protocol.name, protocol.version, protocol.https
                 );
             }
+            if let Some(app) = &info.app {
+                let trust = match app.trust {
+                    mhtml::TrustLevel::App => "app",
+                    mhtml::TrustLevel::Universal => "universal",
+                };
+                println!("app: {}  uuid={}  trust={}", app.name, app.uuid, trust);
+            }
             println!("{} bytes, {} routes", info.bytes, info.routes.len());
             for (route, title) in info.routes {
                 println!(

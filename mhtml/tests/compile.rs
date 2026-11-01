@@ -1,6 +1,6 @@
 use std::fs;
 
-use mhtml::{build, inspect, BuildOptions};
+use mhtml::{build, inspect, BuildOptions, TrustLevel};
 
 #[test]
 fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
@@ -13,6 +13,7 @@ fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
         directory.path().join("linker.json"),
         r#"{
             "site": {"title": "Test", "version": "1.0.0", "description": "A test"},
+            "app": {"name": "Test App", "uuid": ""},
             "lang": "pl",
             "protocol": {
                 "name": "byrust",
@@ -84,4 +85,35 @@ fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
     assert_eq!(info.version.as_deref(), Some("1.0.0"));
     assert_eq!(info.routes.len(), 2);
     assert_eq!(info.routes[0].0, "/");
+}
+
+#[test]
+fn universal_uuid_marks_the_page_as_unsafe() {
+    let directory = tempfile::tempdir().unwrap();
+    fs::create_dir_all(directory.path().join("pages")).unwrap();
+    fs::write(
+        directory.path().join("linker.json"),
+        r#"{
+            "site": {"title": "Unsafe", "version": "1.0.0"},
+            "protocol": {"name": "byrust", "version": 1, "https": true, "alias": "byrust"},
+            "app": {"name": "Universal", "uuid": "universal"},
+            "pages": [{"route": "/", "file": "pages/index.mhtml"}]
+        }"#,
+    )
+    .unwrap();
+    fs::write(directory.path().join("pages/index.mhtml"), "<p>Hello</p>").unwrap();
+
+    let bundle = build(
+        directory.path().join("linker.json"),
+        BuildOptions::default(),
+    )
+    .unwrap();
+
+    assert!(bundle.html.contains("Page is not safe"));
+    assert!(bundle.html.contains("byrust-trust\" content=\"universal\""));
+    let info = inspect(&bundle.html);
+    assert_eq!(
+        info.app.as_ref().map(|app| app.trust.clone()),
+        Some(TrustLevel::Universal)
+    );
 }
