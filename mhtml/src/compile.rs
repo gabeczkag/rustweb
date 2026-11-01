@@ -276,6 +276,7 @@ pub fn build_from_config(
 <head>\n\
 <meta charset=\"utf-8\">\n\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
+<link rel=\"icon\" type=\"image/svg+xml\" href=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDcwYjE0Ii8+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjN2RkM2ZjIi8+PHJlY3QgeD0iMTgiIHk9IjQiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzZlZTdhMCIvPjxyZWN0IHg9IjQiIHk9IjE4IiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmNDcyYjYiLz48cmVjdCB4PSIxOCIgeT0iMTgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0iI2ZiYmYyNCIvPjwvc3ZnPg==\">\n\
 <meta name=\"rweb-version\" content=\"{version}\">\n\
 <meta name=\"rweb-base\" content=\"{base}\">\n\
 <meta name=\"description\" content=\"{description}\">\n\
