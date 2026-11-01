@@ -7,3 +7,4 @@ tcps-data/
 __pycache__/
 *.pyc
 /tcps.json
+docs/superpowers/
