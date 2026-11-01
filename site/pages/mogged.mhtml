@@ -14,7 +14,7 @@
   </div>
 
   <div class="reel-stage" id="reel-stage">
-    <canvas id="reel-canvas" width="1920" height="1080"></canvas>
+    <canvas id="reel-canvas" class="reel-canvas" width="1920" height="1080"></canvas>
     <div class="reel-hud" aria-hidden="true">
       <span class="reel-corner reel-corner-tl">+</span>
       <span class="reel-corner reel-corner-tr">+</span>
