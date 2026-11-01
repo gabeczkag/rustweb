@@ -1,0 +1,33 @@
+services:
+  rustweb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  tcps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["tcps", "--config", "/app/tcps.json"]
+    ports:
+      - "4100:4100"
+      - "4101:4101/udp"
+    volumes:
+      - tcps-data:/app/tcps-data
+      - ./tcps/tcps.container.json:/app/tcps.json:ro
+    restart: unless-stopped
+
+  uc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["uc", "serve", "--listen", "0.0.0.0:4200"]
+    ports:
+      - "4200:4200"
+    restart: unless-stopped
+
+volumes:
+  tcps-data:

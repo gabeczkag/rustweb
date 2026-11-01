@@ -38,6 +38,8 @@ jobs:
           cp site/site.rweb dist/index.html
           cp site/site.rweb dist/404.html
           cp site/site.rweb dist/site.rweb
+          cp site/robots.txt dist/robots.txt
+          cp site/sitemap.xml dist/sitemap.xml
           touch dist/.nojekyll
           ls -lh dist
 

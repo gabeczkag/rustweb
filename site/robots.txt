@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://gabeczkag.github.io/rustweb/sitemap.xml

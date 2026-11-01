@@ -61,6 +61,12 @@
       "route": "/game",
       "file": "pages/game.mhtml",
       "title": "Game Lab - RustWeb"
+    },
+    {
+      "route": "/deploy",
+      "file": "pages/deploy.mhtml",
+      "title": "Deploy — RustWeb",
+      "description": "Postaw RustWeb u siebie: Docker, lokalny HTTPS, VPS albo GitHub Pages."
     }
   ],
   "data": {

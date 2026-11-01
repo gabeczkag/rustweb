@@ -4,14 +4,16 @@
     <h1>API W RUSTCIE.<br><span>JAK W FASTAPI.</span></h1>
     <p class="lead">{{ tagline }}</p>
     <div class="actions">
-      <a class="button" href="/bench">ZOBACZ BENCHMARK</a>
+      <a class="button" href="/deploy">POSTAW U SIEBIE</a>
+      <a class="button ghost" href="/bench">ZOBACZ BENCHMARK</a>
       <a class="button ghost" href="/about">JAK DZIALA MHTML</a>
     </div>
     <div class="badges">
       <span class="badge">1 PLIK .RWEB</span>
       <span class="badge">0 RUNTIME TEMPLATING</span>
-      <span class="badge">76 KB</span>
+      <span class="badge">88 KB</span>
       <span class="badge">ASCII ONLY</span>
+      <span class="badge">DOCKER READY</span>
     </div>
   </div>
 
@@ -97,4 +99,86 @@
     </div>
   </div>
   <pre><code>{{ mhtml_syntax }}</code></pre>
+</section>
+
+<section class="suite-section">
+  <p class="eyebrow">04 // PAKIET, NIE FRAMEWORK</p>
+  <h2>WIECEJ NIZ API.</h2>
+  <p class="lead">RustWeb to jedna binarka, jeden plik strony i zestaw usług, ktorych normalnie szukasz w pieciu osobnych projektach.</p>
+
+  <div class="suite-grid">
+    <a class="suite-card" href="/cert">
+      <strong>CERT DB</strong>
+      <span>Publiczny rejestr aplikacji, fingerprinty i jednorazowe klucze. Bez plaintext UUID w bazie.</span>
+      <em>OTWORZ /cert</em>
+    </a>
+    <a class="suite-card" href="/deploy">
+      <strong>TCPS</strong>
+      <span>Per-user pliki, manifest, sync brakujacych plikow i sesje graczy po UDP z limitem bandwidth.</span>
+      <em>JAK POSTAWIC</em>
+    </a>
+    <a class="suite-card" href="/deploy">
+      <strong>UC PACKS</strong>
+      <span>Binarne compression packi dla malych pakietow. Zstd, CRC32, limit 4 KB na pakiet.</span>
+      <em>JAK POSTAWIC</em>
+    </a>
+    <a class="suite-card" href="/game">
+      <strong>GAME LAB</strong>
+      <span>Packet Arena z dziewiecioma systemami, logami i twardym limitem 4096 B.</span>
+      <em>ZAGRAJ</em>
+    </a>
+  </div>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">05 // DLACZEGO TO INNE</p>
+    <h2>NIE DOKLADAJ KOLEJNEJ WARSTWY.</h2>
+    <p>Wiekszosc stackow optymalizuje jeden fragment. RustWeb laczy API, statyczny frontend, certyfikacje, transport plikow, kompresje pakietow i testowy game lab w jednym repo.</p>
+    <p class="note">To nie jest benchmark marketingowy. Liczby sa w `bench/RESULTS.md`, a kazda usluga ma wlasny test i komende startowa.</p>
+  </div>
+  <table class="compare-table">
+    <thead>
+      <tr><th>FUNKCJA</th><th>RUSTWEB</th><th>TYPOWY STACK</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Runtime templating</td><td>0</td><td>Jinja / RSC / Node</td></tr>
+      <tr><td>Deploy strony</td><td>1 plik .rweb</td><td>build + serwer + CDN</td></tr>
+      <tr><td>Publiczny cert DB</td><td>w repo</td><td>osobny serwis</td></tr>
+      <tr><td>Per-user file sync</td><td>tcps</td><td>osobny backend</td></tr>
+      <tr><td>Compression packs</td><td>uc</td><td>wlasny format</td></tr>
+      <tr><td>Game packet lab</td><td>/game</td><td>osobny prototyp</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">06 // START</p>
+    <h2>OD ZERA DO HTTPS.</h2>
+    <p>Jedna komenda buduje stronę i uruchamia lokalny serwer z certyfikatem Byrust. Docker jest dla tych, ktorzy chca od razu kontener.</p>
+    <div class="actions">
+      <a class="button" href="/deploy">ZOBACZ DEPLOY</a>
+      <a class="button ghost" href="https://github.com/gabeczkag/rustweb" target="_blank" rel="noreferrer">GITHUB</a>
+    </div>
+  </div>
+  <div class="code-block">
+    <button class="copy-button" data-copy="#home-start" type="button">KOPIUJ</button>
+    <pre><code id="home-start">git clone https://github.com/gabeczkag/rustweb.git
+cd rustweb
+./run.sh
+
+# albo kontener:
+docker compose up --build</code></pre>
+  </div>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">07 // WYBOR</p>
+  <h2>POSTAW TO U SIEBIE.</h2>
+  <p>Masz jeden plik strony, jedna binarke i siedem tras. Reszta to opcjonalne uslugi, ktore mozesz wlaczac po kolei.</p>
+  <div class="actions">
+    <a class="button" href="/deploy">WDROZ TERAZ</a>
+    <a class="button ghost" href="/bench">SPRAWDZ BENCHMARK</a>
+  </div>
 </section>

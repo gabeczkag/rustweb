@@ -1,0 +1,10 @@
+target
+.git
+.gitignore
+bench/.venv
+certs
+certifications.json
+certifications.tmp
+tcps-data
+docs/superpowers
+*.log

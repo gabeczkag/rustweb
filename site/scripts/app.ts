@@ -58,11 +58,53 @@ const bindTheme = (): void => {
   });
 };
 
+const copyText = async (text: string): Promise<boolean> => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    const copied = document.execCommand("copy");
+    area.remove();
+    return copied;
+  }
+};
+
+const bindCopyButtons = (): void => {
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+    if (button.dataset.bound === "1") return;
+    button.dataset.bound = "1";
+
+    button.addEventListener("click", async () => {
+      const selector = button.dataset.copy || "";
+      const target = selector ? document.querySelector(selector) : null;
+      const code = target || button.closest(".code-block")?.querySelector("code");
+      const text = code?.textContent || "";
+      if (!text) return;
+
+      const original = button.textContent || "KOPIUJ";
+      if (await copyText(text)) {
+        button.textContent = "SKOPIOWANO";
+        window.setTimeout(() => {
+          button.textContent = original;
+        }, 1400);
+      }
+    });
+  });
+};
+
 document.addEventListener("rweb:rendered", () => {
   updateYear();
   bindTheme();
+  bindCopyButtons();
 });
 
 applyTheme(initialTheme());
 updateYear();
 bindTheme();
+bindCopyButtons();

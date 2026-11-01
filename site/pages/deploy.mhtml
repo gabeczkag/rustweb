@@ -1,0 +1,109 @@
+<section class="deploy-hero">
+  <p class="eyebrow">07 // DEPLOY // SELF HOST</p>
+  <h1>POSTAW TO<br><span>U SIEBIE.</span></h1>
+  <p class="lead">Jeden plik `.rweb`, jeden binarny serwer i zero runtime templatingu. Od `docker compose up` do własnego VPS albo GitHub Pages — bez klejenia pieciu frameworkow.</p>
+  <div class="actions">
+    <a class="button" href="#deploy-docker">DOCKER</a>
+    <a class="button ghost" href="#deploy-local">LOKALNIE</a>
+    <a class="button gold" href="https://github.com/gabeczkag/rustweb" target="_blank" rel="noreferrer">GITHUB</a>
+  </div>
+  <div class="badges">
+    <span class="badge">1 BINARKA</span>
+    <span class="badge">1 PLIK .RWEB</span>
+    <span class="badge">DOCKER READY</span>
+    <span class="badge">BEZ BAZY DLA STRONY</span>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat"><strong>1</strong><span>PLIK STRONY</span></div>
+  <div class="stat"><strong>0</strong><span>RUNTIME TEMPLATING</span></div>
+  <div class="stat"><strong>55</strong><span>TESTÓW W REPO</span></div>
+</section>
+
+<section class="deploy-grid">
+  <article class="deploy-card">
+    <p class="eyebrow">01 // DOCKER</p>
+    <h2>NAJSZYBSZY START</h2>
+    <p>Zbuduj obraz i uruchom stronę oraz usługi TCPs i UC. W produkcji postaw to za Caddy, Traefik albo Nginx z TLS.</p>
+    <div class="code-block">
+      <button class="copy-button" data-copy="#deploy-docker" type="button">KOPIUJ</button>
+      <pre><code id="deploy-docker">git clone https://github.com/gabeczkag/rustweb.git
+cd rustweb
+docker compose up --build
+# strona:  http://127.0.0.1:3000
+# tcps:    http://127.0.0.1:4100  (UDP 4101)
+# uc:      http://127.0.0.1:4200
+# zmien token w tcps/tcps.container.json</code></pre>
+    </div>
+  </article>
+
+  <article class="deploy-card">
+    <p class="eyebrow">02 // LOCAL HTTPS</p>
+    <h2>BYRUST + LOCAL CA</h2>
+    <p>Jeden skrypt buduje `.rweb` i uruchamia RustWeb po HTTPS. Pierwszy start tworzy lokalne CA i cert aplikacji.</p>
+    <div class="code-block">
+      <button class="copy-button" data-copy="#deploy-local" type="button">KOPIUJ</button>
+      <pre><code id="deploy-local">./run.sh
+# https://127.0.0.1:3000/
+# zaufaj ~/.config/byrust/ca.crt</code></pre>
+    </div>
+  </article>
+
+  <article class="deploy-card">
+    <p class="eyebrow">03 // VPS</p>
+    <h2>WŁASNY SERWER</h2>
+    <p>Zbuduj release raz i uruchom binarkę z prawdziwym certyfikatem Let's Encrypt. Bez Node, bez Pythona, bez runtime template engine.</p>
+    <div class="code-block">
+      <button class="copy-button" data-copy="#deploy-vps" type="button">KOPIUJ</button>
+      <pre><code id="deploy-vps">cargo build --release -p rustweb
+./target/release/rustweb site/site.rweb \
+  --host 0.0.0.0 \
+  --tls-cert /etc/letsencrypt/live/example/fullchain.pem \
+  --tls-key /etc/letsencrypt/live/example/privkey.pem</code></pre>
+    </div>
+  </article>
+
+  <article class="deploy-card">
+    <p class="eyebrow">04 // GITHUB PAGES</p>
+    <h2>STATICZNY DEPLOY</h2>
+    <p>Fork repo, włącz Pages i pozwól workflow zbudować `.rweb` oraz opublikować go jako `index.html`, `404.html` i `site.rweb`.</p>
+    <div class="code-block">
+      <button class="copy-button" data-copy="#deploy-pages" type="button">KOPIUJ</button>
+      <pre><code id="deploy-pages">git clone https://github.com/gabeczkag/rustweb.git
+# GitHub -> Settings -> Pages -> Source: GitHub Actions
+# push na main uruchamia build i deploy</code></pre>
+    </div>
+  </article>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">05 // CO DOSTAJESZ</p>
+    <h2>NIE TYLKO STRONĘ.</h2>
+    <p>RustWeb to pakiet narzędzi, nie pojedynczy landing page. Strona, certyfikaty, transport plików, kompresja pakietów i game lab są w jednym repo.</p>
+    <div class="actions">
+      <a class="button" href="/cert">CERT DB</a>
+      <a class="button ghost" href="/game">GAME LAB</a>
+      <a class="button ghost" href="/about">MHTML</a>
+    </div>
+  </div>
+  <div class="service-table">
+    <div class="service-row"><strong>rustweb</strong><span>strona + API + TLS</span><code>:3000</code></div>
+    <div class="service-row"><strong>tcps</strong><span>pliki per-user + UDP player</span><code>:4100 / :4101</code></div>
+    <div class="service-row"><strong>uc</strong><span>compression packs + zstd</span><code>:4200</code></div>
+    <div class="service-row"><strong>cert</strong><span>publiczny rejestr aplikacji</span><code>/cert</code></div>
+    <div class="service-row"><strong>game</strong><span>packet arena + logi</span><code>/game</code></div>
+  </div>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">06 // PRODUKCJA</p>
+  <h2>CO SPRAWDZIĆ PRZED STARTEM</h2>
+  <p>Ustaw TLS na reverse proxy, jeśli kontener działa po HTTP. Dla lokalnego HTTPS użyj CA z `~/.config/byrust/ca.crt`. Nie publikuj `ca.key`, `app.key` ani sekretów z `tcps.json`.</p>
+  <p class="note">Docker domyślnie wystawia HTTP na porcie 3000. To celowe: TLS powinien kończyć Caddy, Traefik albo Nginx, a nie kontener aplikacji.</p>
+  <div class="actions">
+    <a class="button" href="/" >WRÓĆ NA START</a>
+    <a class="button ghost" href="/bench">ZOBACZ BENCHMARK</a>
+  </div>
+</section>

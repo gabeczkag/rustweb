@@ -279,6 +279,10 @@ pub fn build_from_config(
 <meta name=\"rweb-version\" content=\"{version}\">\n\
 <meta name=\"rweb-base\" content=\"{base}\">\n\
 <meta name=\"description\" content=\"{description}\">\n\
+<meta property=\"og:type\" content=\"website\">\n\
+<meta property=\"og:title\" content=\"{title}\">\n\
+<meta property=\"og:description\" content=\"{description}\">\n\
+<meta name=\"twitter:card\" content=\"summary\">\n\
 {byrust_meta}\
 <title>{title}</title>\n\
 <style>{css}</style>\n\

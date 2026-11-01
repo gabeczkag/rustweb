@@ -2,6 +2,15 @@
 
 FastAPI-style web framework for Rust, built on axum, designed for low latency.
 
+**Live:** <https://gabeczkag.github.io/rustweb/> ·
+**Deploy:** <https://gabeczkag.github.io/rustweb/deploy> ·
+**Game Lab:** <https://gabeczkag.github.io/rustweb/game>
+
+```bash
+./run.sh                 # local HTTPS
+docker compose up --build # site + tcps + uc
+```
+
 You declare types, RustWeb gives you parsing, validation, FastAPI-shaped 422
 errors, and generated OpenAPI/Swagger UI. The framework adds no middleware to
 the hot path: macros expand at compile time and the OpenAPI document is built
@@ -114,6 +123,8 @@ Invalid input returns the FastAPI shape:
   systems, channel functions, packet overrides, and a live log.
 - `uc`: binary compression packs for many small packets, with zstd, CRC32,
   a 4 KiB packet limit, a 4 MiB pack limit, CLI tools, and a local HTTP service.
+- `/deploy`: local HTTPS, Docker, VPS, and GitHub Pages instructions with
+  copyable commands.
 
 ## How it works
 
@@ -237,7 +248,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **74 KiB** (~23 KB gzipped on Pages) and contains ASCII only
+compiles to about **86 KiB** (~26 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.
@@ -346,7 +357,7 @@ document is reduced to its `<body>`.
 
 ```bash
 rweb inspect site/site.rweb
-# RustWeb — 0.1.0, 6 routes: /, /about, /bench, /viewer, /cert, /game
+# RustWeb — 0.1.0, 7 routes: /, /about, /bench, /viewer, /cert, /game, /deploy
 ```
 
 ### Game Lab
@@ -450,6 +461,23 @@ directory and the `certs/` folder are outside the repository. GitHub Actions is
 CI, not a long-running host: it builds and deploys the single-file site. To run
 the Rust server itself, use `rustweb site/site.rweb` on a VPS/container.
 
+### Docker
+
+```bash
+docker compose up --build
+# site:  http://127.0.0.1:3000
+# tcps:  http://127.0.0.1:4100  (UDP 4101)
+# uc:    http://127.0.0.1:4200
+```
+
+Change the `change-me` token in `tcps/tcps.container.json` before exposing the
+TCPs control port.
+
+The container serves HTTP on port 3000 and is intended to sit behind Caddy,
+Traefik, or Nginx with TLS. Build the site first if you changed `site/`; the
+image copies `site/site.rweb`. For a local HTTPS server with the Byrust CA, use
+`./run.sh` instead.
+
 ## TCPs
 
 `tcps` is a separate service, not part of the `.rweb` site. It keeps a
@@ -509,6 +537,9 @@ comparison, not just an API-shape comparison. The detailed runs are in
 ## Project layout
 
 ```
+Dockerfile        multi-stage RustWeb image
+compose.yaml      one-command site container
+Makefile          dev/build/test/docker shortcuts
 rustweb/          core framework: builder, extractors, errors, OpenAPI
 rustweb-macros/   route/model/query procedural macros
 mhtml/            MHTML parser, page compiler, .rweb bundler, rweb CLI
