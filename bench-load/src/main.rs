@@ -109,9 +109,7 @@ async fn run_connection(
     for _ in 0..requests {
         let started = Instant::now();
         send(&mut sender, &host, &path).await;
-        let micros = (started.elapsed().as_micros() as u64)
-            .max(1)
-            .min(60_000_000);
+        let micros = (started.elapsed().as_micros() as u64).clamp(1, 60_000_000);
         histogram.record(micros).expect("record latency");
     }
 
