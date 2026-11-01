@@ -1,6 +1,7 @@
 const proofs = [
   {
     tag: "SPEED",
+    scene: "orbit",
     value: "210 750",
     label: "REQ/S",
     body: "Ten sam stos axum. Bez warstwy frameworka w hot path.",
@@ -10,7 +11,8 @@ const proofs = [
   },
   {
     tag: "SIZE",
-    value: "112 KB",
+    scene: "grid",
+    value: "122 KB",
     label: "CALY FRONTEND",
     body: "Strona, style, skrypty i routing w jednym pliku .rweb.",
     link: "OTWORZ VIEWER",
@@ -19,6 +21,7 @@ const proofs = [
   },
   {
     tag: "TESTS",
+    scene: "neon",
     value: "56",
     label: "TESTOW W REPO",
     body: "Routing, MHTML, certyfikaty, TCPs, UC i benchmarki. Kazda usluga ma dowod.",
@@ -28,6 +31,7 @@ const proofs = [
   },
   {
     tag: "STREAM",
+    scene: "signal",
     value: "4.7",
     label: "GIB/S LOOPBACK",
     body: "Osobny benchmark streamingowy. 64 MiB na strumien, bez buforowania calosci.",
@@ -37,6 +41,7 @@ const proofs = [
   },
   {
     tag: "DEPLOY",
+    scene: "heat",
     value: "1",
     label: "KOMENDA DOCKER",
     body: "Strona, TCPs i UC w jednym compose. TLS na reverse proxy.",
@@ -46,6 +51,7 @@ const proofs = [
   },
   {
     tag: "PACKS",
+    scene: "paper",
     value: "4 KB",
     label: "LIMIT PAKIETU UC",
     body: "Compression packi z zstd, CRC32 i twardym limitem 4 MiB na pack.",
@@ -78,6 +84,15 @@ function initBaner() {
   function render() {
     const item = proofs[current];
     proof.dataset.accent = item.accent;
+    const page = document.getElementById("baner-page");
+    if (page) {
+      page.dataset.scene = item.scene;
+      page.classList.remove("scene-shift");
+      void page.offsetWidth;
+      page.classList.add("scene-shift");
+    }
+    const sceneLabel = document.getElementById("baner-scene-label");
+    if (sceneLabel) sceneLabel.textContent = `SCENE // ${item.scene.toUpperCase()}`;
     if (tag) tag.textContent = item.tag;
     if (value) value.textContent = item.value;
     if (label) label.textContent = item.label;

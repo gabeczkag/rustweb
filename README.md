@@ -250,7 +250,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **115 KiB** (~33 KB gzipped on Pages) and contains ASCII only
+compiles to about **119 KiB** (~34 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.

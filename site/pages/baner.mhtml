@@ -1,6 +1,13 @@
-<section class="baner-page">
+<section class="baner-page" id="baner-page" data-scene="orbit">
   <div class="baner-stage" id="baner-stage">
     <div class="baner-grid" aria-hidden="true"></div>
+    <div class="baner-scene" aria-hidden="true">
+      <span class="scene-ring scene-ring-a"></span>
+      <span class="scene-ring scene-ring-b"></span>
+      <span class="scene-blob scene-blob-a"></span>
+      <span class="scene-blob scene-blob-b"></span>
+      <span class="scene-beam"></span>
+    </div>
     <div class="baner-orb orb-a" aria-hidden="true"></div>
     <div class="baner-orb orb-b" aria-hidden="true"></div>
     <div class="baner-orb orb-c" aria-hidden="true"></div>
@@ -27,6 +34,7 @@
         <button id="baner-prev" class="badge" type="button" aria-label="Poprzedni proof">&lt;</button>
         <button id="baner-next" class="badge" type="button" aria-label="Nastepny proof">&gt;</button>
         <span id="baner-index" class="baner-index">01 / 06</span>
+        <span id="baner-scene-label" class="baner-scene-label">SCENE // ORBIT</span>
         <span class="baner-live"><i></i> AUTO 500 MS</span>
       </div>
     </div>
@@ -54,7 +62,7 @@
 
   <section class="baner-strip">
     <article>
-      <strong>112 KB</strong>
+      <strong>122 KB</strong>
       <span>CALY FRONTEND</span>
       <p>Strona, style, skrypty i routing w jednym `.rweb`. Bez CDN, bez buildu w runtime.</p>
       <a href="/viewer">OTWORZ VIEWER</a>

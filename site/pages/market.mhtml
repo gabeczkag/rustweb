@@ -1,3 +1,4 @@
+<div class="market-page" id="market-page" data-scene="core">
 <section class="market-hero" id="market-hero">
   <div class="market-spotlight" aria-hidden="true"></div>
   <div class="market-orb market-orb-a" aria-hidden="true"></div>
@@ -9,6 +10,7 @@
     <span class="market-live-dot"></span>
     <span>FEATURED</span>
     <strong id="market-live">RUSTWEB CORE</strong>
+    <span id="market-scene-label" class="market-scene-label">SCENE // CORE</span>
     <button id="market-pause" class="badge" type="button">PAUZA</button>
   </div>
 </section>
@@ -29,63 +31,63 @@
 </div>
 
 <section class="market-grid" id="market-grid">
-  <article class="market-card is-featured" data-market-card data-tags="core" data-title="RUSTWEB CORE">
+  <article class="market-card is-featured" data-market-card data-tags="core" data-title="RUSTWEB CORE" data-scene="core">
     <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
     <h2>RUSTWEB</h2>
     <p>Routing, walidacja 422, OpenAPI i Swagger bez runtime templatingu.</p>
     <strong>210 750 <small>REQ/S</small></strong>
     <a href="/">OTWORZ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="core" data-title="MHTML">
+  <article class="market-card" data-market-card data-tags="core" data-title="MHTML" data-scene="grid">
     <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
     <h2>MHTML</h2>
     <p>Mini-HTML, MCSS i MScript. Caly frontend w jednym pliku `.rweb`.</p>
-    <strong>112 KB <small>FRONTEND</small></strong>
+    <strong>122 KB <small>FRONTEND</small></strong>
     <a href="/about">POZNAJ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="service" data-title="CERT DB">
+  <article class="market-card" data-market-card data-tags="service" data-title="CERT DB" data-scene="neon">
     <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
     <h2>CERT DB</h2>
     <p>Publiczny rejestr aplikacji, fingerprinty i jednorazowe klucze.</p>
     <strong>0 <small>PLAINTEXT UUID</small></strong>
     <a href="/cert">OTWORZ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="service" data-title="TCPs">
+  <article class="market-card" data-market-card data-tags="service" data-title="TCPs" data-scene="signal">
     <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
     <h2>TCPs</h2>
     <p>Pliki per-user, manifest, sync brakow i sesje graczy po UDP.</p>
     <strong>2 <small>APLIKACJE / USER</small></strong>
     <a href="/deploy">JAK POSTAWIC</a>
   </article>
-  <article class="market-card" data-market-card data-tags="service" data-title="UC PACKS">
+  <article class="market-card" data-market-card data-tags="service" data-title="UC PACKS" data-scene="heat">
     <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
     <h2>UC</h2>
     <p>Compression packi dla malych pakietow. Zstd, CRC32, limit 4 KB.</p>
     <strong>4 KB <small>PER PACKET</small></strong>
     <a href="/deploy">JAK POSTAWIC</a>
   </article>
-  <article class="market-card" data-market-card data-tags="lab" data-title="GAME LAB">
+  <article class="market-card" data-market-card data-tags="lab" data-title="GAME LAB" data-scene="neon">
     <div class="market-card-top"><span class="badge">LAB</span><span>LIVE</span></div>
     <h2>GAME LAB</h2>
     <p>Packet Arena z dziewiecioma systemami, logami i limitem 4096 B.</p>
     <strong>9 <small>SYSTEMOW</small></strong>
     <a href="/game">ZAGRAJ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="ops" data-title="VIEWER">
+  <article class="market-card" data-market-card data-tags="ops" data-title="VIEWER" data-scene="grid">
     <div class="market-card-top"><span class="badge">OPS</span><span>READY</span></div>
     <h2>VIEWER</h2>
     <p>Wrzuc `.rweb`, zobacz trasy, protokol, APP UUID, gzip i preview.</p>
     <strong>1 <small>PLIK</small></strong>
     <a href="/viewer">OTWORZ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="ops" data-title="DEPLOY">
+  <article class="market-card" data-market-card data-tags="ops" data-title="DEPLOY" data-scene="paper">
     <div class="market-card-top"><span class="badge">OPS</span><span>READY</span></div>
     <h2>DEPLOY</h2>
     <p>Docker, lokalny HTTPS, VPS z Let's Encrypt albo GitHub Pages.</p>
     <strong>1 <small>KOMENDA</small></strong>
     <a href="/deploy">WDROZ</a>
   </article>
-  <article class="market-card" data-market-card data-tags="lab" data-title="BENCH">
+  <article class="market-card" data-market-card data-tags="lab" data-title="BENCH" data-scene="orbit">
     <div class="market-card-top"><span class="badge">LAB</span><span>READY</span></div>
     <h2>BENCH</h2>
     <p>Request throughput, streaming bandwidth i porownanie z FastAPI.</p>
@@ -103,3 +105,5 @@
     <a class="button ghost" href="/baner">ZOBACZ BANER</a>
   </div>
 </section>
+
+</div>

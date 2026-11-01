@@ -27,6 +27,17 @@ function initMarket() {
     }
     card.classList.add("is-featured");
     if (live) live.textContent = card.dataset.title || "MODUL";
+
+    const scene = card.dataset.scene || "core";
+    const page = document.getElementById("market-page");
+    if (page) {
+      page.dataset.scene = scene;
+      page.classList.remove("scene-shift");
+      void page.offsetWidth;
+      page.classList.add("scene-shift");
+    }
+    const label = document.getElementById("market-scene-label");
+    if (label) label.textContent = `SCENE // ${scene.toUpperCase()}`;
   }
 
   function currentCard() {
