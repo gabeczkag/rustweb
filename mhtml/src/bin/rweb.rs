@@ -83,6 +83,12 @@ fn main() -> Result<(), mhtml::Error> {
                 info.title.as_deref().unwrap_or("untitled"),
                 info.version.as_deref().unwrap_or("unknown")
             );
+            if let Some(protocol) = &info.protocol {
+                println!(
+                    "protocol: {} v{} (https={})",
+                    protocol.name, protocol.version, protocol.https
+                );
+            }
             println!("{} bytes, {} routes", info.bytes, info.routes.len());
             for (route, title) in info.routes {
                 println!(

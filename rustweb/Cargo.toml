@@ -9,10 +9,11 @@ categories = ["web-programming::http-server"]
 
 [features]
 default = ["cli"]
-cli = ["dep:clap"]
+cli = ["dep:clap", "dep:axum-server"]
 
 [dependencies]
 axum = { version = "0.8.9", features = ["macros"] }
+axum-server = { version = "0.8", features = ["tls-rustls"], optional = true }
 clap = { version = "4", features = ["derive"], optional = true }
 mhtml = { path = "../mhtml" }
 rustweb-macros = { path = "../rustweb-macros" }

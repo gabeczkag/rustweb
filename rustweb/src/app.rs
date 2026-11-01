@@ -1,5 +1,6 @@
 use axum::body::Bytes;
-use axum::http::{header, HeaderValue};
+use axum::http::{header, HeaderMap, HeaderValue};
+use axum::response::IntoResponse;
 use axum::Router;
 use utoipa::openapi::{path::Operation, schema::Schema, RefOr};
 use utoipa_swagger_ui::SwaggerUi;
@@ -32,6 +33,7 @@ pub struct RustWeb {
     pub(crate) docs_path: Option<String>,
     pub(crate) openapi_path: String,
     pub(crate) spa: Option<Bytes>,
+    pub(crate) spa_headers: HeaderMap,
 }
 
 impl RustWeb {
@@ -45,6 +47,7 @@ impl RustWeb {
             docs_path: Some("/docs".to_owned()),
             openapi_path: "/openapi.json".to_owned(),
             spa: None,
+            spa_headers: HeaderMap::new(),
         }
     }
 
@@ -88,18 +91,25 @@ impl RustWeb {
         }
 
         match self.spa {
-            Some(html) => router.fallback(move || {
-                let html = html.clone();
-                async move {
-                    (
-                        [(
-                            header::CONTENT_TYPE,
-                            HeaderValue::from_static("text/html; charset=utf-8"),
-                        )],
-                        html,
-                    )
+            Some(html) => {
+                let mut headers = self.spa_headers;
+                if !headers.contains_key(header::CONTENT_TYPE) {
+                    headers.insert(
+                        header::CONTENT_TYPE,
+                        HeaderValue::from_static("text/html; charset=utf-8"),
+                    );
                 }
-            }),
+
+                router.fallback(move || {
+                    let html = html.clone();
+                    let headers = headers.clone();
+                    async move {
+                        let mut response = html.into_response();
+                        *response.headers_mut() = headers;
+                        response
+                    }
+                })
+            }
             None => router.fallback(|| async { ApiError::not_found("Not Found") }),
         }
     }

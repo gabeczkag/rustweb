@@ -19,7 +19,7 @@ pub use ast::{Attr, BinaryOp, Element, Expr, Node, UnaryOp};
 pub use compile::{
     build, build_from_config, inspect, BuildOptions, BundleInfo, BundleStats, CompiledBundle,
 };
-pub use linker::{LinkerConfig, PageConfig, SiteMeta};
+pub use linker::{LinkerConfig, PageConfig, ProtocolConfig, SiteMeta};
 pub use parser::parse;
 pub use render::render;
 

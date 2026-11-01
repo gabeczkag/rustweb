@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -31,6 +31,35 @@ pub struct PageConfig {
 ///
 /// All paths are relative to the directory containing `linker.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProtocolConfig {
+    #[serde(default = "default_protocol_name")]
+    pub name: String,
+    #[serde(default = "default_protocol_version")]
+    pub version: u16,
+    #[serde(default = "default_true")]
+    pub https: bool,
+    #[serde(default)]
+    pub alias: Option<String>,
+    #[serde(default)]
+    pub alt_svc: Option<String>,
+    #[serde(default)]
+    pub headers: BTreeMap<String, String>,
+}
+
+impl Default for ProtocolConfig {
+    fn default() -> Self {
+        Self {
+            name: default_protocol_name(),
+            version: default_protocol_version(),
+            https: true,
+            alias: None,
+            alt_svc: None,
+            headers: BTreeMap::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LinkerConfig {
     pub site: SiteMeta,
     #[serde(default = "default_lang")]
@@ -47,6 +76,8 @@ pub struct LinkerConfig {
     pub data: Value,
     #[serde(default)]
     pub output: Option<String>,
+    #[serde(default)]
+    pub protocol: Option<ProtocolConfig>,
 }
 
 impl LinkerConfig {
@@ -149,6 +180,10 @@ impl LinkerConfig {
             }
         }
 
+        if let Some(protocol) = &self.protocol {
+            protocol.validate()?;
+        }
+
         Ok(())
     }
 }
@@ -164,6 +199,71 @@ fn validate_unique(kind: &str, entries: &[String]) -> Result<(), Error> {
         }
     }
     Ok(())
+}
+
+impl ProtocolConfig {
+    pub fn validate(&self) -> Result<(), Error> {
+        if self.name.trim().is_empty()
+            || !self.name.chars().all(|character| {
+                character.is_ascii_alphanumeric() || matches!(character, '-' | '+' | '_')
+            })
+        {
+            return Err(Error::Linker(
+                "protocol.name must be a non-empty scheme-like identifier".to_owned(),
+            ));
+        }
+        if self.version == 0 {
+            return Err(Error::Linker(
+                "protocol.version must be greater than zero".to_owned(),
+            ));
+        }
+        if let Some(alias) = &self.alias {
+            if alias.trim().is_empty()
+                || !alias.chars().all(|character| {
+                    character.is_ascii_alphanumeric() || matches!(character, '-' | '+' | '_')
+                })
+            {
+                return Err(Error::Linker(
+                    "protocol.alias must be a non-empty scheme-like identifier".to_owned(),
+                ));
+            }
+        }
+        if let Some(alt_svc) = &self.alt_svc {
+            if alt_svc
+                .chars()
+                .any(|character| matches!(character, '\r' | '\n'))
+            {
+                return Err(Error::Linker(
+                    "protocol.alt_svc must not contain newlines".to_owned(),
+                ));
+            }
+        }
+        for (name, value) in &self.headers {
+            if name.trim().is_empty()
+                || name
+                    .chars()
+                    .any(|character| matches!(character, '\r' | '\n' | ':'))
+                || value
+                    .chars()
+                    .any(|character| matches!(character, '\r' | '\n'))
+            {
+                return Err(Error::Linker(format!("invalid protocol header `{name}`")));
+            }
+        }
+        Ok(())
+    }
+}
+
+fn default_protocol_name() -> String {
+    "byrust".to_owned()
+}
+
+fn default_protocol_version() -> u16 {
+    1
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn default_lang() -> String {

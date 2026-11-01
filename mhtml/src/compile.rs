@@ -6,7 +6,7 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use serde_json::{json, Map, Value};
 
-use crate::linker::{LinkerConfig, PageConfig};
+use crate::linker::{LinkerConfig, PageConfig, ProtocolConfig};
 use crate::{parser, render, Error};
 
 #[derive(Debug, Clone, Copy)]
@@ -41,6 +41,7 @@ pub struct BundleStats {
 pub struct BundleInfo {
     pub title: Option<String>,
     pub version: Option<String>,
+    pub protocol: Option<ProtocolConfig>,
     pub routes: Vec<(String, Option<String>)>,
     pub bytes: usize,
 }
@@ -170,6 +171,25 @@ pub fn build_from_config(
         templates.push_str("</template>\n");
     }
 
+    let protocol_meta = match &config.protocol {
+        Some(protocol) => {
+            let json = serde_json::to_string(protocol)?.replace("</", "<\\/");
+            format!(
+                "<meta name=\"byrust\" content=\"{}\">\n\
+<meta name=\"byrust-version\" content=\"{}\">\n\
+<meta name=\"byrust-https\" content=\"{}\">\n\
+<meta name=\"byrust-alias\" content=\"{}\">\n\
+<script type=\"application/json\" id=\"byrust-config\">{}</script>\n",
+                escape_html(&protocol.name),
+                protocol.version,
+                protocol.https,
+                escape_html(protocol.alias.as_deref().unwrap_or("")),
+                json
+            )
+        }
+        None => String::new(),
+    };
+
     let mut script_tags = String::new();
     if !classic_scripts.is_empty() {
         script_tags.push_str("<script>");
@@ -193,6 +213,7 @@ pub fn build_from_config(
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <meta name=\"rweb-version\" content=\"{version}\">\n\
 <meta name=\"description\" content=\"{description}\">\n\
+{protocol_meta}\
 <title>{title}</title>\n\
 <style>{css}</style>\n\
 </head>\n\
@@ -202,6 +223,7 @@ pub fn build_from_config(
 {templates}{script_tags}</body>\n\
 </html>\n",
         lang = escape_html(&config.lang),
+        protocol_meta = protocol_meta,
         version = escape_html(&config.site.version),
         description = escape_html(&config.site.description),
         title = escape_html(&home_title),
@@ -238,9 +260,13 @@ pub fn inspect(html: &str) -> BundleInfo {
         }
     }
 
+    let protocol = extract_script_json(html, "byrust-config")
+        .and_then(|source| serde_json::from_str(&source).ok());
+
     BundleInfo {
         title,
         version,
+        protocol,
         routes,
         bytes: html.len(),
     }
@@ -407,6 +433,13 @@ fn extract_meta(html: &str, name: &str) -> Option<String> {
     attribute_value(&html[start..tag_end], "content")
 }
 
+fn extract_script_json(html: &str, id: &str) -> Option<String> {
+    let needle = format!("<script type=\"application/json\" id=\"{id}\">");
+    let start = html.find(&needle)? + needle.len();
+    let end = html[start..].find("</script>")? + start;
+    Some(html[start..end].to_owned())
+}
+
 fn attribute_value(tag: &str, name: &str) -> Option<String> {
     let lower = tag.to_ascii_lowercase();
     let needle = format!("{}=\"", name.to_ascii_lowercase());
@@ -436,8 +469,12 @@ const ROUTER_JS: &str = r#"
     if (!path || path === '/') return '/';
     return path.replace(/\/+$/, '') || '/';
   };
-  const render = () => {
-    const path = normalize(location.pathname);
+  const hasByrust = !!document.querySelector('meta[name="byrust"]');
+  const alias = document.querySelector('meta[name="byrust-alias"]')?.content || 'byrust';
+  const scheme = `${alias}:`;
+  const webScheme = `web+${alias}:`;
+  const render = (pathOverride) => {
+    const path = normalize(pathOverride || location.pathname);
     const template = templates.get(path) || fallback;
     if (!template || !app) return;
     app.replaceChildren(template.content.cloneNode(true));
@@ -445,10 +482,46 @@ const ROUTER_JS: &str = r#"
     document.dispatchEvent(new CustomEvent('rweb:rendered', { detail: { path } }));
     window.scrollTo({ top: 0 });
   };
+  const parseByrust = (raw) => {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.protocol !== scheme && parsed.protocol !== webScheme) return null;
+      if (parsed.hostname && parsed.hostname !== 'self' && parsed.hostname !== location.hostname) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+  if (hasByrust) {
+    try {
+      const external = new URLSearchParams(location.search).get(alias);
+      const parsed = external ? parseByrust(external) : null;
+      if (parsed) {
+        const target = parsed.pathname + parsed.search + parsed.hash;
+        history.replaceState({}, '', target);
+        render(parsed.pathname);
+      }
+    } catch {}
+    if (navigator.registerProtocolHandler) {
+      try {
+        navigator.registerProtocolHandler(webScheme.slice(0, -1), `${location.origin}/?${encodeURIComponent(alias)}=%s`);
+      } catch {}
+    }
+  }
   document.addEventListener('click', (event) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const anchor = event.target.closest('a');
     if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
+    const href = anchor.getAttribute('href') || '';
+    if (hasByrust && (href.startsWith(`${alias}://`) || href.startsWith(`web+${alias}://`))) {
+      const parsed = parseByrust(href);
+      if (parsed) {
+        event.preventDefault();
+        history.pushState({}, '', parsed.pathname + parsed.search + parsed.hash);
+        render(parsed.pathname);
+      }
+      return;
+    }
     const url = new URL(anchor.href, location.href);
     if (url.origin !== location.origin || url.hash) return;
     if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/docs') || url.pathname === '/openapi.json') return;
@@ -456,7 +529,7 @@ const ROUTER_JS: &str = r#"
     history.pushState({}, '', url);
     render();
   });
-  window.addEventListener('popstate', render);
+  window.addEventListener('popstate', () => render());
   render();
 })();
 "#;

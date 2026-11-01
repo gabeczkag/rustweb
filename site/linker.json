@@ -6,6 +6,15 @@
   },
   "lang": "pl",
   "output": "site.rweb",
+  "protocol": {
+    "name": "byrust",
+    "version": 1,
+    "https": true,
+    "alias": "byrust",
+    "headers": {
+      "X-Byrust-Site": "rustweb"
+    }
+  },
   "styles": ["assets/style.css"],
   "scripts": ["scripts/app.ts"],
   "assets": ["assets/logo.svg"],
@@ -76,7 +85,8 @@
     "interp_syntax": "{{ expression }}",
     "build_command": "rweb build site",
     "inspect_command": "rweb inspect site/site.rweb",
-    "memory_note": "Pomiar RSS po starcie, bez ruchu: ~4,8 MB dla rustweb i ~153 MB dla FastAPI + uvicorn z dwoma workerami. Jeden proces, jeden plik HTML, zero runtime'owego templatingu.",
+    "protocol_json": "\"protocol\": {\n  \"name\": \"byrust\",\n  \"version\": 1,\n  \"https\": true,\n  \"alias\": \"byrust\"\n}",
+    "memory_note": "Pomiar RSS po starcie, bez ruchu: ~6,6 MB dla rustweb i ~153 MB dla FastAPI + uvicorn z dwoma workerami. Jeden proces, jeden plik HTML, zero runtime'owego templatingu.",
     "linker_note": "linker.json wskazuje strony, style, skrypty i assety. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript i zamienia obrazy na data URI. Wynik to jeden plik .rweb."
   }
 }

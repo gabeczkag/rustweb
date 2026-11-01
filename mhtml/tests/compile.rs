@@ -14,6 +14,13 @@ fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
         r#"{
             "site": {"title": "Test", "version": "1.0.0", "description": "A test"},
             "lang": "pl",
+            "protocol": {
+                "name": "byrust",
+                "version": 1,
+                "https": true,
+                "alias": "byrust",
+                "headers": {"X-Byrust-Site": "test"}
+            },
             "styles": ["assets/style.css"],
             "scripts": ["scripts/app.js"],
             "assets": ["assets/logo.svg"],
@@ -63,8 +70,16 @@ fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
     assert!(html.contains("body{color:red}"));
     assert!(html.contains("console.log('hello');"));
     assert!(html.contains("rweb:rendered"));
+    assert!(html.contains("<meta name=\"byrust\""));
+    assert!(html.contains("id=\"byrust-config\""));
 
     let info = inspect(html);
+    assert_eq!(
+        info.protocol
+            .as_ref()
+            .map(|protocol| protocol.name.as_str()),
+        Some("byrust")
+    );
     assert_eq!(info.title.as_deref(), Some("Test"));
     assert_eq!(info.version.as_deref(), Some("1.0.0"));
     assert_eq!(info.routes.len(), 2);

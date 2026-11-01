@@ -160,9 +160,12 @@ SPA fallback: one cached document, client-side routing, no template work in the
 request path.
 
 ```bash
-bash site/build.sh                      # builds site/site.rweb
-rustweb site/site.rweb                  # or: cargo run -p rustweb --bin rustweb -- site/site.rweb
-# open http://127.0.0.1:3000
+bash site/build.sh
+rustweb site/site.rweb --allow-http   # local development
+# or, for real HTTPS:
+bash site/dev-cert.sh
+rustweb site/site.rweb --tls-cert certs/dev.crt --tls-key certs/dev.key
+# open https://127.0.0.1:3000
 ```
 
 `linker.json` links every page, stylesheet, script, and asset:
@@ -196,8 +199,8 @@ can be opened as a static file by an SPA-capable host or served directly by
 RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
 handles unmatched routes.
 
-Startup RSS in this repository's measurement was ~4.8 MiB for
-`rustweb site/site.rweb` versus ~153 MiB for the FastAPI + uvicorn process tree
+Startup RSS in this repository's measurement was ~6.6 MiB for the
+`.rweb` server versus ~153 MiB for the FastAPI + uvicorn process tree
 (master, two workers, and resource tracker), with no requests in flight. The
 server holds one HTML document and does no runtime templating. Details and
 caveats are in [`bench/RESULTS.md`](bench/RESULTS.md).
@@ -211,6 +214,32 @@ can be `.mhtml` or plain `.html`; a full document is reduced to its `<body>`.
 rweb inspect site/site.rweb
 # RustWeb — 0.1.0, 3 routes: /, /about, /bench
 ```
+
+### Byrust protocol
+
+`linker.json` can declare a protocol profile:
+
+```json
+"protocol": {
+  "name": "byrust",
+  "version": 1,
+  "https": true,
+  "alias": "byrust",
+  "headers": { "X-Byrust-Site": "rustweb" }
+}
+```
+
+`rweb` embeds the profile in the `.rweb` as `<meta name="byrust">` and a
+`byrust-config` JSON block. `rustweb` reads it, refuses plain HTTP when
+`https` is true (`--allow-http` is a dev-only override), adds `X-Byrust-*` and
+HSTS headers over TLS, and serves a real HTTPS endpoint. The SPA router maps
+`byrust://self/path` and `web+byrust://...` links to the current origin, and
+can register `web+byrust` as a browser protocol handler.
+
+The browser still sees `https://`: only TLS with a trusted certificate creates
+a secure context. `byrust://` is an in-app alias and protocol profile, not a
+replacement for TLS. `--allow-http` exists for local development and does not
+make the browser treat the page as HTTPS.
 
 ## Benchmarks
 

@@ -1,4 +1,5 @@
 /target
 /bench/.venv
+/certs
 __pycache__/
 *.pyc
