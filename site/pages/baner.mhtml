@@ -45,7 +45,7 @@
 
   <section class="baner-strip">
     <article>
-      <strong>89 KB</strong>
+      <strong>112 KB</strong>
       <span>CALY FRONTEND</span>
       <p>Strona, style, skrypty i routing w jednym `.rweb`. Bez CDN, bez buildu w runtime.</p>
       <a href="/viewer">OTWORZ VIEWER</a>

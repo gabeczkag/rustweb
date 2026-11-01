@@ -10,7 +10,7 @@ const proofs = [
   },
   {
     tag: "SIZE",
-    value: "89 KB",
+    value: "112 KB",
     label: "CALY FRONTEND",
     body: "Strona, style, skrypty i routing w jednym pliku .rweb.",
     link: "OTWORZ VIEWER",
