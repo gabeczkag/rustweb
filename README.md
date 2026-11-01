@@ -196,6 +196,12 @@ can be opened as a static file by an SPA-capable host or served directly by
 RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
 handles unmatched routes.
 
+Startup RSS in this repository's measurement was ~4.8 MiB for
+`rustweb site/site.rweb` versus ~153 MiB for the FastAPI + uvicorn process tree
+(master, two workers, and resource tracker), with no requests in flight. The
+server holds one HTML document and does no runtime templating. Details and
+caveats are in [`bench/RESULTS.md`](bench/RESULTS.md).
+
 Scripts can be `.js`, `.mjs`, or `.ts`; `.ts` is transpiled with `tsc` at build
 time (install TypeScript or use `.js`). Styles and assets are inlined, so the
 compiled page makes no external requests for its own CSS, JS, or images. Pages

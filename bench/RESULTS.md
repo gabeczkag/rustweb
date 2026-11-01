@@ -80,6 +80,21 @@ In this setup RustWeb delivered roughly 14–15× the throughput and 6–7× low
 p99. This compares runtimes under the same load, not just the shape of the API;
 it is still one machine and two runs, so treat the ratio as directional.
 
+## Memory
+
+RSS immediately after startup, no requests, release build, same machine:
+
+| Process | RSS |
+|---|---:|
+| `rustweb site/site.rweb` | 4.8 MiB |
+| FastAPI + uvicorn, two workers (whole process tree) | 153.4 MiB |
+
+The `.rweb` server keeps one 21.5 KiB HTML document in memory and serves it as
+an SPA fallback; it does not parse templates or bundle assets at runtime. The
+uvicorn tree includes the master, two workers, and uvicorn's resource tracker.
+The feature sets are not identical, so this is a directional memory comparison,
+not a formal benchmark.
+
 ## Interpretation
 
 Across five runs the RustWeb/axum throughput ratio was 1.014, 1.023, 0.969,

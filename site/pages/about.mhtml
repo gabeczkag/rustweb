@@ -71,7 +71,7 @@
     <p class="eyebrow">Hostowanie</p>
     <h2>Jeden plik, mniej RAM-u</h2>
     <p><code>.rweb</code> jest zwykłym plikiem HTML. RustWeb ładuje go raz i serwuje jako fallback dla wszystkich tras SPA. Nie ma runtime'owego bundlera, drzewa szablonów ani osobnych assetów.</p>
-    <p class="note">To celowe rozdzielenie: autor strony ufa swojemu HTML-owi, ale nie danym, które podstawia. Hosting to jeden plik, a nie katalog z dziesiątkami zależności.</p>
+    <p class="note">{{ memory_note }}</p>
   </section>
 </main>
 
