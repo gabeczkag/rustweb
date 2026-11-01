@@ -53,8 +53,8 @@ async fn main() {
         }));
     }
 
-    let mut histogram = Histogram::<u64>::new_with_bounds(1, 60_000_000, 3)
-        .expect("valid histogram bounds");
+    let mut histogram =
+        Histogram::<u64>::new_with_bounds(1, 60_000_000, 3).expect("valid histogram bounds");
     let mut measured = 0usize;
 
     for task in tasks {
@@ -69,9 +69,7 @@ async fn main() {
 
     println!(
         "requests={measured} connections={} elapsed={:.3}s throughput={:.0} req/s",
-        config.connections,
-        seconds,
-        throughput
+        config.connections, seconds, throughput
     );
     println!(
         "latency_us p50={} p90={} p99={} p99.9={} max={}",

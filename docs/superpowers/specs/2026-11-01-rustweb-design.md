@@ -24,7 +24,7 @@ i tak nie da się uniknąć.
 - Ekstraktory: `ApiPath<T>`, `ApiQuery<T>`, `ApiJson<T>` (walidacja + 422).
 - Modele: `#[model]` dodający `Serialize`, `Deserialize`, `ToSchema`, `Validate`.
 - Błędy: `ApiError` / `ApiResult<T>` z ciałem `{"detail": ...}` jak w FastAPI.
-- OpenAPI 3.2: automatyczne ścieżki, parametry, request body, response, schematy.
+- OpenAPI 3.1: automatyczne ścieżki, parametry, request body, response, schematy.
 - Swagger UI pod `/docs`, spec pod `/openapi.json`.
 - Fallback 404 w formacie JSON.
 - Benchmark p50/p99 na tle czystego axum.

@@ -24,8 +24,7 @@ struct User {
     age: u8,
 }
 
-static STORE: LazyLock<Mutex<HashMap<u64, User>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static STORE: LazyLock<Mutex<HashMap<u64, User>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[rustweb::post("/users", status = 201)]
 async fn create_user(ApiJson(body): ApiJson<CreateUser>) -> ApiResult<Json<User>> {

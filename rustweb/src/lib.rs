@@ -25,9 +25,10 @@ pub use rustweb_macros::{delete, get, model, patch, post, put, query};
 
 /// Common imports for application code.
 pub mod prelude {
-    pub use crate::{ApiError, ApiJson, ApiPath, ApiQuery, ApiResult, RustWeb, Route};
+    pub use crate::{ApiError, ApiJson, ApiPath, ApiQuery, ApiResult, Route, RustWeb};
     pub use axum::extract::{Path, Query};
     pub use axum::http::StatusCode;
     pub use axum::Json;
     pub use rustweb_macros::{delete, get, model, patch, post, put, query};
+    pub use validator::Validate;
 }

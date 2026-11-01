@@ -93,7 +93,7 @@ Invalid input returns the FastAPI shape:
   errors.
 - `#[model]` adds `Serialize`, `Deserialize`, `ToSchema`, and `Validate` in one
   attribute.
-- Generated OpenAPI 3.2 document and vendored Swagger UI, no manual
+- Generated OpenAPI 3.1 document and vendored Swagger UI, no manual
   `#[utoipa::path]`.
 - JSON 404 fallback.
 - No per-request framework overhead; routes use axum's `matchit` router
@@ -150,6 +150,19 @@ bash bench/run.sh
 The script starts two servers — one on RustWeb, one on plain axum — and runs a
 keep-alive load generator that reports throughput and p50/p90/p99/p99.9/max
 latency. Results are written to [`bench/RESULTS.md`](bench/RESULTS.md).
+
+Measured on an AMD Ryzen 5 4500U (6 cores), server pinned to 2 cores, client to
+4 cores, 64 keep-alive connections, 200k requests:
+
+| Server | Throughput | p50 | p99 |
+|---|---:|---:|---:|
+| RustWeb | 181–183k req/s | 295 µs | 742–781 µs |
+| plain axum | 179k req/s | 295–298 µs | 786–862 µs |
+
+The difference is within run-to-run noise: for a route without validation, the
+framework adds no measurable request-path overhead. These are loopback numbers
+on one machine, not a TechEmpower claim. Validation cost depends on the model
+and payload and is not included in this table.
 
 ## Project layout
 

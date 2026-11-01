@@ -20,8 +20,7 @@ struct User {
     age: u8,
 }
 
-static USERS: LazyLock<Mutex<HashMap<u64, User>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static USERS: LazyLock<Mutex<HashMap<u64, User>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[rustweb::get("/")]
 async fn root() -> &'static str {

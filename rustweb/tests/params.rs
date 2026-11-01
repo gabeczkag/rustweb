@@ -25,7 +25,12 @@ async fn search(ApiQuery(q): ApiQuery<Pagination>) -> Json<u32> {
 async fn path_param_works() {
     let app = RustWeb::new("test", "0.0.0").route(get_user).into_router();
     let response = app
-        .oneshot(Request::builder().uri("/users/42").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/users/42")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -37,7 +42,12 @@ async fn path_param_works() {
 async fn invalid_path_param_returns_422() {
     let app = RustWeb::new("test", "0.0.0").route(get_user).into_router();
     let response = app
-        .oneshot(Request::builder().uri("/users/abc").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/users/abc")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -47,17 +57,34 @@ async fn invalid_path_param_returns_422() {
 async fn query_validation_returns_422() {
     let app = RustWeb::new("test", "0.0.0").route(search).into_router();
     let response = app
-        .oneshot(Request::builder().uri("/search?limit=0").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/search?limit=0")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(
+        json["detail"][0]["loc"],
+        serde_json::json!(["query", "limit"])
+    );
 }
 
 #[tokio::test]
 async fn valid_query_works() {
     let app = RustWeb::new("test", "0.0.0").route(search).into_router();
     let response = app
-        .oneshot(Request::builder().uri("/search?limit=10").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/search?limit=10")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);

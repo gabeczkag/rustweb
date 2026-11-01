@@ -57,7 +57,11 @@ fn post_operation_has_request_body_and_201() {
 
 #[test]
 fn schemas_include_models_and_error_body() {
-    let names: Vec<String> = get_user.schemas().into_iter().map(|(name, _)| name).collect();
+    let names: Vec<String> = get_user
+        .schemas()
+        .into_iter()
+        .map(|(name, _)| name)
+        .collect();
     assert!(names.contains(&"User".to_string()));
     assert!(names.contains(&"ApiErrorBody".to_string()));
 }

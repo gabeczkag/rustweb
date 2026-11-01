@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use utoipa::openapi::path::{HttpMethod, PathItem, PathsBuilder};
 use utoipa::openapi::schema::{ComponentsBuilder, Schema};
-use utoipa::openapi::{Info, OpenApi, OpenApiBuilder, OpenApiVersion, RefOr};
+use utoipa::openapi::{Info, OpenApi, OpenApiBuilder, RefOr};
 
 use crate::app::RouteMeta;
 
@@ -38,7 +38,6 @@ pub(crate) fn build(title: &str, version: &str, routes: &[RouteMeta]) -> OpenApi
     }
 
     OpenApiBuilder::new()
-        .openapi(OpenApiVersion::Version32)
         .info(Info::new(title, version))
         .paths(paths.build())
         .components(Some(components.build()))

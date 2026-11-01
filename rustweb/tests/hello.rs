@@ -13,7 +13,12 @@ async fn hello() -> &'static str {
 async fn hello_route_returns_200() {
     let app = RustWeb::new("test", "0.0.0").route(hello).into_router();
     let response = app
-        .oneshot(Request::builder().uri("/hello").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/hello")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
 

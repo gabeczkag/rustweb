@@ -276,9 +276,11 @@ fn is_result(output: &ReturnType) -> bool {
     };
 
     match &**ty {
-        Type::Path(path) => path.path.segments.last().is_some_and(|segment| {
-            segment.ident == "Result" || segment.ident == "ApiResult"
-        }),
+        Type::Path(path) => path
+            .path
+            .segments
+            .last()
+            .is_some_and(|segment| segment.ident == "Result" || segment.ident == "ApiResult"),
         _ => false,
     }
 }

@@ -98,17 +98,14 @@ pub fn operation_tokens(metadata: &Metadata, status: u16) -> TokenStream {
     }
 
     if let Some(ty) = &metadata.body {
+        let body_schema = schema_tokens(ty);
         statements.push(quote! {
             __builder = __builder.request_body(Some(
                 ::rustweb::openapi::request_body::RequestBodyBuilder::new()
                     .required(Some(::rustweb::openapi::Required::True))
                     .content(
                         "application/json",
-                        ::rustweb::openapi::ContentBuilder::new().schema(Some(
-                            ::rustweb::openapi::Ref::from_schema_name(
-                                <#ty as ::rustweb::utoipa::ToSchema>::name(),
-                            ),
-                        )),
+                        ::rustweb::openapi::ContentBuilder::new().schema(Some(#body_schema)),
                     )
                     .build(),
             ));
@@ -119,6 +116,7 @@ pub fn operation_tokens(metadata: &Metadata, status: u16) -> TokenStream {
     let description = status_description(status.as_str());
 
     if let Some(ty) = &metadata.response {
+        let response_schema = schema_tokens(ty);
         statements.push(quote! {
             __builder = __builder.response(
                 #status,
@@ -126,11 +124,8 @@ pub fn operation_tokens(metadata: &Metadata, status: u16) -> TokenStream {
                     .description(#description)
                     .content(
                         "application/json",
-                        ::rustweb::openapi::ContentBuilder::new().schema(Some(
-                            ::rustweb::openapi::Ref::from_schema_name(
-                                <#ty as ::rustweb::utoipa::ToSchema>::name(),
-                            ),
-                        )),
+                        ::rustweb::openapi::ContentBuilder::new()
+                            .schema(Some(#response_schema)),
                     ),
             );
         });
@@ -174,13 +169,7 @@ pub fn schemas_tokens(metadata: &Metadata) -> TokenStream {
     let mut statements = Vec::new();
 
     for ty in metadata.body.iter().chain(metadata.response.iter()) {
-        statements.push(quote! {
-            <#ty as ::rustweb::utoipa::ToSchema>::schemas(&mut __schemas);
-            __schemas.push((
-                <#ty as ::rustweb::utoipa::ToSchema>::name().into_owned(),
-                <#ty as ::rustweb::utoipa::PartialSchema>::schema(),
-            ));
-        });
+        collect_type_schemas(ty, &mut statements);
     }
 
     if needs_validation(metadata) {
@@ -205,6 +194,103 @@ pub fn schemas_tokens(metadata: &Metadata) -> TokenStream {
 
 fn needs_validation(metadata: &Metadata) -> bool {
     !metadata.params.is_empty() || metadata.body.is_some()
+}
+
+fn schema_tokens(ty: &Type) -> TokenStream {
+    if collection_inner_types(ty).is_some() {
+        quote!(<#ty as ::rustweb::utoipa::PartialSchema>::schema())
+    } else {
+        quote!(::rustweb::openapi::Ref::from_schema_name(
+            <#ty as ::rustweb::utoipa::ToSchema>::name()
+        ))
+    }
+}
+
+fn collect_type_schemas(ty: &Type, statements: &mut Vec<TokenStream>) {
+    if let Some(inner_types) = collection_inner_types(ty) {
+        for inner in inner_types {
+            collect_type_schemas(&inner, statements);
+        }
+        return;
+    }
+
+    if is_primitive(ty) {
+        return;
+    }
+
+    statements.push(quote! {
+        <#ty as ::rustweb::utoipa::ToSchema>::schemas(&mut __schemas);
+        __schemas.push((
+            <#ty as ::rustweb::utoipa::ToSchema>::name().into_owned(),
+            <#ty as ::rustweb::utoipa::PartialSchema>::schema(),
+        ));
+    });
+}
+
+fn collection_inner_types(ty: &Type) -> Option<Vec<Type>> {
+    match ty {
+        Type::Array(array) => Some(vec![(*array.elem).clone()]),
+        Type::Slice(slice) => Some(vec![(*slice.elem).clone()]),
+        Type::Path(path) => {
+            let segment = path.path.segments.last()?;
+            let name = segment.ident.to_string();
+
+            if !matches!(
+                name.as_str(),
+                "Vec" | "Option" | "HashMap" | "BTreeMap" | "HashSet" | "BTreeSet"
+            ) {
+                return None;
+            }
+
+            let PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+                return Some(Vec::new());
+            };
+
+            Some(
+                arguments
+                    .args
+                    .iter()
+                    .filter_map(|argument| match argument {
+                        GenericArgument::Type(ty) => Some(ty.clone()),
+                        _ => None,
+                    })
+                    .collect(),
+            )
+        }
+        _ => None,
+    }
+}
+
+fn is_primitive(ty: &Type) -> bool {
+    let Type::Path(path) = ty else {
+        return false;
+    };
+    let Some(segment) = path.path.segments.last() else {
+        return false;
+    };
+    let name = segment.ident.to_string();
+
+    matches!(
+        name.as_str(),
+        "i8" | "i16"
+            | "i32"
+            | "i64"
+            | "i128"
+            | "isize"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "u128"
+            | "usize"
+            | "f32"
+            | "f64"
+            | "bool"
+            | "String"
+            | "str"
+            | "char"
+            | "Value"
+    )
 }
 
 fn path_param_names(path: &str) -> Vec<String> {

@@ -50,7 +50,7 @@ async fn openapi_contains_paths_params_and_schemas() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let doc: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
 
-    assert_eq!(doc["openapi"], "3.2.0");
+    assert_eq!(doc["openapi"], "3.1.0");
     assert_eq!(doc["info"]["title"], "Test API");
     assert_eq!(
         doc["paths"]["/users/{id}"]["get"]["parameters"][0]["name"],
@@ -62,6 +62,32 @@ async fn openapi_contains_paths_params_and_schemas() {
         "Created"
     );
     assert!(doc["components"]["schemas"]["User"].is_object());
+
+    let list = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/users")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(list.status(), StatusCode::OK);
+
+    let created = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/users")
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(Body::from(r#"{"id":1,"name":"Ada"}"#))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(created.status(), StatusCode::CREATED);
 
     let docs = app
         .oneshot(
