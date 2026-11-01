@@ -1,9 +1,9 @@
 <section class="reel-page">
   <div class="reel-head">
     <div>
-      <p class="eyebrow">08 // MOTION REEL // 900 FRAMES // 0 KEYFRAMES</p>
-      <h1>NO KEYFRAMES.<br><span>JUST MATH.</span></h1>
-      <p class="lead">Programmatic motion study: shape, easing, sine field, sphere and a four-panel procedural breakdown. Every frame is code.</p>
+      <p class="eyebrow">08 // PRODUCT REEL // RUSTWEB // 900 FRAMES</p>
+      <h1>RUSTWEB.<br><span>W RUCHU.</span></h1>
+      <p class="lead">15 sekund o tym, co faktycznie dostajesz: API, MHTML, cert DB, TCPs, UC, Game Lab, deploy i benchmark. Bez slajdow o niczym.</p>
     </div>
     <div class="reel-meta">
       <span>60 FPS</span>
@@ -20,11 +20,11 @@
       <span class="reel-corner reel-corner-tr">+</span>
       <span class="reel-corner reel-corner-bl">+</span>
       <span class="reel-corner reel-corner-br">+</span>
-      <span class="reel-hud-tl">RUSTWEB // MOTION REEL</span>
+      <span class="reel-hud-tl">RUSTWEB // PRODUCT REEL</span>
       <span class="reel-hud-tr">60 FPS / 1920x1080</span>
       <span class="reel-hud-bl">FRAME <b id="reel-frame-hud">000</b> / 900</span>
       <span class="reel-hud-br">NO KEYFRAMES</span>
-      <span class="reel-scene-hud" id="reel-scene-hud">00 // INTRO</span>
+      <span class="reel-scene-hud" id="reel-scene-hud">00 // RUSTWEB</span>
       <span class="reel-rec"><i></i> REC</span>
     </div>
   </div>
@@ -38,22 +38,27 @@
     <span class="reel-timecode" id="reel-timecode">00:00:00:00</span>
   </div>
 
+  <div class="reel-live-ticker" id="reel-live-ticker">RUSTWEB // 210 750 REQ/S</div>
+
   <div class="reel-timeline" id="reel-timeline">
-    <span data-scene="0" class="is-active">00 INTRO</span>
-    <span data-scene="1">01 TITLE</span>
-    <span data-scene="2">02 KINETIC</span>
-    <span data-scene="4">03 EASING</span>
-    <span data-scene="7">04 PROCEDURAL</span>
-    <span data-scene="10">05 CORE</span>
-    <span data-scene="12">06 OUTRO</span>
+    <span data-scene="0" class="is-active">00 RUSTWEB</span>
+    <span data-scene="1">01 API</span>
+    <span data-scene="2">02 MHTML</span>
+    <span data-scene="3">03 CERT DB</span>
+    <span data-scene="4">04 TCPs</span>
+    <span data-scene="5">05 UC</span>
+    <span data-scene="6">06 GAME LAB</span>
+    <span data-scene="7">07 DEPLOY</span>
+    <span data-scene="8">08 BENCH</span>
+    <span data-scene="9">09 OUTRO</span>
     <i id="reel-playhead"></i>
   </div>
 
   <div class="reel-bottom">
     <div>
       <p class="eyebrow">THE LOOP</p>
-      <h2>SHAPE / EASING / FIELD / CORE.</h2>
-      <p>Scena jest rysowana w canvasie 2D. Punkt na wykresie to funkcja czasu, nie keyframe. Sine field morphuje w sferę, a cztery panele pokazują rotate, squash, offset i wave.</p>
+      <h2>API / FRONTEND / CERTS / PACKETS.</h2>
+      <p>Kazda scena to produkt: endpoint, plik `.rweb`, certyfikat, packet, compression pack, deploy i benchmark. Canvas jest rysowany w czasie rzeczywistym, a HUD pokazuje klatke i scene.</p>
     </div>
     <div class="reel-links">
       <a class="button" href="/baner">ZOBACZ BANER</a>

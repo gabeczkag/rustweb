@@ -42,7 +42,7 @@
     <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
     <h2>MHTML</h2>
     <p>Mini-HTML, MCSS i MScript. Caly frontend w jednym pliku `.rweb`.</p>
-    <strong>140 KB <small>FRONTEND</small></strong>
+    <strong>144 KB <small>FRONTEND</small></strong>
     <a href="/about">POZNAJ</a>
   </article>
   <article class="market-card" data-market-card data-tags="service" data-title="CERT DB" data-scene="neon">

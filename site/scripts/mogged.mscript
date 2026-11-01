@@ -1,12 +1,13 @@
-const REEL_WIDTH = 1920;
-const REEL_HEIGHT = 1080;
-const REEL_DURATION = 15;
-const REEL_FPS = 60;
-const REEL_FRAMES = REEL_DURATION * REEL_FPS;
+const W = 1920;
+const H = 1080;
+const DURATION = 15;
+const FPS = 60;
+const FRAMES = DURATION * FPS;
 
-const REEL = {
+const C = {
   bg: "#0f1115",
   panel: "#151920",
+  panel2: "#1a1f28",
   line: "#2a3039",
   ink: "#f4f1e8",
   muted: "#8b919b",
@@ -16,14 +17,30 @@ const REEL = {
   purple: "#a78bfa",
 };
 
-const REEL_SCENES = [
-  { start: 0, label: "00 // INTRO" },
-  { start: 1, label: "01 // TITLE CARD" },
-  { start: 2, label: "02 // KINETIC GRID" },
-  { start: 4, label: "03 // EASING" },
-  { start: 7, label: "04 // PROCEDURAL" },
-  { start: 10, label: "05 // CORE PHILOSOPHY" },
-  { start: 12, label: "06 // OUTRO" },
+const SCENES = [
+  { start: 0, label: "00 // RUSTWEB" },
+  { start: 1.5, label: "01 // API" },
+  { start: 3, label: "02 // MHTML" },
+  { start: 4.5, label: "03 // CERT DB" },
+  { start: 6, label: "04 // TCPs" },
+  { start: 7.5, label: "05 // UC" },
+  { start: 9, label: "06 // GAME LAB" },
+  { start: 10.5, label: "07 // DEPLOY" },
+  { start: 12, label: "08 // BENCH" },
+  { start: 13.5, label: "09 // OUTRO" },
+];
+
+const TICKER = [
+  "210 750 REQ/S",
+  "1 FILE .RWEB",
+  "56 TESTS",
+  "4.7 GIB/S STREAMING",
+  "0 RUNTIME TEMPLATING",
+  "10 ROUTES",
+  "0 PLAINTEXT UUID",
+  "9 GAME SYSTEMS",
+  "DOCKER READY",
+  "4 KB UC PACKETS",
 ];
 
 let activeReel = null;
@@ -57,13 +74,14 @@ function createReel(canvas, ctx) {
   const sceneHud = document.getElementById("reel-scene-hud");
   const playhead = document.getElementById("reel-playhead");
   const timeline = document.getElementById("reel-timeline");
+  const liveTicker = document.getElementById("reel-live-ticker");
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
   const query = new URLSearchParams(location.search);
   const requestedFrame = Number(query.get("frame"));
   const still = query.get("still") === "1";
   let time = Number.isFinite(requestedFrame)
-    ? Math.max(0, Math.min(REEL_FRAMES - 1, requestedFrame)) / REEL_FPS
+    ? Math.max(0, Math.min(FRAMES - 1, requestedFrame)) / FPS
     : 0;
   let playing = !reduced && !still;
   let destroyed = false;
@@ -82,48 +100,44 @@ function createReel(canvas, ctx) {
     return 1 - Math.pow(1 - value, 3);
   }
 
-  function easeInOutCubic(value) {
-    return value < 0.5
-      ? 4 * value * value * value
-      : 1 - Math.pow(-2 * value + 2, 3) / 2;
-  }
-
   function easeOutBack(value) {
     const c1 = 1.70158;
     const c3 = c1 + 1;
     return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
   }
 
-  function easeOutElastic(value) {
-    if (value === 0 || value === 1) return value;
-    return Math.pow(2, -10 * value) * Math.sin((value * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1;
-  }
-
-  function smoothstep(edge0, edge1, value) {
-    const x = clamp01((value - edge0) / (edge1 - edge0));
-    return x * x * (3 - 2 * x);
-  }
-
-  function clear(color = REEL.bg) {
+  function clear(color = C.bg) {
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
-    ctx.fillRect(0, 0, REEL_WIDTH, REEL_HEIGHT);
-    ctx.strokeStyle = REEL.line;
-    ctx.globalAlpha = 0.32;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = C.line;
+    ctx.globalAlpha = 0.28;
     ctx.lineWidth = 1;
-    for (let x = 0; x <= REEL_WIDTH; x += 48) {
+    for (let x = 0; x <= W; x += 48) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, REEL_HEIGHT);
+      ctx.lineTo(x, H);
       ctx.stroke();
     }
-    for (let y = 0; y <= REEL_HEIGHT; y += 48) {
+    for (let y = 0; y <= H; y += 48) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(REEL_WIDTH, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = C.coral;
+    ctx.globalAlpha = 0.08;
+    for (let x = -H; x < W + H; x += 240) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + H, H);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
   }
 
   function font(size, family = '"Arial Black", Impact, sans-serif') {
@@ -131,447 +145,598 @@ function createReel(canvas, ctx) {
     ctx.textBaseline = "middle";
   }
 
-  function mono(size, color = REEL.muted) {
+  function mono(size, color = C.muted) {
     ctx.font = `700 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
     ctx.textBaseline = "middle";
     ctx.fillStyle = color;
   }
 
-  function label(text, x, y, size = 18, color = REEL.coral) {
+  function label(text, x, y, size = 16, color = C.coral) {
     mono(size, color);
     ctx.textAlign = "left";
     ctx.fillText(text, x, y);
   }
 
-  function centered(text, x, y, size, color, family) {
-    font(size, family);
-    ctx.fillStyle = color;
-    ctx.textAlign = "center";
-    ctx.fillText(text, x, y);
+  function heading(index, title, x = 90, y = 120) {
+    label(index, x, y, 15, C.coral);
+    font(74);
+    ctx.fillStyle = C.ink;
     ctx.textAlign = "left";
+    ctx.fillText(title, x, y + 74);
+  }
+
+  function panel(x, y, width, height, fill = C.panel) {
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+  }
+
+  function chip(text, x, y, color = C.blue) {
+    mono(14, color);
+    const width = ctx.measureText(text).width + 26;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y - 15, width, 30);
+    ctx.fillText(text, x + 13, y + 1);
+  }
+
+  function bar(text, value, fraction, x, y, width, color) {
+    mono(15, C.muted);
+    ctx.fillText(text, x, y);
+    ctx.fillStyle = C.line;
+    ctx.fillRect(x, y + 18, width, 10);
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y + 18, width * clamp01(fraction), 10);
+    mono(13, color);
+    ctx.textAlign = "right";
+    ctx.fillText(value, x + width, y);
+    ctx.textAlign = "left";
+  }
+
+  function code(lines, x, y, width, height) {
+    panel(x, y, width, height, "#0b0e12");
+    let lineY = y + 38;
+    for (const line of lines) {
+      const isComment = line.trim().startsWith("//");
+      mono(17, isComment ? C.muted : line.includes("#[") ? C.coral : C.ink);
+      ctx.fillText(line, x + 22, lineY);
+      lineY += 30;
+    }
+  }
+
+  function fileIcon(x, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, size * 0.72, size);
+    ctx.fillStyle = C.bg;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.72, y);
+    ctx.lineTo(x + size, y + size * 0.28);
+    ctx.lineTo(x + size * 0.72, y + size * 0.28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.72, y);
+    ctx.lineTo(x + size * 0.72, y + size * 0.28);
+    ctx.lineTo(x + size, y + size * 0.28);
+    ctx.closePath();
+    ctx.fill();
   }
 
   function drawIntro(local) {
     clear();
     const p = clamp01(local);
-    const radius = 4 + easeOutExpo(p) * 14;
-    const ring = 30 + easeOutCubic(p) * 230;
 
-    ctx.strokeStyle = REEL.line;
+    ctx.strokeStyle = C.blue;
+    ctx.globalAlpha = 0.22;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(1540, 370, 250 + Math.sin(p * Math.PI) * 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(1540, 370, 180, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    label("PRODUCT REEL // 00", 90, 100, 15, C.lime);
+    font(150);
+    ctx.fillStyle = C.ink;
+    ctx.fillText("RUSTWEB", 90, 280);
+    font(150);
+    ctx.fillStyle = C.coral;
+    ctx.fillText("ONE STACK.", 90, 430);
+    mono(24, C.muted);
+    ctx.fillText("API / FRONTEND / CERTS / PACKETS / GAMES", 94, 520);
+
+    const cards = [
+      ["210 750", "REQ/S", C.blue],
+      ["1 FILE", ".RWEB", C.lime],
+      ["56", "TESTS", C.coral],
+      ["4.7 GIB/S", "STREAMING", C.purple],
+    ];
+    for (const [index, [value, name, color]] of cards.entries()) {
+      const x = 90 + index * 445;
+      const y = 640 + Math.sin(p * Math.PI + index) * 6;
+      panel(x, y, 410, 170);
+      font(54);
+      ctx.fillStyle = color;
+      ctx.fillText(value, x + 24, y + 64);
+      mono(14, C.muted);
+      ctx.fillText(name, x + 26, y + 118);
+    }
+
+    // A dense "product bus" under the cards.
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(90, 900);
+    ctx.lineTo(W - 90, 900);
+    ctx.stroke();
+    for (let index = 0; index < 12; index += 1) {
+      const x = 90 + ((p * 1800 + index * 154) % 1740);
+      ctx.fillStyle = index % 3 === 0 ? C.coral : index % 3 === 1 ? C.blue : C.lime;
+      ctx.beginPath();
+      ctx.arc(x, 900, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+  }
+
+  function drawApi(local) {
+    clear();
+    const p = clamp01(local);
+    heading("01 // API W RUSTCIE", "FASTAPI DX. RUST CORE.");
+
+    font(190);
+    ctx.fillStyle = C.blue;
+    ctx.fillText("210 750", 90, 390);
+    mono(24, C.muted);
+    ctx.fillText("REQ/S", 96, 472);
+    mono(17, C.lime);
+    ctx.fillText("p99 0.70 MS  //  axum in the hot path", 98, 530);
+
+    const bars = [
+      ["RUSTWEB", "210 750", 1.0, C.blue],
+      ["PLAIN AXUM", "208 173", 0.99, C.lime],
+      ["FASTAPI", "14 000", 0.07, C.coral],
+    ];
+    for (const [index, [name, value, fraction, color]] of bars.entries()) {
+      bar(name, value, fraction * easeOutCubic(clamp01(p * 2)), 90, 630 + index * 76, 810, color);
+    }
+
+    code(
+      [
+        '#[get("/users/{id}")]',
+        "async fn get_user(",
+        "  ApiPath(id): ApiPath<u64>",
+        ") -> ApiResult<Json<User>> {",
+        "  Ok(Json(User { id, .. }))",
+        "}",
+      ],
+      1100,
+      230,
+      730,
+      340,
+    );
+
+    ctx.strokeStyle = C.coral;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(1100, 680);
+    ctx.lineTo(1830, 680);
+    ctx.stroke();
+    for (let index = 0; index < 8; index += 1) {
+      const x = 1100 + ((p * 900 + index * 100) % 730);
+      ctx.fillStyle = index % 2 === 0 ? C.coral : C.blue;
+      ctx.beginPath();
+      ctx.arc(x, 680, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    mono(14, C.muted);
+    ctx.fillText("POST /users  ->  201  ->  JSON", 1100, 730);
+
+  }
+
+  function drawMhtml(local) {
+    clear();
+    const p = clamp01(local);
+    heading("02 // MHTML -> .RWEB", "ONE FILE. ZERO RUNTIME.");
+
+    for (let index = 3; index > 0; index -= 1) {
+      panel(90 + index * 16, 260 + index * 16, 500, 300, C.panel2);
+    }
+    panel(90, 260, 500, 300);
+    fileIcon(130, 300, 100, C.coral);
+    font(72);
+    ctx.fillStyle = C.ink;
+    ctx.fillText(".rweb", 130, 470);
+    mono(15, C.muted);
+    ctx.fillText("site.rweb  //  144 KB", 132, 520);
+
+    const routes = ["/", "/about", "/bench", "/viewer", "/cert", "/game", "/deploy", "/baner", "/market", "/mogged"];
+    for (const [index, route] of routes.entries()) {
+      chip(route, 690 + (index % 3) * 190, 290 + Math.floor(index / 3) * 64, index % 2 === 0 ? C.lime : C.blue);
+    }
+
+    code(
+      [
+        "<h1>{{ title }}</h1>",
+        "@if show_badge {",
+        '  <span class="badge">{{ version }}</span>',
+        "}",
+        "@for feature in features {",
+        "  <article>{{ feature.title }}</article>",
+        "}",
+      ],
+      690,
+      520,
+      540,
+      260,
+    );
+
+    bar("ROUTES", "10", 1, 1280, 560, 450, C.lime);
+    bar("RUNTIME TEMPLATING", "0", 0, 1280, 630, 450, C.coral);
+    bar("FRONTEND SIZE", "144 KB", 0.64, 1280, 700, 450, C.blue);
+
+    ctx.globalAlpha = 0.35;
+    mono(22, C.ink);
+    for (let index = 0; index < 3; index += 1) {
+      ctx.fillText("MHTML / MCSS / MSCRIPT", 690 + Math.sin(p * Math.PI + index) * 20, 810 - index * 24);
+    }
+    ctx.globalAlpha = 1;
+
+  }
+
+  function drawCert(local) {
+    clear();
+    const p = clamp01(local);
+    heading("03 // CERT DB", "PUBLIC REGISTRY. SEALED KEYS.");
+
+    font(240);
+    ctx.fillStyle = C.lime;
+    ctx.fillText("0", 90, 390);
+    mono(24, C.ink);
+    ctx.fillText("PLAINTEXT UUID", 220, 390);
+    mono(16, C.muted);
+    ctx.fillText("commitment + fingerprint + encrypted payload", 96, 470);
+
+    panel(1050, 230, 780, 560, C.panel);
+    label("PUBLIC ENTRY", 1080, 270, 14, C.coral);
+    const rows = [
+      ["APP", "RUSTWEB"],
+      ["FINGERPRINT", "386BB8A5A62F36A8..."],
+      ["UUID COMMITMENT", "C7E55EE139AB6D5D..."],
+      ["ENCRYPTED KEY", "AES-256-GCM // SEALED"],
+      ["STATUS", "VERIFIED"],
+    ];
+    rows.forEach(([name, value], index) => {
+      const y = 340 + index * 78;
+      mono(12, C.muted);
+      ctx.fillText(name, 1080, y);
+      mono(17, index === 4 ? C.lime : C.ink);
+      ctx.fillText(value, 1080, y + 24);
+    });
+
+    ctx.strokeStyle = C.coral;
     ctx.globalAlpha = 0.7;
-    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(REEL_WIDTH / 2 - 220, REEL_HEIGHT / 2);
-    ctx.lineTo(REEL_WIDTH / 2 + 220, REEL_HEIGHT / 2);
-    ctx.moveTo(REEL_WIDTH / 2, REEL_HEIGHT / 2 - 220);
-    ctx.lineTo(REEL_WIDTH / 2, REEL_HEIGHT / 2 + 220);
+    ctx.moveTo(1080, 650 + Math.sin(p * Math.PI * 2) * 70);
+    ctx.lineTo(1800, 650 + Math.sin(p * Math.PI * 2) * 70);
     ctx.stroke();
+    ctx.globalAlpha = 1;
 
-    ctx.globalAlpha = 0.9;
-    ctx.strokeStyle = REEL.blue;
-    ctx.lineWidth = 2;
+    chip("AES-256-GCM", 90, 580, C.blue);
+    chip("PBKDF2", 330, 580, C.lime);
+    chip("ECDSA P-256", 500, 580, C.coral);
+
+    // A sealed lock shape.
+    ctx.strokeStyle = C.lime;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(96, 680, 120, 100);
     ctx.beginPath();
-    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, ring, 0, Math.PI * 2);
+    ctx.arc(156, 680, 42, Math.PI, 0);
     ctx.stroke();
+    ctx.fillStyle = C.lime;
+    ctx.fillRect(150, 720, 12, 30);
 
-    ctx.fillStyle = REEL.coral;
+  }
+
+  function drawTcps(local) {
+    clear();
+    const p = clamp01(local);
+    heading("04 // TCPs", "FILES + UDP PLAYERS.");
+
+    font(130);
+    ctx.fillStyle = C.ink;
+    ctx.fillText("PER-USER", 90, 350);
+    ctx.fillStyle = C.blue;
+    ctx.fillText("SYNC.", 90, 470);
+    mono(18, C.muted);
+    ctx.fillText("manifest / missing files / bandwidth", 94, 540);
+
+    const files = ["players.json", "assets.pak", "world.bin", "config.json"];
+    for (const [index, file] of files.entries()) {
+      panel(90, 620 + index * 64, 520, 52, index === 2 ? C.panel2 : C.panel);
+      mono(16, index === 2 ? C.lime : C.muted);
+      ctx.fillText(index === 2 ? "MISSING ->" : "OK", 110, 647 + index * 64);
+      mono(16, C.ink);
+      ctx.fillText(file, 250, 647 + index * 64);
+    }
+
+    // File packets moving into the player on the right.
+    panel(900, 250, 900, 560, C.panel);
+    label("UDP PLAYER PLANE", 930, 290, 14, C.coral);
+    ctx.strokeStyle = C.line;
     ctx.beginPath();
-    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, radius, 0, Math.PI * 2);
+    ctx.moveTo(950, 430);
+    ctx.lineTo(1750, 430);
+    ctx.stroke();
+    for (let index = 0; index < 9; index += 1) {
+      const x = 950 + ((p * 900 + index * 90) % 790);
+      ctx.fillStyle = index % 2 === 0 ? C.lime : C.blue;
+      ctx.beginPath();
+      ctx.arc(x, 430, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = C.coral;
+    ctx.fillRect(1680, 370, 80, 120);
+    mono(13, C.bg);
+    ctx.fillText("GAME", 1698, 430);
+
+    bar("PLAYER BANDWIDTH", "1 MIB/S", 0.72, 930, 560, 810, C.lime);
+    bar("MAX APPS / USER", "2", 1, 930, 650, 810, C.coral);
+
+  }
+
+  function drawUc(local) {
+    clear();
+    const p = clamp01(local);
+    heading("05 // UC PACKS", "SMALLER. STILL MACHINE-READABLE.");
+
+    font(180);
+    ctx.fillStyle = C.coral;
+    ctx.fillText("4 KB", 90, 350);
+    mono(24, C.muted);
+    ctx.fillText("PER PACKET // 4 MIB PER PACK", 96, 430);
+
+    const compression = easeOutCubic(clamp01(p * 1.5));
+    for (let index = 0; index < 16; index += 1) {
+      const col = index % 4;
+      const row = Math.floor(index / 4);
+      const fromX = 110 + col * 74;
+      const fromY = 560 + row * 74;
+      const toX = 1130 + col * 18;
+      const toY = 560 + row * 18;
+      const x = fromX + (toX - fromX) * compression;
+      const y = fromY + (toY - fromY) * compression;
+      ctx.fillStyle = index % 3 === 0 ? C.blue : index % 3 === 1 ? C.lime : C.coral;
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x, y, 46, 46);
+    }
+    ctx.globalAlpha = 1;
+
+    panel(1080, 500, 380, 300, C.panel);
+    mono(14, C.muted);
+    ctx.fillText("PACKED", 1110, 540);
+    font(72);
+    ctx.fillStyle = C.lime;
+    ctx.fillText("0.038", 1110, 620);
+    mono(14, C.muted);
+    ctx.fillText("RATIO", 1112, 680);
+    chip("ZSTD", 1500, 570, C.blue);
+    chip("CRC32", 1500, 620, C.lime);
+
+    mono(18, C.ink);
+    ctx.fillText("25 925 B", 110, 900);
+    ctx.fillStyle = C.coral;
+    ctx.fillRect(270, 893, 220 * (1 - compression) + 4, 8);
+    mono(18, C.lime);
+    ctx.fillText("-> 995 B", 520, 900);
+
+  }
+
+  function drawGame(local) {
+    clear();
+    const p = clamp01(local);
+    heading("06 // GAME LAB", "9 SYSTEMS. 4096 B PER PACKET.");
+
+    panel(90, 280, 980, 560, "#0b0e12");
+    label("PACKET ARENA", 120, 320, 14, C.lime);
+    for (let x = 120; x < 1040; x += 60) {
+      ctx.strokeStyle = C.line;
+      ctx.globalAlpha = 0.45;
+      ctx.beginPath();
+      ctx.moveTo(x, 350);
+      ctx.lineTo(x, 800);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    const playerX = 420 + Math.sin(p * Math.PI * 2) * 160;
+    const playerY = 580 + Math.cos(p * Math.PI * 2) * 120;
+    ctx.fillStyle = C.blue;
+    ctx.beginPath();
+    ctx.arc(playerX, playerY, 22, 0, Math.PI * 2);
     ctx.fill();
-
-    label("RUSTWEB // MOTION STUDY", 90, 90, 16, REEL.lime);
-    mono(13, REEL.muted);
-    ctx.fillText("A SINGLE DOT. A WHOLE SYSTEM.", 90, 118);
-    mono(13, REEL.muted);
-    ctx.textAlign = "right";
-    ctx.fillText("00:00 // INTRO", REEL_WIDTH - 90, 90);
-    ctx.textAlign = "left";
-
-    ctx.globalAlpha = 0.3;
-    ctx.strokeStyle = REEL.ink;
-    ctx.beginPath();
-    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, 300 + Math.sin(p * Math.PI) * 20, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  function drawTitle(local) {
-    clear();
-    const p = clamp01(local);
-    const scale = 1.22 - easeOutExpo(p) * 0.22;
-    const alpha = clamp01(p * 4);
-
-    ctx.save();
-    ctx.translate(REEL_WIDTH / 2, REEL_HEIGHT / 2 - 30);
-    ctx.scale(scale, scale);
-    ctx.globalAlpha = alpha;
-    centered("RUSTWEB", 0, 0, 238, REEL.ink);
-    ctx.restore();
-
-    ctx.save();
-    ctx.translate(REEL_WIDTH - 108, REEL_HEIGHT / 2);
-    ctx.rotate(-Math.PI / 2);
-    mono(16, REEL.coral);
-    ctx.textAlign = "center";
-    ctx.fillText("MOTION DESIGN // PROCEDURAL", 0, 0);
-    ctx.restore();
-
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = REEL.coral;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(300, REEL_HEIGHT / 2 + 118);
-    ctx.lineTo(REEL_WIDTH - 300, REEL_HEIGHT / 2 + 118);
-    ctx.stroke();
-    mono(15, REEL.muted);
-    ctx.fillText("NO KEYFRAMES. JUST MATH.", 310, REEL_HEIGHT / 2 + 150);
-    ctx.globalAlpha = 1;
-  }
-
-  function drawKinetic(local) {
-    ctx.fillStyle = REEL.coral;
-    ctx.fillRect(0, 0, REEL_WIDTH, REEL_HEIGHT);
-
-    ctx.save();
-    ctx.globalAlpha = 0.16;
-    mono(24, REEL.bg);
-    for (let y = 54; y < REEL_HEIGHT; y += 54) {
-      for (let x = -240; x < REEL_WIDTH + 240; x += 560) {
-        ctx.fillText("// SHAPE / FORM / MOTION /", x + ((y * 3) % 180), y);
-      }
-    }
-    ctx.restore();
-
-    const p = clamp01(local);
-    const bounce = easeOutBack(clamp01(p * 1.45));
-    const shapes = [
-      { x: 390, y: 500, size: 150, color: REEL.ink, kind: "circle" },
-      { x: 960, y: 500, size: 150, color: REEL.bg, kind: "square" },
-      { x: 1530, y: 500, size: 150, color: REEL.blue, kind: "triangle" },
-    ];
-
-    for (const [index, shape] of shapes.entries()) {
-      const scale = 0.45 + bounce * 0.55;
-      const drift = Math.sin(p * Math.PI + index) * 20;
-      ctx.save();
-      ctx.translate(shape.x, shape.y + drift);
-      ctx.rotate((p * Math.PI * 2 * (index % 2 === 0 ? 1 : -1)) / 2);
-      ctx.scale(scale, scale);
-      ctx.fillStyle = shape.color;
-      ctx.strokeStyle = REEL.bg;
-      ctx.lineWidth = 8;
-      if (shape.kind === "circle") {
-        ctx.beginPath();
-        ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      } else if (shape.kind === "square") {
-        ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
-        ctx.strokeRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(0, -shape.size / 2);
-        ctx.lineTo(shape.size / 2, shape.size / 2);
-        ctx.lineTo(-shape.size / 2, shape.size / 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    font(72);
-    ctx.fillStyle = REEL.ink;
-    ctx.textAlign = "center";
-    ctx.fillText("SHAPE / FORM / MOTION", REEL_WIDTH / 2, 150);
-    ctx.textAlign = "left";
-    mono(15, REEL.bg);
-    ctx.fillText("02 // KINETIC FORM GRID", 90, 100);
-  }
-
-  function drawEasing(local) {
-    clear();
-    font(72);
-    ctx.fillStyle = REEL.ink;
-    ctx.fillText("EASING IS A FEELING.", 90, 120);
-    mono(15, REEL.coral);
-    ctx.fillText("04 // TIMING / CURVES / NODES", 94, 160);
-
-    const tracks = [
-      { name: "LINEAR", fn: (v) => v, color: REEL.lime },
-      { name: "CUBIC.INOUT", fn: easeInOutCubic, color: REEL.blue },
-      { name: "BACK.OUT", fn: easeOutBack, color: REEL.coral },
-      { name: "ELASTIC.OUT", fn: easeOutElastic, color: REEL.gold || REEL.lime },
-    ];
-
-    const p = clamp01(local);
-    for (const [index, track] of tracks.entries()) {
-      const y = 310 + index * 145;
-      const startX = 430;
-      const width = 1250;
-      const progress = (p * 1.65 + index * 0.12) % 1;
-      const x = startX + track.fn(progress) * width;
-
-      mono(16, track.color);
-      ctx.fillText(track.name, 120, y);
-      ctx.strokeStyle = REEL.line;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(startX, y);
-      ctx.lineTo(startX + width, y);
-      ctx.stroke();
-
-      ctx.strokeStyle = track.color;
-      ctx.globalAlpha = 0.28;
-      for (let tick = 0; tick <= 10; tick += 1) {
-        const tickX = startX + (tick / 10) * width;
-        ctx.beginPath();
-        ctx.moveTo(tickX, y - 8);
-        ctx.lineTo(tickX, y + 8);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-
-      ctx.fillStyle = track.color;
-      ctx.beginPath();
-      ctx.arc(x, y, 12, 0, Math.PI * 2);
-      ctx.fill();
-
-      mono(11, REEL.muted);
-      ctx.fillText(`t=${progress.toFixed(2)}`, startX + width + 26, y);
-    }
-
-    mono(14, REEL.muted);
-    ctx.fillText("p = f(t)  //  one variable, no timeline", 120, 930);
-  }
-
-  function drawProcedural(local) {
-    clear();
-    const p = clamp01(local);
-    const morph = smoothstep(0, 0.7, p);
-    const spin = p * Math.PI * 1.7;
-    const cols = 54;
-    const rows = 30;
-
-    for (let row = 0; row < rows; row += 1) {
-      for (let col = 0; col < cols; col += 1) {
-        const u = (col / (cols - 1)) * 2 - 1;
-        const v = (row / (rows - 1)) * 2 - 1;
-        const planeX = u * 760;
-        const planeY = v * 360;
-        const planeZ = Math.sin(u * 4 + p * 6) * 80 + Math.cos(v * 5 + p * 3) * 50;
-
-        const theta = u * Math.PI;
-        const phi = v * Math.PI * 0.5;
-        const radius = 320;
-        const sphereX = Math.sin(theta) * Math.cos(phi) * radius;
-        const sphereY = Math.cos(theta) * radius;
-        const sphereZ = Math.sin(theta) * Math.sin(phi) * radius;
-
-        const x = planeX + (sphereX - planeX) * morph;
-        const y = planeY + (sphereY - planeY) * morph;
-        const z = planeZ + (sphereZ - planeZ) * morph;
-        const rotatedX = x * Math.cos(spin) - z * Math.sin(spin);
-        const rotatedZ = x * Math.sin(spin) + z * Math.cos(spin);
-        const perspective = 900 / (900 + rotatedZ + 420);
-        const screenX = REEL_WIDTH / 2 + rotatedX * perspective;
-        const screenY = REEL_HEIGHT / 2 + y * perspective;
-
-        const light = clamp01(0.5 + rotatedZ / 900);
-        ctx.globalAlpha = 0.22 + light * 0.78;
-        ctx.fillStyle = light > 0.62 ? REEL.lime : light > 0.36 ? REEL.blue : REEL.purple;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, 1.8 + light * 2.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.globalAlpha = 1;
-
-    ctx.strokeStyle = REEL.coral;
-    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = C.coral;
+    ctx.fillRect(780, 470, 38, 38);
+    ctx.strokeStyle = C.lime;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, 360 + Math.sin(p * Math.PI) * 18, 0, Math.PI * 2);
+    ctx.moveTo(playerX, playerY);
+    ctx.lineTo(780, 470);
     ctx.stroke();
-    ctx.globalAlpha = 1;
 
+    const systems = [
+      "/game_chat",
+      "/player_packets",
+      "/game_state",
+      "/inventory",
+      "/trade",
+      "/file_sync",
+      "/leaderboard",
+      "/metrics",
+      "/emotes",
+    ];
+    systems.forEach((system, index) => {
+      const y = 300 + index * 56;
+      chip(system, 1130, y, index === Math.floor(p * 9) ? C.coral : C.blue);
+    });
+
+    mono(16, C.muted);
+    ctx.fillText("MAX PACKET 4096 B  //  LOGS ON", 120, 800);
+    bar("SYSTEMS", "9", 1, 1130, 820, 610, C.lime);
+
+  }
+
+  function drawDeploy(local) {
+    clear();
+    const p = clamp01(local);
+    heading("07 // DEPLOY", "ONE COMMAND. ANYWHERE.");
+
+    font(150);
+    ctx.fillStyle = C.ink;
+    ctx.fillText("DOCKER", 90, 330);
+    ctx.fillStyle = C.lime;
+    ctx.fillText("UP.", 90, 450);
+
+    code(
+      [
+        "$ docker compose up --build",
+        "site  :3000",
+        "tcps  :4100 / udp :4101",
+        "uc    :4200",
+        "",
+        "$ ./run.sh",
+        "https://127.0.0.1:3000/",
+      ],
+      90,
+      540,
+      900,
+      420,
+    );
+
+    // Containers/stack blocks on the right.
+    for (let index = 0; index < 3; index += 1) {
+      const x = 1140 + index * 30;
+      const y = 360 + index * 70;
+      panel(x, y, 180, 70, index === 1 ? C.panel2 : C.panel);
+      mono(12, index === 1 ? C.lime : C.muted);
+      ctx.fillText(["RUSTWEB", "TCPs", "UC"][index], x + 18, y + 30);
+      ctx.fillStyle = index === 1 ? C.lime : C.blue;
+      ctx.fillRect(x + 18, y + 46, 120 * (0.4 + p * 0.6), 6);
+    }
+
+    ctx.fillStyle = C.coral;
+    ctx.fillRect(90, 970 - 8, 8, 18);
+    mono(14, C.muted);
+    ctx.fillText("TLS AT THE PROXY // NO SECRETS IN THE IMAGE", 120, 970);
+
+  }
+
+  function drawBench(local) {
+    clear();
+    const p = clamp01(local);
+    heading("08 // BENCH", "FAST IS A FEATURE.");
+
+    font(180);
+    ctx.fillStyle = C.lime;
+    ctx.fillText("4.7", 90, 370);
+    mono(28, C.ink);
+    ctx.fillText("GIB/S STREAMING", 320, 370);
+    mono(17, C.muted);
+    ctx.fillText("loopback // 64 MiB per stream // no buffering", 96, 440);
+
+    bar("RUSTWEB", "4 672 MIB/S", 1, 90, 560, 1000, C.lime);
+    bar("PLAIN AXUM", "4 692 MIB/S", 0.99, 90, 650, 1000, C.blue);
+    bar("FASTAPI", "14K REQ/S", 0.08, 90, 740, 1000, C.coral);
+
+    panel(1220, 260, 610, 520, C.panel);
+    label("REQUEST PATH", 1250, 300, 14, C.coral);
     font(64);
-    ctx.fillStyle = REEL.ink;
-    ctx.fillText("SINE FIELD -> SPHERE", 90, 120);
-    mono(14, REEL.blue);
-    ctx.fillText("04 // PROCEDURAL SYSTEMS / x = sin(theta)*cos(phi), y = cos(theta), z = sin(theta)*sin(phi)", 94, 158);
-  }
+    ctx.fillStyle = C.blue;
+    ctx.fillText("210 750", 1250, 380);
+    mono(14, C.muted);
+    ctx.fillText("REQ/S", 1252, 430);
+    font(48);
+    ctx.fillStyle = C.ink;
+    ctx.fillText("0.70 MS", 1250, 510);
+    mono(14, C.muted);
+    ctx.fillText("P99", 1252, 550);
+    font(48);
+    ctx.fillStyle = C.lime;
+    ctx.fillText("6.6 MB", 1250, 640);
+    mono(14, C.muted);
+    ctx.fillText("RSS", 1252, 680);
 
-  function drawPanel(x, y, width, height, title, draw) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, width, height);
-    ctx.clip();
-    ctx.fillStyle = REEL.panel;
-    ctx.fillRect(x, y, width, height);
-    draw(x, y, width, height);
-    ctx.restore();
-
-    ctx.strokeStyle = REEL.line;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, width, height);
-    mono(12, REEL.muted);
-    ctx.fillText(title, x + 16, y + 22);
-  }
-
-  function drawCore(local) {
-    clear();
-    const p = clamp01(local);
-    const gap = 34;
-    const width = 790;
-    const height = 330;
-    const left = 118;
-    const top = 190;
-
-    drawPanel(left, top, width, height, "01 // ROTATE", (x, y, w, h) => {
-      const cx = x + w / 2;
-      const cy = y + h / 2;
-      for (let ring = 60; ring < 230; ring += 38) {
-        ctx.strokeStyle = ring % 76 === 0 ? REEL.blue : REEL.line;
-        ctx.globalAlpha = 0.65;
-        ctx.beginPath();
-        ctx.arc(cx, cy, ring, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      const angle = p * Math.PI * 5;
-      ctx.strokeStyle = REEL.lime;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(angle) * 220, cy + Math.sin(angle) * 220);
-      ctx.stroke();
-      ctx.fillStyle = REEL.lime;
-      ctx.beginPath();
-      ctx.arc(cx + Math.cos(angle) * 220, cy + Math.sin(angle) * 220, 8, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    drawPanel(left + width + gap, top, width, height, "02 // SQUASH", (x, y, w, h) => {
-      const cx = x + w / 2;
-      const bounce = Math.abs(Math.sin(p * Math.PI * 3));
-      const floor = y + h - 70;
-      const cy = floor - bounce * 170;
-      const squash = 1 + (1 - bounce) * 0.55;
-      ctx.fillStyle = REEL.coral;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 58 * squash, 58 / squash, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = REEL.line;
-      ctx.beginPath();
-      ctx.moveTo(x + 60, floor + 30);
-      ctx.lineTo(x + w - 60, floor + 30);
-      ctx.stroke();
-    });
-
-    drawPanel(left, top + height + gap, width, height, "03 // OFFSET", (x, y, w, h) => {
-      ctx.save();
-      ctx.translate(x + w / 2, y + h / 2);
-      ctx.rotate(p * Math.PI);
-      for (let index = 0; index < 8; index += 1) {
-        const size = 250 - index * 27;
-        ctx.strokeStyle = index % 2 === 0 ? REEL.purple : REEL.blue;
-        ctx.globalAlpha = 0.75;
-        ctx.strokeRect(-size / 2 + index * 7, -size / 2 + index * 7, size, size);
-      }
-      ctx.restore();
-      ctx.globalAlpha = 1;
-    });
-
-    drawPanel(left + width + gap, top + height + gap, width, height, "04 // WAVE", (x, y, w, h) => {
-      const center = y + h / 2;
-      ctx.strokeStyle = REEL.lime;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for (let point = 0; point <= 100; point += 1) {
-        const px = x + 40 + (point / 100) * (w - 80);
-        const py = center + Math.sin(point * 0.24 + p * Math.PI * 4) * 70;
-        if (point === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-    });
-
-    font(96);
-    ctx.fillStyle = REEL.ink;
-    ctx.textAlign = "center";
-    ctx.fillText("NO KEYFRAMES.", REEL_WIDTH / 2, REEL_HEIGHT / 2 + 14);
-    ctx.fillStyle = REEL.coral;
-    ctx.fillText("JUST MATH.", REEL_WIDTH / 2, REEL_HEIGHT / 2 + 108);
-    ctx.textAlign = "left";
   }
 
   function drawOutro(local) {
     clear();
     const p = clamp01(local);
-    const alpha = easeOutExpo(p);
+    const alpha = 0.55 + 0.45 * easeOutExpo(p);
     ctx.globalAlpha = alpha;
 
-    font(112);
-    ctx.fillStyle = REEL.ink;
-    ctx.textAlign = "center";
-    ctx.fillText("EVERY FRAME", REEL_WIDTH / 2, 330);
-    ctx.fillStyle = REEL.coral;
-    ctx.fillText("IS CODE.", REEL_WIDTH / 2, 456);
+    label("09 // OUTRO", 90, 120, 15, C.coral);
+    font(150);
+    ctx.fillStyle = C.ink;
+    ctx.fillText("POSTAW", 90, 300);
+    ctx.fillStyle = C.coral;
+    ctx.fillText("U SIEBIE.", 90, 450);
+    mono(24, C.ink);
+    ctx.fillText("JEDEN PLIK. CALA STRONA. ZERO RUNTIME TEMPLATING.", 94, 540);
 
-    ctx.strokeStyle = REEL.blue;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(250, 570);
-    ctx.lineTo(REEL_WIDTH - 250, 570);
-    ctx.stroke();
+    panel(90, 640, 1740, 150, C.panel);
+    mono(20, C.lime);
+    ctx.fillText("gabeczkag.github.io/rustweb", 120, 700);
+    mono(16, C.muted);
+    ctx.fillText("Docker / VPS / GitHub Pages / local HTTPS", 120, 746);
 
-    mono(20, REEL.muted);
-    ctx.fillText("900 FRAMES  //  60 FPS  //  0 KEYFRAMES", REEL_WIDTH / 2, 640);
-    mono(14, REEL.lime);
-    ctx.fillText("RUSTWEB // MOTION REEL // 00:15", REEL_WIDTH / 2, 710);
+    chip("10 ROUTES", 1420, 680, C.blue);
+    chip("56 TESTS", 1600, 680, C.lime);
+    chip("1 BINARKA", 1760, 680, C.coral);
 
-    ctx.fillStyle = REEL.coral;
-    ctx.beginPath();
-    ctx.arc(REEL_WIDTH / 2, 810 + Math.sin(p * Math.PI) * 8, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.textAlign = "left";
     ctx.globalAlpha = 1;
   }
 
   function sceneAt(value) {
     let index = 0;
-    for (let current = 0; current < REEL_SCENES.length; current += 1) {
-      if (value >= REEL_SCENES[current].start) index = current;
+    for (let current = 0; current < SCENES.length; current += 1) {
+      if (value >= SCENES[current].start) index = current;
     }
     return index;
   }
 
   function render(value) {
     const scene = sceneAt(value);
-    const start = REEL_SCENES[scene].start;
-    const end = scene + 1 < REEL_SCENES.length ? REEL_SCENES[scene + 1].start : REEL_DURATION;
+    const start = SCENES[scene].start;
+    const end = scene + 1 < SCENES.length ? SCENES[scene + 1].start : DURATION;
     const local = (value - start) / (end - start);
 
     if (scene === 0) drawIntro(local);
-    else if (scene === 1) drawTitle(local);
-    else if (scene === 2) drawKinetic(local);
-    else if (scene === 3) drawEasing(local);
-    else if (scene === 4) drawProcedural(local);
-    else if (scene === 5) drawCore(local);
+    else if (scene === 1) drawApi(local);
+    else if (scene === 2) drawMhtml(local);
+    else if (scene === 3) drawCert(local);
+    else if (scene === 4) drawTcps(local);
+    else if (scene === 5) drawUc(local);
+    else if (scene === 6) drawGame(local);
+    else if (scene === 7) drawDeploy(local);
+    else if (scene === 8) drawBench(local);
     else drawOutro(local);
 
-    const frame = Math.min(REEL_FRAMES - 1, Math.floor(value * REEL_FPS));
+    const frame = Math.min(FRAMES - 1, Math.floor(value * FPS));
     const seconds = Math.floor(value);
-    const frameInSecond = frame % REEL_FPS;
+    const frameInSecond = frame % FPS;
     if (frameNode) frameNode.textContent = String(frame).padStart(3, "0");
     if (frameHud) frameHud.textContent = String(frame).padStart(3, "0");
     if (timecode) {
       timecode.textContent = `00:00:${String(seconds).padStart(2, "0")}:${String(frameInSecond).padStart(2, "0")}`;
     }
-    if (sceneHud) sceneHud.textContent = REEL_SCENES[scene].label;
-    if (playhead) playhead.style.setProperty("--playhead", `${(value / REEL_DURATION) * 100}%`);
+    if (sceneHud) sceneHud.textContent = SCENES[scene].label;
+    if (liveTicker) liveTicker.textContent = `RUSTWEB // ${TICKER[Math.floor(value * 2) % TICKER.length]}`;
+    if (playhead) playhead.style.setProperty("--playhead", `${(value / DURATION) * 100}%`);
     if (scrub && document.activeElement !== scrub) scrub.value = String(frame);
     if (timeline) {
       for (const item of timeline.querySelectorAll("[data-scene]")) {
@@ -597,7 +762,7 @@ function createReel(canvas, ctx) {
 
     const delta = previous ? Math.min(0.1, (now - previous) / 1000) : 0;
     previous = now;
-    time = (time + delta) % REEL_DURATION;
+    time = (time + delta) % DURATION;
     render(time);
     startLoop();
   }
@@ -628,7 +793,7 @@ function createReel(canvas, ctx) {
     } catch {}
   });
   scrub?.addEventListener("input", () => {
-    time = Number(scrub.value) / REEL_FPS;
+    time = Number(scrub.value) / FPS;
     render(time);
   });
   canvas.addEventListener("click", () => setPlaying(!playing));

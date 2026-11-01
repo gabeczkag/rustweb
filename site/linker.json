@@ -86,8 +86,8 @@
     {
       "route": "/mogged",
       "file": "pages/mogged.mhtml",
-      "title": "Mogged Motion Reel — RustWeb",
-      "description": "15 sekund proceduralnego motion designu: 900 klatek, 60 FPS, zero keyframes."
+      "title": "Product Motion Reel — RustWeb",
+      "description": "15 sekund produktowego motion designu RustWeb: API, MHTML, cert DB, TCPs, UC, Game Lab, deploy i benchmark."
     }
   ],
   "data": {

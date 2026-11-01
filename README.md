@@ -127,8 +127,8 @@ Invalid input returns the FastAPI shape:
   copyable commands.
 - `/baner` and `/market`: fast motion marketing pages with 500 ms proof/card
   rotation, scene palettes, tickers, filters, pause, and reduced-motion support.
-- `/mogged`: a 15-second procedural canvas reel with 900 frames, easing curves,
-  sine-field/sphere morph, four motion panels, HUD, scrubber, and frame counter.
+- `/mogged`: a 15-second product motion reel with 900 frames, API, MHTML, cert
+  DB, TCPs, UC, Game Lab, deploy and bench scenes, HUD, scrubber, and frame counter.
 
 ## How it works
 
@@ -252,7 +252,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **137 KiB** (~39 KB gzipped on Pages) and contains ASCII only
+compiles to about **141 KiB** (~40 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.

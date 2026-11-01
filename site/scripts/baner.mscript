@@ -12,7 +12,7 @@ const proofs = [
   {
     tag: "SIZE",
     scene: "grid",
-    value: "140 KB",
+    value: "144 KB",
     label: "CALY FRONTEND",
     body: "Strona, style, skrypty i routing w jednym pliku .rweb.",
     link: "OTWORZ VIEWER",

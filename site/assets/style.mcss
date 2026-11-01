@@ -2682,3 +2682,28 @@ button.badge {
     animation: none;
   }
 }
+
+.reel-live-ticker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 2px solid var(--line);
+  background: var(--reel-coral);
+  color: #0f1115;
+  box-shadow: 4px 4px 0 var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reel-live-ticker::before {
+  content: "LIVE";
+  padding: 3px 6px;
+  background: #0f1115;
+  color: var(--reel-lime);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
