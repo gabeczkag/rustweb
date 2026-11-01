@@ -8,6 +8,7 @@
     <a href="/about" data-nav="about">02 MHTML</a>
     <a href="/bench" data-nav="bench">03 BENCH</a>
     <a href="/viewer" data-nav="viewer">04 VIEWER</a>
+    <a href="/cert" data-nav="cert">05 CERT</a>
   </nav>
   <span class="status"><i></i> BYRUST/1</span>
 </div>
@@ -16,5 +17,5 @@
 
 <footer class="footer">
   <span>RUSTWEB {{ site.version }} // MHTML + .RWEB // <span id="year"></span></span>
-  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a></span>
+  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a><a href="/cert">CERT</a></span>
 </footer>

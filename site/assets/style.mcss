@@ -838,3 +838,113 @@ tr:nth-child(3) .bar span {
   max-height: 520px;
   overflow: auto;
 }
+
+.cert-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cert-field {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cert-field input,
+.cert-secret {
+  width: 100%;
+  padding: 12px;
+  border: 3px solid var(--line);
+  background: #03050b;
+  box-shadow: 4px 4px 0 var(--line);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  outline: none;
+}
+
+.cert-field input:focus,
+.cert-secret:focus {
+  border-color: var(--sky);
+}
+
+.cert-secret {
+  min-height: 48px;
+  resize: vertical;
+}
+
+#cert-password {
+  min-height: 96px;
+  color: var(--gold);
+  font-size: 11px;
+  word-break: break-all;
+}
+
+#cert-check-entry {
+  min-height: 130px;
+}
+
+#cert-entry {
+  display: block;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.cert-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cert-item {
+  padding: 12px;
+  border: 3px solid var(--line);
+  background: var(--panel);
+  box-shadow: 5px 5px 0 var(--line);
+}
+
+.cert-item strong {
+  display: block;
+  font-family: "Arial Black", Impact, sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.cert-item small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  word-break: break-all;
+}
+
+.cert-item .actions {
+  margin-top: 10px;
+}
+
+.cert-item .badge,
+button.badge {
+  cursor: pointer;
+}
+
+#cert-result {
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cert-valid {
+  color: var(--green) !important;
+}
+
+.cert-invalid {
+  color: var(--red) !important;
+}

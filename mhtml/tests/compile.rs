@@ -69,7 +69,9 @@ fn compiles_pages_styles_scripts_and_assets_into_one_html_file() {
     assert!(html.contains("<h1>Ada</h1>"));
     assert!(html.contains("data:image/svg+xml;base64,"));
     assert!(html.contains("body{color:red}"));
-    assert!(html.contains("console.log('hello');"));
+    // esbuild may rewrite quotes when it is installed; assert on tokens instead.
+    assert!(html.contains("console.log"));
+    assert!(html.contains("hello"));
     assert!(html.contains("rweb:rendered"));
     assert!(html.contains("<meta name=\"byrust\""));
     assert!(html.contains("id=\"byrust-config\""));

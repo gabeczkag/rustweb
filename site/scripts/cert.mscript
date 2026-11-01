@@ -1,0 +1,269 @@
+import { registerApp, checkEntry, selfTest } from "./cert-crypto.mjs";
+
+const STORAGE = "byrust.certifications.v1";
+let lastRegistration = null;
+
+function el(id) {
+  return document.getElementById(id);
+}
+
+function readSeed() {
+  const node = el("cert-seed");
+  if (!node) return [];
+
+  try {
+    return JSON.parse(node.value || node.textContent || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function readLocal() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveLocal(entries) {
+  try {
+    localStorage.setItem(STORAGE, JSON.stringify(entries));
+  } catch {}
+}
+
+function allEntries() {
+  const entries = new Map();
+
+  for (const entry of [...readSeed(), ...readLocal()]) {
+    if (entry?.key_fingerprint) {
+      entries.set(entry.key_fingerprint, entry);
+    }
+  }
+
+  return Array.from(entries.values());
+}
+
+function addLocal(entry) {
+  const entries = readLocal();
+  if (!entries.some((item) => item.key_fingerprint === entry.key_fingerprint)) {
+    entries.push(entry);
+    saveLocal(entries);
+  }
+}
+
+function formatEntry(entry) {
+  return JSON.stringify(entry, null, 2);
+}
+
+function download(name, text) {
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = name;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setResult(text, valid) {
+  const node = el("cert-result");
+  if (!node) return;
+  node.textContent = text;
+  node.classList.toggle("cert-valid", valid);
+  node.classList.toggle("cert-invalid", !valid);
+}
+
+function showRegisterError(message) {
+  const node = el("cert-register-error");
+  if (node) node.textContent = message;
+}
+
+function renderDb() {
+  const container = el("cert-db");
+  if (!container) return;
+
+  container.replaceChildren();
+  const entries = allEntries();
+  const count = el("cert-count");
+  if (count) count.textContent = `${entries.length} ENTRIES // PUBLIC`;
+
+  if (!entries.length) {
+    const note = document.createElement("div");
+    note.className = "note";
+    note.textContent = "Brak wpisow. Zarejestruj pierwsza aplikacje.";
+    container.append(note);
+    return;
+  }
+
+  for (const entry of entries) {
+    const item = document.createElement("article");
+    item.className = "cert-item";
+
+    const title = document.createElement("strong");
+    title.textContent = entry.app || "APP";
+
+    const meta = document.createElement("small");
+    meta.textContent = `${entry.status || "SEALED"} // ${entry.key_fingerprint || ""}`;
+
+    const created = document.createElement("small");
+    created.textContent = entry.created || "";
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const check = document.createElement("button");
+    check.type = "button";
+    check.className = "badge";
+    check.textContent = "SPRAWDZ";
+    check.addEventListener("click", () => {
+      const area = el("cert-check-entry");
+      if (area) {
+        area.value = formatEntry(entry);
+        area.scrollIntoView({ behavior: "smooth", block: "center" });
+        el("cert-check-password")?.focus();
+      }
+    });
+
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "badge";
+    copyButton.textContent = "KOPIUJ";
+    copyButton.addEventListener("click", async () => {
+      await copy(formatEntry(entry));
+      copyButton.textContent = "SKOPIOWANO";
+    });
+
+    actions.append(check, copyButton);
+    item.append(title, meta, created, actions);
+    container.append(item);
+  }
+}
+
+function renderRegistration(result) {
+  lastRegistration = result;
+
+  const password = el("cert-password");
+  const entry = el("cert-entry");
+  const output = el("cert-output");
+
+  if (password) password.value = result.password;
+  if (entry) entry.textContent = formatEntry(result.entry);
+  if (output) output.hidden = false;
+}
+
+function attach() {
+  const form = el("cert-register-form");
+  if (!form) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    showRegisterError("GENEROWANIE KLUCZY...");
+
+    try {
+      const result = await registerApp(
+        el("cert-app-name")?.value || "",
+        el("cert-app-uuid")?.value || "",
+      );
+      addLocal(result.entry);
+      renderRegistration(result);
+      renderDb();
+      showRegisterError("APP ZAREJESTROWANA LOKALNIE. HASLO POKAZANO RAZ — ZAPISZ JE.");
+    } catch (error) {
+      showRegisterError(`BLAD: ${error.message || error}`);
+    }
+  });
+
+  el("cert-check-button")?.addEventListener("click", async () => {
+    const raw = el("cert-check-entry")?.value.trim() || "";
+    const password = el("cert-check-password")?.value || "";
+
+    let entry;
+    try {
+      entry = JSON.parse(raw);
+    } catch {
+      setResult("NIE POPRAWNE: entry nie jest JSON-em", false);
+      return;
+    }
+
+    setResult("ODSZYFROWYWANIE...", true);
+    const result = await checkEntry(entry, password);
+
+    if (result.valid) {
+      setResult(
+        `POPRAWNE\nUUID: ${result.uuid}\nMARKER: ${result.marker}\nFINGERPRINT: ${result.fingerprint}\n\nPRIVATE KEY (PKCS8 BASE64):\n${result.private_key}`,
+        true,
+      );
+    } else {
+      setResult(`NIE POPRAWNE\n${result.error}`, false);
+    }
+  });
+
+  el("cert-copy-password")?.addEventListener("click", async () => {
+    const password = el("cert-password")?.value || "";
+    if (await copy(password)) {
+      const button = el("cert-copy-password");
+      if (button) button.textContent = "SKOPIOWANO";
+    }
+  });
+
+  el("cert-copy-entry")?.addEventListener("click", async () => {
+    const entry = el("cert-entry")?.textContent || "";
+    if (await copy(entry)) {
+      const button = el("cert-copy-entry");
+      if (button) button.textContent = "SKOPIOWANO";
+    }
+  });
+
+  el("cert-download-entry")?.addEventListener("click", () => {
+    if (lastRegistration) {
+      download(
+        `${lastRegistration.entry.app.replace(/[^a-z0-9_-]/gi, "-")}.cert.json`,
+        formatEntry(lastRegistration.entry),
+      );
+    }
+  });
+
+  el("cert-check-now")?.addEventListener("click", () => {
+    if (!lastRegistration) return;
+    const area = el("cert-check-entry");
+    const password = el("cert-check-password");
+    if (area) area.value = formatEntry(lastRegistration.entry);
+    if (password) password.value = lastRegistration.password;
+    el("cert-check-button")?.click();
+  });
+
+  el("cert-export")?.addEventListener("click", () => {
+    download(
+      "certifications.json",
+      JSON.stringify({ version: 1, entries: readLocal() }, null, 2),
+    );
+  });
+
+  renderDb();
+
+  if (new URLSearchParams(location.search).get("cert-test") === "1") {
+    selfTest().then((result) => {
+      addLocal(result.entry);
+      renderDb();
+      setResult(
+        result.valid
+          ? `CERT SELFTEST: PASS\nUUID: ${result.uuid}\nMARKER: ${result.marker}`
+          : `CERT SELFTEST: FAIL\n${result.error}`,
+        result.valid,
+      );
+    });
+  }
+}
+
+document.addEventListener("rweb:rendered", attach);
+attach();

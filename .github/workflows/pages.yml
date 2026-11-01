@@ -26,8 +26,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install TypeScript
-        run: npm install -g typescript
+      - name: Install TypeScript and esbuild
+        run: npm install -g typescript esbuild
 
       - name: Compile MHTML into one .rweb file
         run: cargo run --release -p mhtml --bin rweb -- build site

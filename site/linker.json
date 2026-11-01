@@ -26,7 +26,8 @@
   ],
   "scripts": [
     "scripts/app.ts",
-    "scripts/viewer.mscript"
+    "scripts/viewer.mscript",
+    "scripts/cert.mscript"
   ],
   "assets": [],
   "pages": [
@@ -49,6 +50,11 @@
       "route": "/viewer",
       "file": "pages/viewer.mhtml",
       "title": "RWeb Viewer - RustWeb"
+    },
+    {
+      "route": "/cert",
+      "file": "pages/cert.mhtml",
+      "title": "Certification Database - RustWeb"
     }
   ],
   "data": {
@@ -103,7 +109,24 @@
     "inspect_command": "rweb inspect site/site.rweb",
     "protocol_json": "\"protocol\": {\n  \"name\": \"byrust\",\n  \"version\": 1,\n  \"https\": true,\n  \"alias\": \"byrust\"\n}",
     "memory_note": "Pomiar RSS po starcie, bez ruchu: ~6,6 MB dla rustweb i ~153 MB dla FastAPI + uvicorn z dwoma workerami. Jeden proces, jeden plik HTML, zero runtime'owego templatingu.",
-    "linker_note": "linker.json wskazuje strony, style, skrypty i assety. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript i zamienia obrazy na data URI. Wynik to jeden plik .rweb."
+    "linker_note": "linker.json wskazuje strony, style, skrypty i assety. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript i zamienia obrazy na data URI. Wynik to jeden plik .rweb.",
+    "certifications": [
+      {
+        "version": 1,
+        "app": "RustWeb Site",
+        "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEChLGPBfkOCiU4siP1xd+WsaiVqRoTJh2jgFlN+aK0+XgLShzvy1rkzHtAFAY09Z0qiogMtPzCliUepe8NCYV2g==",
+        "key_fingerprint": "386bb8a5a62f36a83e32251772abe302039a69d548324fd4b312fb9643ddcb2d",
+        "uuid_commitment": "c7e55ee139ab6d5de486e3e7b0277e6652eedf88991e1435c814178ecffba330",
+        "salt": "AK259VMdkRCpDuyOqr37PA==",
+        "iv": "7dpYhA6ArOR8La8n",
+        "iterations": 210000,
+        "ciphertext": "IadsxoO7w48cQmAaK2Y+3UuzrkPlvi2sfHAZgCns3JSWDT9lVc7e7D/ALuErhja8bXTV4CyJiEb9u9zPjum1vTqAIF7mayitqYCeuTwDnUOc6gVD2Vwysecnx68Pyjj8opl0i8ve16hN4wLFvkiWktWQAo8JrNn8C1/MDmwjOkXdJnez9bHiSIgMn9Ha5nhpF31b08MMjyD3P+yQD4MC8jEXWjUvmdzzstDTwtrXfjjh0B9EP4Pd9dJAI8C0I/5UZ+mtKQFc9xALCyqt3tBoYnqFp6BcMjrChZlFDEIJAXlGXvL+AYBm5XdGnT6ocjeYFZH6kxi3swVXr66WTrz2A18yayL4u1B7uQ0rxt3DsuGnrvKPD9msc3wmEFA=",
+        "status": "SEALED",
+        "created": "2026-11-01T15:23:11.552Z",
+        "trust": "app",
+        "algo": "AES-256-GCM/PBKDF2-SHA256/ECDSA-P-256"
+      }
+    ]
   },
   "base": "/rustweb"
 }

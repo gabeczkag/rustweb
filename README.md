@@ -103,6 +103,9 @@ Invalid input returns the FastAPI shape:
   document.
 - `/viewer`: drag-and-drop `.rweb` inspector with metadata, size, gzip, source,
   and a sandboxed preview.
+- `/cert`: browser-side certification registry. Each entry seals its UUID and
+  ECDSA P-256 private key with AES-256-GCM and publishes only the public key,
+  fingerprint, and UUID commitment.
 
 ## How it works
 
@@ -156,11 +159,12 @@ Then open <http://127.0.0.1:3000/docs>.
 ## MHTML and .rweb
 
 MHTML is a mini-HTML: ordinary markup plus `{{ expression }}`, `@if`, and
-`@for`. The `rweb` compiler reads `linker.json`, renders every page, inlines
-CSS, transpiles TypeScript with `tsc`, turns images and fonts into data URIs,
-and writes one self-contained `.rweb` HTML file. RustWeb serves that file as an
-SPA fallback: one cached document, client-side routing, no template work in the
-request path.
+`@for`. The `rweb` compiler reads `linker.json`, renders every page, resolves
+MCSS variables, bundles MScript modules, transpiles TypeScript with `tsc`,
+minifies JavaScript with `esbuild` when it is installed, turns images and fonts
+into data URIs, and writes one self-contained `.rweb` HTML file. RustWeb serves
+that file as an SPA fallback: one cached document, client-side routing, no
+template work in the request path.
 
 ```bash
 bash site/build.sh
@@ -193,11 +197,18 @@ refuses to start if the port is already taken. Stop the old process or use
   "base": "/rustweb",
   "ascii": true,
   "styles": ["assets/style.mcss"],
-  "scripts": ["scripts/app.ts", "scripts/viewer.mscript"],
+  "scripts": [
+    "scripts/app.ts",
+    "scripts/viewer.mscript",
+    "scripts/cert.mscript"
+  ],
   "assets": ["assets/logo.svg"],
   "pages": [
     { "route": "/", "file": "pages/index.mhtml", "title": "Start" },
-    { "route": "/about", "file": "pages/about.mhtml", "title": "MHTML" }
+    { "route": "/about", "file": "pages/about.mhtml", "title": "MHTML" },
+    { "route": "/bench", "file": "pages/bench.mhtml", "title": "Benchmark" },
+    { "route": "/viewer", "file": "pages/viewer.mhtml", "title": "Viewer" },
+    { "route": "/cert", "file": "pages/cert.mhtml", "title": "Certifications" }
   ],
   "data": { "headline": "API w Rustcie..." }
 }
@@ -212,11 +223,11 @@ directive.
 
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
-navigation. The blocky redesign with the viewer compiles to about **37 KiB**
-(~11 KB gzipped on Pages) and contains ASCII only (`ascii: true` transliterates
-Polish diacritics). The earlier compact build was 19.5 KiB (21% smaller), but
-it had a much plainer visual layer; the zero-image blocky UI and viewer trade
-some bytes for the layout.
+navigation. The blocky redesign with the viewer and certification database
+compiles to about **49 KiB** (~16 KB gzipped on Pages) and contains ASCII only
+(`ascii: true` transliterates Polish diacritics). The earlier compact build was
+19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
+blocky UI, viewer, and certification tools trade some bytes for the features.
 
 **MHTML syntax.** Full HTML documents are supported; a full document is reduced
 to its `<body>` when embedded. Use `{{{ trusted_html }}}` for raw, unescaped
@@ -240,8 +251,45 @@ export function size(value) { return bytes(value); }
 ```
 
 The compiled file can be opened as a static file by an SPA-capable host or
-served directly by RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
-handles unmatched routes.
+served directly by RustWeb. Dynamic APIs belong in normal RustWeb handlers; the
+SPA fallback only handles unmatched routes.
+
+### Certification Database
+
+`/cert` is a static, browser-side registry for app identities. Registering an
+app generates an ECDSA P-256 keypair and a 128-character one-time password
+(shown once, never stored). The UUID, private key, and a marker are serialized
+and sealed with AES-256-GCM. The encryption key is derived from the password
+with PBKDF2-SHA256 (210,000 iterations) and a random 16-byte salt. The public
+entry contains only the app name, public key, SHA-256 key fingerprint, salt,
+IV, ciphertext, and a UUID commitment:
+
+```text
+SHA-256("byrust-uuid-v1:" + uuid + ":" + salt)
+```
+
+The checker takes the public entry and the one-time password, decrypts the
+payload, and verifies the marker (`POPRAWNE` or the randomly chosen
+`as10sign edi5nbaseApro3ved`), the UUID commitment, the key fingerprint, and an
+ECDSA signature made with the recovered private key. A successful check prints
+`POPRAWNE`, the UUID, and the PKCS#8 private key. A wrong password or a tampered
+entry fails without revealing the UUID.
+
+On GitHub Pages there is no writable server database: registrations live in
+`localStorage`, can be exported as JSON, and become part of the shared public
+registry by adding the entry to `linker.json` under `data.certifications` (or
+by opening a PR). The bundled registry contains the public `RustWeb Site`
+entry; its one-time password is not in this repository. Losing a password means
+losing the ability to decrypt that entry; there is no recovery.
+
+This is client-side cryptography on a static page, so the hosting origin can
+always serve different JavaScript. Treat the checker as a convenience and
+verify high-value identities with a server-side implementation.
+
+```bash
+node site/scripts/cert-crypto.test.mjs
+# CERT CRYPTO OK <uuid> <marker> <fingerprint prefix>
+```
 
 Startup RSS in this repository's measurement was ~6.6 MiB for the
 `.rweb` server versus ~153 MiB for the FastAPI + uvicorn process tree
@@ -257,7 +305,7 @@ document is reduced to its `<body>`.
 
 ```bash
 rweb inspect site/site.rweb
-# RustWeb — 0.1.0, 4 routes: /, /about, /bench, /viewer
+# RustWeb — 0.1.0, 5 routes: /, /about, /bench, /viewer, /cert
 ```
 
 ### Byrust protocol

@@ -1,6 +1,7 @@
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
@@ -251,6 +252,9 @@ pub fn build_from_config(
         ""
     };
 
+    let classic_scripts = minify_javascript(&classic_scripts);
+    let module_scripts = minify_javascript(&module_scripts);
+
     let mut script_tags = String::new();
     if !classic_scripts.is_empty() {
         script_tags.push_str("<script>");
@@ -341,6 +345,39 @@ pub fn inspect(html: &str) -> BundleInfo {
         app: byrust.and_then(|config| config.app),
         routes,
         bytes: html.len(),
+    }
+}
+
+fn minify_javascript(source: &str) -> String {
+    if source.trim().is_empty() {
+        return source.to_owned();
+    }
+
+    let mut child = match Command::new("esbuild")
+        .args([
+            "--minify",
+            "--target=es2020",
+            "--loader=js",
+            "--log-level=error",
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+    {
+        Ok(child) => child,
+        Err(_) => return source.to_owned(),
+    };
+
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = stdin.write_all(source.as_bytes());
+    }
+
+    match child.wait_with_output() {
+        Ok(output) if output.status.success() => {
+            String::from_utf8(output.stdout).unwrap_or_else(|_| source.to_owned())
+        }
+        _ => source.to_owned(),
     }
 }
 
