@@ -28,7 +28,9 @@
     "scripts/app.ts",
     "scripts/viewer.mscript",
     "scripts/cert.mscript",
-    "scripts/game.mscript"
+    "scripts/game.mscript",
+    "scripts/baner.mscript",
+    "scripts/market.mscript"
   ],
   "assets": [],
   "pages": [
@@ -67,6 +69,18 @@
       "file": "pages/deploy.mhtml",
       "title": "Deploy — RustWeb",
       "description": "Postaw RustWeb u siebie: Docker, lokalny HTTPS, VPS albo GitHub Pages."
+    },
+    {
+      "route": "/baner",
+      "file": "pages/baner.mhtml",
+      "title": "Banner Engine — RustWeb",
+      "description": "RustWeb Banner Engine: szybkie proof cards, ruchome elementy i CTA."
+    },
+    {
+      "route": "/market",
+      "file": "pages/market.mhtml",
+      "title": "Market — RustWeb",
+      "description": "Market modulow RustWeb: CORE, SERVICE, LAB, OPS."
     }
   ],
   "data": {

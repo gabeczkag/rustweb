@@ -1,0 +1,102 @@
+<section class="market-hero">
+  <p class="eyebrow">RUSTWEB // MARKET // MODULES</p>
+  <h1>MODUŁY,<br><span>NIE OBIETNICE.</span></h1>
+  <p class="lead">Wybierz kawalek stacku, ktory naprawde istnieje w repo. Kazda karta ma dowod, test i komende startowa.</p>
+  <div class="market-live">
+    <span class="market-live-dot"></span>
+    <span>FEATURED</span>
+    <strong id="market-live">RUSTWEB CORE</strong>
+    <button id="market-pause" class="badge" type="button">PAUZA</button>
+  </div>
+</section>
+
+<div class="market-ticker" aria-hidden="true">
+  <div class="market-track">
+    <span>CORE</span><b>•</b><span>MHTML</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs</span><b>•</b><span>UC</span><b>•</b><span>GAME LAB</span><b>•</b><span>VIEWER</span><b>•</b><span>DEPLOY</span><b>•</b><span>BENCH</span><b>•</b>
+    <span>CORE</span><b>•</b><span>MHTML</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs</span><b>•</b><span>UC</span><b>•</b><span>GAME LAB</span><b>•</b><span>VIEWER</span><b>•</b><span>DEPLOY</span><b>•</b><span>BENCH</span><b>•</b>
+  </div>
+</div>
+
+<div class="market-filters" role="group" aria-label="Filtruj moduly">
+  <button class="badge is-active" data-filter="all" type="button">WSZYSTKO</button>
+  <button class="badge" data-filter="core" type="button">CORE</button>
+  <button class="badge" data-filter="service" type="button">SERVICE</button>
+  <button class="badge" data-filter="lab" type="button">LAB</button>
+  <button class="badge" data-filter="ops" type="button">OPS</button>
+</div>
+
+<section class="market-grid" id="market-grid">
+  <article class="market-card is-featured" data-market-card data-tags="core" data-title="RUSTWEB CORE">
+    <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
+    <h2>RUSTWEB</h2>
+    <p>Routing, walidacja 422, OpenAPI i Swagger bez runtime templatingu.</p>
+    <strong>210 750 <small>REQ/S</small></strong>
+    <a href="/">OTWORZ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="core" data-title="MHTML">
+    <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
+    <h2>MHTML</h2>
+    <p>Mini-HTML, MCSS i MScript. Caly frontend w jednym pliku `.rweb`.</p>
+    <strong>89 KB <small>FRONTEND</small></strong>
+    <a href="/about">POZNAJ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="service" data-title="CERT DB">
+    <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
+    <h2>CERT DB</h2>
+    <p>Publiczny rejestr aplikacji, fingerprinty i jednorazowe klucze.</p>
+    <strong>0 <small>PLAINTEXT UUID</small></strong>
+    <a href="/cert">OTWORZ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="service" data-title="TCPs">
+    <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
+    <h2>TCPs</h2>
+    <p>Pliki per-user, manifest, sync brakow i sesje graczy po UDP.</p>
+    <strong>2 <small>APLIKACJE / USER</small></strong>
+    <a href="/deploy">JAK POSTAWIC</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="service" data-title="UC PACKS">
+    <div class="market-card-top"><span class="badge">SERVICE</span><span>READY</span></div>
+    <h2>UC</h2>
+    <p>Compression packi dla malych pakietow. Zstd, CRC32, limit 4 KB.</p>
+    <strong>4 KB <small>PER PACKET</small></strong>
+    <a href="/deploy">JAK POSTAWIC</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="lab" data-title="GAME LAB">
+    <div class="market-card-top"><span class="badge">LAB</span><span>LIVE</span></div>
+    <h2>GAME LAB</h2>
+    <p>Packet Arena z dziewiecioma systemami, logami i limitem 4096 B.</p>
+    <strong>9 <small>SYSTEMOW</small></strong>
+    <a href="/game">ZAGRAJ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="ops" data-title="VIEWER">
+    <div class="market-card-top"><span class="badge">OPS</span><span>READY</span></div>
+    <h2>VIEWER</h2>
+    <p>Wrzuc `.rweb`, zobacz trasy, protokol, APP UUID, gzip i preview.</p>
+    <strong>1 <small>PLIK</small></strong>
+    <a href="/viewer">OTWORZ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="ops" data-title="DEPLOY">
+    <div class="market-card-top"><span class="badge">OPS</span><span>READY</span></div>
+    <h2>DEPLOY</h2>
+    <p>Docker, lokalny HTTPS, VPS z Let's Encrypt albo GitHub Pages.</p>
+    <strong>1 <small>KOMENDA</small></strong>
+    <a href="/deploy">WDROZ</a>
+  </article>
+  <article class="market-card" data-market-card data-tags="lab" data-title="BENCH">
+    <div class="market-card-top"><span class="badge">LAB</span><span>READY</span></div>
+    <h2>BENCH</h2>
+    <p>Request throughput, streaming bandwidth i porownanie z FastAPI.</p>
+    <strong>4.7 <small>GIB/S</small></strong>
+    <a href="/bench">ZOBACZ</a>
+  </article>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">MARKET // CTA</p>
+  <h2>BIERZ CALY STACK.</h2>
+  <p>Kazdy modul jest w tym samym repo i ma jedna komende startowa. Nie musisz kupowac siedmiu subskrypcji, zeby zlozyc jedna strone.</p>
+  <div class="actions">
+    <a class="button" href="/deploy">POSTAW U SIEBIE</a>
+    <a class="button ghost" href="/baner">ZOBACZ BANER</a>
+  </div>
+</section>

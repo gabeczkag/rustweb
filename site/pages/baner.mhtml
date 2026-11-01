@@ -1,0 +1,66 @@
+<section class="baner-page">
+  <div class="baner-stage" id="baner-stage">
+    <div class="baner-grid" aria-hidden="true"></div>
+    <div class="baner-orb orb-a" aria-hidden="true"></div>
+    <div class="baner-orb orb-b" aria-hidden="true"></div>
+    <div class="baner-orb orb-c" aria-hidden="true"></div>
+
+    <div class="baner-copy">
+      <p class="eyebrow">RUSTWEB // BANNER ENGINE // 500 MS</p>
+      <h1>JEDEN PLIK.<br><span>CAŁA STRONA.</span></h1>
+      <p class="lead">API, frontend, certyfikaty, transport plików i compression packi w jednym repo. Bez runtime templatingu. Bez pięciu frameworków. Bez wymówek.</p>
+      <div class="actions">
+        <a class="button" href="/deploy">POSTAW U SIEBIE</a>
+        <a class="button ghost" href="/market">ZOBACZ MARKET</a>
+      </div>
+      <div class="baner-controls">
+        <button id="baner-pause" class="badge" type="button">PAUZA</button>
+        <button id="baner-prev" class="badge" type="button" aria-label="Poprzedni proof">←</button>
+        <button id="baner-next" class="badge" type="button" aria-label="Nastepny proof">→</button>
+        <span id="baner-index" class="baner-index">01 / 06</span>
+        <span class="baner-live"><i></i> AUTO 500 MS</span>
+      </div>
+    </div>
+
+    <aside class="baner-proof" id="baner-proof" data-accent="sky">
+      <div class="baner-proof-top">
+        <span class="badge">PROOF</span>
+        <span id="baner-proof-tag">SPEED</span>
+      </div>
+      <strong id="baner-proof-value">210 750</strong>
+      <span id="baner-proof-label">REQ/S</span>
+      <p id="baner-proof-body">Ten sam stos axum. Bez warstwy frameworka w hot path.</p>
+      <a id="baner-proof-link" class="baner-proof-link" href="/bench">SPRAWDZ BENCHMARK</a>
+      <div class="baner-progress"><span id="baner-progress"></span></div>
+      <span class="baner-proof-note">Pauza na hover. Reduced motion respektowane.</span>
+    </aside>
+  </div>
+
+  <div class="baner-ticker" aria-hidden="true">
+    <div class="baner-track">
+      <span>SINGLE FILE</span><b>•</b><span>ZERO RUNTIME TEMPLATING</span><b>•</b><span>56 TESTS</span><b>•</b><span>DOCKER READY</span><b>•</b><span>4.7 GIB/S STREAMING</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs + UDP</span><b>•</b><span>UC PACKS</span><b>•</b>
+      <span>SINGLE FILE</span><b>•</b><span>ZERO RUNTIME TEMPLATING</span><b>•</b><span>56 TESTS</span><b>•</b><span>DOCKER READY</span><b>•</b><span>4.7 GIB/S STREAMING</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs + UDP</span><b>•</b><span>UC PACKS</span><b>•</b>
+    </div>
+  </div>
+
+  <section class="baner-strip">
+    <article>
+      <strong>89 KB</strong>
+      <span>CALY FRONTEND</span>
+      <p>Strona, style, skrypty i routing w jednym `.rweb`. Bez CDN, bez buildu w runtime.</p>
+      <a href="/viewer">OTWORZ VIEWER</a>
+    </article>
+    <article>
+      <strong>1 BINARKA</strong>
+      <span>BEZ NODE I PYTHONA</span>
+      <p>RustWeb serwuje statyczny plik i API. Docker, VPS albo lokalny HTTPS jednym poleceniem.</p>
+      <a href="/deploy">JAK WDROZYC</a>
+    </article>
+    <article>
+      <strong>56</strong>
+      <span>TESTOW W REPO</span>
+      <p>Routing, walidacja, MHTML, certyfikaty, TCPs, UC i benchmarki. Kazda usluga ma dowod.</p>
+      <a href="https://github.com/gabeczkag/rustweb" target="_blank" rel="noreferrer">GITHUB</a>
+    </article>
+  </section>
+</section>

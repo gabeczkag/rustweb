@@ -17,10 +17,10 @@
 
   <div class="hero-art" aria-hidden="true">
     <div class="spec-board">
-      <div class="spec-cell"><strong>7</strong><span>STRONY W JEDNYM PLIKU</span></div>
+      <div class="spec-cell"><strong>9</strong><span>STRONY W JEDNYM PLIKU</span></div>
       <div class="spec-cell"><strong>1</strong><span>PLIK .RWEB</span></div>
       <div class="spec-cell"><strong>0</strong><span>RUNTIME TEMPLATING</span></div>
-      <div class="spec-cell"><strong>89 KB</strong><span>WAGA PLIKU .RWEB</span></div>
+      <div class="spec-cell"><strong>112 KB</strong><span>WAGA PLIKU .RWEB</span></div>
     </div>
     <div class="art-tag">BUILD<br><strong>RWEB</strong></div>
   </div>

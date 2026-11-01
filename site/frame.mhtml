@@ -20,5 +20,5 @@
 
 <footer class="footer">
   <span>RUSTWEB {{ site.version }} // MHTML + .RWEB // <span id="year"></span></span>
-  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a><a href="/cert">CERT</a><a href="/game">GAME</a><a href="/deploy">DEPLOY</a></span>
+  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a><a href="/cert">CERT</a><a href="/game">GAME</a><a href="/deploy">DEPLOY</a><a href="/market">MARKET</a><a href="/baner">BANER</a></span>
 </footer>

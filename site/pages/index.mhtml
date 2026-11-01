@@ -11,7 +11,7 @@
     <div class="badges">
       <span class="badge">1 PLIK .RWEB</span>
       <span class="badge">0 RUNTIME TEMPLATING</span>
-      <span class="badge">89 KB</span>
+      <span class="badge">112 KB</span>
       <span class="badge">ASCII ONLY</span>
       <span class="badge">DOCKER READY</span>
     </div>
@@ -105,6 +105,11 @@
   <p class="eyebrow">04 // PAKIET, NIE FRAMEWORK</p>
   <h2>WIECEJ NIZ API.</h2>
   <p class="lead">RustWeb to jedna binarka, jeden plik strony i zestaw usług, ktorych normalnie szukasz w pieciu osobnych projektach.</p>
+
+  <div class="actions">
+    <a class="button gold" href="/market">WEJDZ DO MARKET</a>
+    <a class="button ghost" href="/baner">ZOBACZ BANER</a>
+  </div>
 
   <div class="suite-grid">
     <a class="suite-card" href="/cert">

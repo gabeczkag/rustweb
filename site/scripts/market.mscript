@@ -1,0 +1,122 @@
+function initMarket() {
+  const grid = document.getElementById("market-grid");
+  if (!grid || grid.dataset.bound === "1") return;
+  grid.dataset.bound = "1";
+
+  const cards = Array.from(document.querySelectorAll("[data-market-card]"));
+  const live = document.getElementById("market-live");
+  const pause = document.getElementById("market-pause");
+  const filters = Array.from(document.querySelectorAll("[data-filter]"));
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  let active = 0;
+  let manualPaused = false;
+  let hoverPaused = false;
+  let timer = null;
+  let filter = "all";
+
+  function visible() {
+    return cards.filter((card) => !card.hidden);
+  }
+
+  function setFeatured(card) {
+    for (const item of cards) item.classList.remove("is-featured");
+    if (!card) {
+      if (live) live.textContent = "BRAK MODULOW";
+      return;
+    }
+    card.classList.add("is-featured");
+    if (live) live.textContent = card.dataset.title || "MODUL";
+  }
+
+  function currentCard() {
+    const list = visible();
+    if (!list.length) return null;
+    active %= list.length;
+    return list[active];
+  }
+
+  function cycle() {
+    const list = visible();
+    if (!list.length) return;
+    active = (active + 1) % list.length;
+    setFeatured(list[active]);
+  }
+
+  function stop() {
+    if (timer) {
+      window.clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  function start() {
+    if (reduced || manualPaused || hoverPaused) return;
+    stop();
+    timer = window.setInterval(() => {
+      if (!grid.isConnected) {
+        stop();
+        return;
+      }
+      cycle();
+    }, 500);
+  }
+
+  function applyFilter(next) {
+    filter = next;
+    for (const button of filters) {
+      button.classList.toggle("is-active", button.dataset.filter === filter);
+    }
+    for (const card of cards) {
+      const tags = String(card.dataset.tags || "").split(/\s+/);
+      card.hidden = filter !== "all" && !tags.includes(filter);
+    }
+    active = 0;
+    setFeatured(currentCard());
+    start();
+  }
+
+  for (const button of filters) {
+    button.addEventListener("click", () => applyFilter(button.dataset.filter || "all"));
+  }
+
+  if (pause) {
+    pause.disabled = Boolean(reduced);
+    pause.textContent = reduced ? "REDUCED" : "PAUZA";
+    pause.addEventListener("click", () => {
+      if (reduced) return;
+      manualPaused = !manualPaused;
+      pause.textContent = manualPaused ? "WZNOW" : "PAUZA";
+      if (manualPaused) stop();
+      else start();
+    });
+  }
+
+  grid.addEventListener("pointerenter", () => {
+    hoverPaused = true;
+    stop();
+  });
+  grid.addEventListener("pointerleave", () => {
+    hoverPaused = false;
+    start();
+  });
+  grid.addEventListener("focusin", () => {
+    hoverPaused = true;
+    stop();
+  });
+  grid.addEventListener("focusout", () => {
+    hoverPaused = false;
+    start();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else start();
+  });
+
+  setFeatured(currentCard());
+  start();
+}
+
+document.addEventListener("rweb:rendered", initMarket);
+initMarket();

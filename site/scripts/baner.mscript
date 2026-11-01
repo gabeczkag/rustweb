@@ -1,0 +1,173 @@
+const proofs = [
+  {
+    tag: "SPEED",
+    value: "210 750",
+    label: "REQ/S",
+    body: "Ten sam stos axum. Bez warstwy frameworka w hot path.",
+    link: "SPRAWDZ BENCHMARK",
+    href: "/bench",
+    accent: "sky",
+  },
+  {
+    tag: "SIZE",
+    value: "89 KB",
+    label: "CALY FRONTEND",
+    body: "Strona, style, skrypty i routing w jednym pliku .rweb.",
+    link: "OTWORZ VIEWER",
+    href: "/viewer",
+    accent: "green",
+  },
+  {
+    tag: "TESTS",
+    value: "56",
+    label: "TESTOW W REPO",
+    body: "Routing, MHTML, certyfikaty, TCPs, UC i benchmarki. Kazda usluga ma dowod.",
+    link: "ZOBACZ GITHUB",
+    href: "https://github.com/gabeczkag/rustweb",
+    accent: "gold",
+  },
+  {
+    tag: "STREAM",
+    value: "4.7",
+    label: "GIB/S LOOPBACK",
+    body: "Osobny benchmark streamingowy. 64 MiB na strumien, bez buforowania calosci.",
+    link: "ZOBACZ WYNIKI",
+    href: "/bench",
+    accent: "pink",
+  },
+  {
+    tag: "DEPLOY",
+    value: "1",
+    label: "KOMENDA DOCKER",
+    body: "Strona, TCPs i UC w jednym compose. TLS na reverse proxy.",
+    link: "POSTAW U SIEBIE",
+    href: "/deploy",
+    accent: "sky",
+  },
+  {
+    tag: "PACKS",
+    value: "4 KB",
+    label: "LIMIT PAKIETU UC",
+    body: "Compression packi z zstd, CRC32 i twardym limitem 4 MiB na pack.",
+    link: "ZOBACZ MARKET",
+    href: "/market",
+    accent: "green",
+  },
+];
+
+function initBaner() {
+  const proof = document.getElementById("baner-proof");
+  if (!proof || proof.dataset.bound === "1") return;
+  proof.dataset.bound = "1";
+
+  const tag = document.getElementById("baner-proof-tag");
+  const value = document.getElementById("baner-proof-value");
+  const label = document.getElementById("baner-proof-label");
+  const body = document.getElementById("baner-proof-body");
+  const link = document.getElementById("baner-proof-link");
+  const index = document.getElementById("baner-index");
+  const progress = document.getElementById("baner-progress");
+  const pause = document.getElementById("baner-pause");
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  let current = 0;
+  let manualPaused = false;
+  let hoverPaused = false;
+  let timer = null;
+
+  function render() {
+    const item = proofs[current];
+    proof.dataset.accent = item.accent;
+    if (tag) tag.textContent = item.tag;
+    if (value) value.textContent = item.value;
+    if (label) label.textContent = item.label;
+    if (body) body.textContent = item.body;
+    if (link) {
+      link.textContent = item.link;
+      link.href = item.href;
+      link.target = item.href.startsWith("http") ? "_blank" : "";
+      link.rel = item.href.startsWith("http") ? "noreferrer" : "";
+    }
+    if (index) index.textContent = `${String(current + 1).padStart(2, "0")} / ${String(proofs.length).padStart(2, "0")}`;
+
+    proof.classList.remove("flip");
+    void proof.offsetWidth;
+    proof.classList.add("flip");
+
+    if (progress) {
+      progress.classList.remove("run");
+      void progress.offsetWidth;
+      progress.classList.add("run");
+    }
+  }
+
+  function stop() {
+    if (timer) {
+      window.clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  function start() {
+    if (reduced || manualPaused || hoverPaused) return;
+    stop();
+    timer = window.setInterval(() => {
+      if (!proof.isConnected) {
+        stop();
+        return;
+      }
+      current = (current + 1) % proofs.length;
+      render();
+    }, 500);
+  }
+
+  function step(delta) {
+    current = (current + delta + proofs.length) % proofs.length;
+    render();
+    start();
+  }
+
+  if (pause) {
+    pause.disabled = Boolean(reduced);
+    pause.textContent = reduced ? "REDUCED" : "PAUZA";
+    pause.addEventListener("click", () => {
+      if (reduced) return;
+      manualPaused = !manualPaused;
+      pause.textContent = manualPaused ? "WZNOW" : "PAUZA";
+      if (manualPaused) stop();
+      else start();
+    });
+  }
+
+  document.getElementById("baner-prev")?.addEventListener("click", () => step(-1));
+  document.getElementById("baner-next")?.addEventListener("click", () => step(1));
+
+  const stage = document.getElementById("baner-stage");
+  stage?.addEventListener("pointerenter", () => {
+    hoverPaused = true;
+    stop();
+  });
+  stage?.addEventListener("pointerleave", () => {
+    hoverPaused = false;
+    start();
+  });
+  stage?.addEventListener("focusin", () => {
+    hoverPaused = true;
+    stop();
+  });
+  stage?.addEventListener("focusout", () => {
+    hoverPaused = false;
+    start();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else start();
+  });
+
+  render();
+  start();
+}
+
+document.addEventListener("rweb:rendered", initBaner);
+initBaner();

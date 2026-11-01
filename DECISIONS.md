@@ -26,3 +26,12 @@
   must stay line-separated and copyable.
 - Rejected: normalizing newlines in JavaScript after render (the source would
   still be broken for no-JS readers and copied text).
+
+## 2026-11-01 — Banner skill
+
+- Choice: install the existing `banner-design` skill from the ui-ux-pro-max
+  pack and allowlist it; do not create a custom replacement.
+- Why: it already covers website heroes, safe zones, art direction, export, and
+  accessibility. The new `/baner` and `/market` pages follow its motion rules
+  (500 ms floor, pause, reduced motion).
+- Rejected: a one-off custom skill with overlapping instructions.
