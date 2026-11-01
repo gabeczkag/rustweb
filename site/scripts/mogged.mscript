@@ -392,9 +392,9 @@ function createReel(canvas, ctx) {
 
     font(64);
     ctx.fillStyle = REEL.ink;
-    ctx.fillText("SINE FIELD → SPHERE", 90, 120);
+    ctx.fillText("SINE FIELD -> SPHERE", 90, 120);
     mono(14, REEL.blue);
-    ctx.fillText("04 // PROCEDURAL SYSTEMS / x = sin(θ)·cos(φ), y = cos(θ), z = sin(θ)·sin(φ)", 94, 158);
+    ctx.fillText("04 // PROCEDURAL SYSTEMS / x = sin(theta)*cos(phi), y = cos(theta), z = sin(theta)*sin(phi)", 94, 158);
   }
 
   function drawPanel(x, y, width, height, title, draw) {

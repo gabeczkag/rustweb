@@ -7,7 +7,7 @@
     </div>
     <div class="reel-meta">
       <span>60 FPS</span>
-      <span>1920 × 1080</span>
+      <span>1920 x 1080</span>
       <span>15.0 S</span>
       <span>900 FRAMES</span>
     </div>
@@ -21,7 +21,7 @@
       <span class="reel-corner reel-corner-bl">+</span>
       <span class="reel-corner reel-corner-br">+</span>
       <span class="reel-hud-tl">RUSTWEB // MOTION REEL</span>
-      <span class="reel-hud-tr">60 FPS / 1920×1080</span>
+      <span class="reel-hud-tr">60 FPS / 1920x1080</span>
       <span class="reel-hud-bl">FRAME <b id="reel-frame-hud">000</b> / 900</span>
       <span class="reel-hud-br">NO KEYFRAMES</span>
       <span class="reel-scene-hud" id="reel-scene-hud">00 // INTRO</span>
@@ -52,7 +52,7 @@
   <div class="reel-bottom">
     <div>
       <p class="eyebrow">THE LOOP</p>
-      <h2>SHAPE → EASING → FIELD → CORE.</h2>
+      <h2>SHAPE / EASING / FIELD / CORE.</h2>
       <p>Scena jest rysowana w canvasie 2D. Punkt na wykresie to funkcja czasu, nie keyframe. Sine field morphuje w sferę, a cztery panele pokazują rotate, squash, offset i wave.</p>
     </div>
     <div class="reel-links">
