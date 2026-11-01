@@ -106,6 +106,8 @@ Invalid input returns the FastAPI shape:
 - `/cert`: Supabase-backed public certification registry. Each entry seals its
   UUID and ECDSA P-256 private key with AES-256-GCM and publishes a separate
   public `app_id`, public key, fingerprint, and UUID commitment.
+- Local `/certinfo/` JSON registry when the site is served by RustWeb; it uses
+  the same request shape and max-2 limit as the Supabase backend.
 
 ## How it works
 
@@ -229,7 +231,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **53 KiB** (~17 KB gzipped on Pages) and contains ASCII only
+compiles to about **54 KiB** (~17 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.
@@ -304,6 +306,20 @@ Without Supabase config, or when the RPC is unavailable, `/cert` falls back to
 GitHub Pages is not available because Pages serves only static files. The
 Supabase RPC URL is the public endpoint; a RustWeb/Worker proxy is required for
 an exact `/certinfo/` path on your own domain.
+
+### Local `/certinfo/`
+
+When RustWeb serves the page, it exposes a local JSON registry:
+
+- `GET /certinfo/` returns the public list.
+- `GET /certinfo/{app_id}` returns one entry.
+- `POST /certinfo/` accepts `{"payload": entry, "hwid": "...",
+  "fingerprint": "..."}` and enforces the same max-2 limit.
+
+The local store is `certifications.json` (ignored by git) and is seeded from
+the compiled `.rweb` on first run. It is local-only; GitHub Pages has no
+writable endpoint and uses Supabase instead. `./run.sh` starts both the site
+and the local API.
 
 ```bash
 node site/scripts/cert-crypto.test.mjs

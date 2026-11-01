@@ -40,6 +40,10 @@ struct Cli {
     /// Allow HTTP even when the Byrust profile requires HTTPS (dev only).
     #[arg(long, alias = "insecure-http")]
     allow_http: bool,
+
+    /// JSON file used by the local `/certinfo/` registry.
+    #[arg(long, default_value = "certifications.json")]
+    cert_db: PathBuf,
 }
 
 #[tokio::main]
@@ -96,8 +100,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = RustWeb::new(title, version)
         .no_docs()
         .spa_headers(headers)
-        .rweb(html)
-        .into_router();
+        .rweb(html.clone())
+        .into_router()
+        .merge(rustweb::certinfo::router(&cli.cert_db, &html));
 
     let address = tokio::net::lookup_host((cli.host.as_str(), cli.port))
         .await?
@@ -136,6 +141,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             trust_label(&app.trust)
         );
     }
+    println!("certinfo: /certinfo/  db={}", cli.cert_db.display());
 
     if let Some((cert, key)) = tls {
         let config = axum_server::tls_rustls::RustlsConfig::from_pem_file(cert, key).await?;

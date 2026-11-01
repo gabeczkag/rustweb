@@ -14,6 +14,7 @@ pub use utoipa;
 pub use utoipa::openapi;
 
 mod app;
+pub mod certinfo;
 mod error;
 mod extract;
 mod route;

@@ -75,7 +75,52 @@ export function normalizePublicEntry(entry) {
   return normalized;
 }
 
+async function localRequest(path, options = {}) {
+  try {
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        accept: "application/json",
+        ...(options.headers || {}),
+      },
+    });
+    const contentType = response.headers.get("content-type") || "";
+    const data = await response.json().catch(() => null);
+
+    if (contentType.includes("application/json") && data !== null) {
+      return { available: true, ok: response.ok, data, response };
+    }
+
+    return { available: false, response };
+  } catch {
+    return { available: false };
+  }
+}
+
 export async function fetchPublicEntries() {
+  const local = await localRequest("/certinfo/", { method: "GET" });
+  if (local.available) {
+    if (local.ok && Array.isArray(local.data)) {
+      return {
+        status: "ok",
+        entries: local.data.map(normalizePublicEntry),
+      };
+    }
+    if (local.ok && Array.isArray(local.data?.entries)) {
+      return {
+        status: "ok",
+        entries: local.data.entries.map(normalizePublicEntry),
+      };
+    }
+    if (!local.ok) {
+      return {
+        status: "error",
+        entries: [],
+        error: errorMessage(local.data, local.response),
+      };
+    }
+  }
+
   const { url, key } = registryConfig();
   if (!url || !key) {
     return { status: "unconfigured", entries: [] };
@@ -111,13 +156,37 @@ export async function fetchPublicEntries() {
 }
 
 export async function publishEntry(entry) {
+  const identity = await deviceIdentity();
+  const payload = JSON.stringify({
+    payload: entry,
+    hwid: identity.hwid,
+    fingerprint: identity.fingerprint,
+  });
+
+  const local = await localRequest("/certinfo/", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: payload,
+  });
+
+  if (local.available) {
+    if (local.ok) {
+      return { status: "ok", entry: normalizePublicEntry(local.data) };
+    }
+
+    const message = errorMessage(local.data, local.response);
+    if (message.includes("LIMIT_REACHED")) {
+      return { status: "limit", error: message };
+    }
+    return { status: "rejected", error: message };
+  }
+
   const { url, key } = registryConfig();
   if (!url || !key) {
     return { status: "unconfigured", error: "REGISTRY_NOT_CONFIGURED" };
   }
 
   try {
-    const identity = await deviceIdentity();
     const response = await fetch(`${url}/rest/v1/rpc/register_certification`, {
       method: "POST",
       headers: {
@@ -125,11 +194,7 @@ export async function publishEntry(entry) {
         "content-type": "application/json",
         accept: "application/json",
       },
-      body: JSON.stringify({
-        payload: entry,
-        hwid: identity.hwid,
-        fingerprint: identity.fingerprint,
-      }),
+      body: payload,
     });
 
     const data = await response.json().catch(() => null);
