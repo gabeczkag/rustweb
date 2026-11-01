@@ -27,7 +27,8 @@
   "scripts": [
     "scripts/app.ts",
     "scripts/viewer.mscript",
-    "scripts/cert.mscript"
+    "scripts/cert.mscript",
+    "scripts/game.mscript"
   ],
   "assets": [],
   "pages": [
@@ -55,6 +56,11 @@
       "route": "/cert",
       "file": "pages/cert.mhtml",
       "title": "Certification Database - RustWeb"
+    },
+    {
+      "route": "/game",
+      "file": "pages/game.mhtml",
+      "title": "Game Lab - RustWeb"
     }
   ],
   "data": {

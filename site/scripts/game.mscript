@@ -1,0 +1,538 @@
+import { MAX_PACKET_BYTES, createRegistry, decodePacket, default_packets, encodePacket } from "./game-protocol.mscript";
+
+const keys = new Set();
+let activeGame = null;
+let keysBound = false;
+
+function initGame() {
+  const canvas = document.getElementById("game-canvas");
+  if (!canvas || canvas.dataset.gameBound === "1") return;
+  canvas.dataset.gameBound = "1";
+
+  let context;
+  try {
+    context = canvas.getContext("2d");
+  } catch {
+    context = null;
+  }
+  if (!context) return;
+
+  if (activeGame) activeGame.destroyed = true;
+  activeGame = createGame(canvas, context);
+
+  if (!keysBound) {
+    keysBound = true;
+    window.addEventListener("keydown", (event) => {
+      if (isTyping(event.target)) return;
+      const key = event.key.toLowerCase();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(key)) {
+        event.preventDefault();
+      }
+      keys.add(key);
+    });
+    window.addEventListener("keyup", (event) => {
+      keys.delete(event.key.toLowerCase());
+    });
+    window.addEventListener("blur", () => keys.clear());
+  }
+}
+
+function isTyping(target) {
+  return target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+}
+
+function createGame(canvas, context) {
+  const width = canvas.width;
+  const height = canvas.height;
+  const registry = createRegistry();
+  const state = {
+    running: false,
+    destroyed: false,
+    time: 0,
+    player: { x: width / 2, y: height / 2, score: 0, items: 0 },
+    bot: { x: width - 150, y: 130, targetX: width - 150, targetY: 130, hp: 100 },
+    mouse: { x: width / 2, y: height / 2 },
+    clicks: [],
+    messages: [],
+    sent: 0,
+    received: 0,
+    bytes: 0,
+    oversized: 0,
+    lastPacket: null,
+    lastMove: 0,
+    lastLook: 0,
+    lastSnapshot: 0,
+  };
+
+  function element(id) {
+    return document.getElementById(id);
+  }
+
+  function set(id, value) {
+    const node = element(id);
+    if (node) node.textContent = value;
+  }
+
+  function log(entry) {
+    const container = element("game-log");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = `game-log-entry ${String(entry.direction || "in").toLowerCase()}`;
+    const time = new Date().toLocaleTimeString([], { hour12: false });
+    row.textContent = `${time} [${entry.direction}] ${entry.system || "-"} ${entry.name || "-"} ${entry.bytes || 0}B ${entry.status || "ok"}`;
+    container.append(row);
+
+    while (container.childElementCount > 200) {
+      container.firstElementChild?.remove();
+    }
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function renderStats() {
+    set("game-packets", `${state.sent} / ${state.received}`);
+    set("game-bytes", `${state.bytes} B`);
+    set("game-oversize", String(state.oversized));
+    set("game-status", state.running ? "RUNNING" : "PAUSED");
+    set("game-packet-types", String(Object.keys(default_packets).length));
+    set("game-max-packet", `${MAX_PACKET_BYTES} B`);
+  }
+
+  function renderSystems() {
+    const container = element("game-systems");
+    if (!container) return;
+
+    container.replaceChildren();
+    for (const system of registry.list()) {
+      const row = document.createElement("div");
+      row.className = "game-system";
+      const name = document.createElement("strong");
+      name.textContent = system.name;
+      const meta = document.createElement("small");
+      meta.textContent = `${system.count} pkt // ${system.bytes} B // ${system.packets.length} typow`;
+      row.append(name, meta);
+      container.append(row);
+    }
+  }
+
+  function showPacket(packet) {
+    const node = element("game-packet");
+    if (node) {
+      node.textContent = packet
+        ? JSON.stringify(packet, null, 2)
+        : "// brak pakietu";
+    }
+  }
+
+  function send(name, payload = {}, note = "") {
+    let bytes;
+    try {
+      bytes = encodePacket(name, payload);
+    } catch (error) {
+      state.oversized += 1;
+      log({ direction: "ERR", system: "/codec", name, bytes: 0, status: String(error.message || error) });
+      renderStats();
+      return null;
+    }
+
+    state.sent += 1;
+    state.bytes += bytes.length;
+    log({ direction: "OUT", system: "/codec", name, bytes: bytes.length, status: note || "encoded" });
+
+    try {
+      const decoded = decodePacket(bytes);
+      state.received += 1;
+      log({ direction: "IN", system: "/codec", name: decoded.name, bytes: decoded.bytes, status: "decoded" });
+
+      const routed = registry.route(decoded, { state, log });
+      log({
+        direction: "ROUTE",
+        system: routed.system,
+        name: decoded.name,
+        bytes: decoded.bytes,
+        status: String(routed.result ?? "ok"),
+      });
+
+      state.lastPacket = {
+        name: decoded.name,
+        bytes: decoded.bytes,
+        payload: decoded.payload,
+      };
+      showPacket(state.lastPacket);
+    } catch (error) {
+      log({ direction: "ERR", system: "/codec", name, bytes: bytes.length, status: String(error.message || error) });
+    }
+
+    renderStats();
+    renderSystems();
+    return bytes;
+  }
+
+  function game_chat(packet, context) {
+    if (packet.name === "chat") {
+      const text = String(packet.payload.text || "").slice(0, 180);
+      if (!text) return "empty";
+      context.state.messages.push(text);
+      while (context.state.messages.length > 6) context.state.messages.shift();
+      return "chat";
+    }
+    if (packet.name === "ping") {
+      return "pong";
+    }
+    return undefined;
+  }
+
+  function emotes(packet, context) {
+    if (packet.name !== "emote") return undefined;
+    const emote = String(packet.payload.emote || "wave").slice(0, 24);
+    context.state.messages.push(`* ${emote}`);
+    while (context.state.messages.length > 6) context.state.messages.shift();
+    return `emote:${emote}`;
+  }
+
+  function player_packets(packet, context) {
+    // A packet override lives inside the system function. This is the
+    // "function inside a function" extension point.
+    function move(packet, context) {
+      const x = Number(packet.payload.x);
+      const y = Number(packet.payload.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return "bad-move";
+      context.state.player.x = Math.max(24, Math.min(width - 24, x));
+      context.state.player.y = Math.max(24, Math.min(height - 24, y));
+      return "move";
+    }
+
+    if (packet.name === "move") return move(packet, context);
+
+    if (packet.name === "look") {
+      const x = Number(packet.payload.x);
+      const y = Number(packet.payload.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        context.state.mouse.x = x;
+        context.state.mouse.y = y;
+      }
+      return "look";
+    }
+
+    if (packet.name === "left_click" || packet.name === "right_click") {
+      const x = Number(packet.payload.x);
+      const y = Number(packet.payload.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return "bad-click";
+
+      context.state.clicks.push({
+        x,
+        y,
+        button: packet.name === "left_click" ? 0 : 2,
+        life: 1,
+      });
+
+      const distance = Math.hypot(x - context.state.bot.x, y - context.state.bot.y);
+      if (distance < 34) {
+        context.state.player.score += 1;
+        context.state.bot.hp = Math.max(0, context.state.bot.hp - 12);
+        context.state.messages.push(`HIT +1 (score ${context.state.player.score})`);
+        while (context.state.messages.length > 6) context.state.messages.shift();
+        if (context.state.bot.hp === 0) {
+          context.state.bot.x = width - 150;
+          context.state.bot.y = 130;
+          context.state.bot.hp = 100;
+        }
+        return "hit";
+      }
+      return "click";
+    }
+
+    return undefined;
+  }
+
+  function game_state(packet, context) {
+    if (packet.name === "snapshot") {
+      return "snapshot";
+    }
+    if (packet.name === "respawn") {
+      context.state.bot.hp = 100;
+      context.state.bot.x = width - 150;
+      context.state.bot.y = 130;
+      return "respawn";
+    }
+    return undefined;
+  }
+
+  function inventory(packet, context) {
+    if (packet.name !== "inventory") return undefined;
+    context.state.player.items += 1;
+    context.state.messages.push(`ITEM x${context.state.player.items}`);
+    while (context.state.messages.length > 6) context.state.messages.shift();
+    return "inventory";
+  }
+
+  function trade(packet, context) {
+    if (packet.name !== "trade") return undefined;
+    return `trade:${String(packet.payload.item || "item")}`;
+  }
+
+  function file_sync(packet, context) {
+    if (packet.name !== "sync") return undefined;
+    const hashes = Array.isArray(packet.payload.hashes) ? packet.payload.hashes : [];
+    context.state.messages.push(`SYNC ${hashes.length} hashy`);
+    while (context.state.messages.length > 6) context.state.messages.shift();
+    return `sync:${hashes.length}`;
+  }
+
+  function leaderboard(packet, context) {
+    if (packet.name !== "score") return undefined;
+    return `score:${context.state.player.score}`;
+  }
+
+  function metrics(packet, context) {
+    if (packet.name !== "metrics") return undefined;
+    return `sent:${context.state.sent},recv:${context.state.received}`;
+  }
+
+  registry.implement("/game_chat", game_chat);
+  registry.implement("/emotes", emotes);
+  registry.implement("/player_packets", player_packets);
+  registry.implement("/game_state", game_state);
+  registry.implement("/inventory", inventory);
+  registry.implement("/trade", trade);
+  registry.implement("/file_sync", file_sync);
+  registry.implement("/leaderboard", leaderboard);
+  registry.implement("/metrics", metrics);
+
+  function reset() {
+    state.running = false;
+    state.time = 0;
+    state.player = { x: width / 2, y: height / 2, score: 0, items: 0 };
+    state.bot = { x: width - 150, y: 130, targetX: width - 150, targetY: 130, hp: 100 };
+    state.clicks = [];
+    state.messages = [];
+    state.sent = 0;
+    state.received = 0;
+    state.bytes = 0;
+    state.oversized = 0;
+    state.lastPacket = null;
+    showPacket(null);
+    log({ direction: "SYS", system: "/arena", name: "reset", bytes: 0, status: "ok" });
+    renderStats();
+    renderSystems();
+  }
+
+  function bind() {
+    element("game-start")?.addEventListener("click", () => {
+      state.running = !state.running;
+      log({
+        direction: "SYS",
+        system: "/arena",
+        name: state.running ? "start" : "pause",
+        bytes: 0,
+        status: "ok",
+      });
+      renderStats();
+    });
+
+    element("game-reset")?.addEventListener("click", reset);
+    element("game-clear")?.addEventListener("click", () => {
+      element("game-log")?.replaceChildren();
+    });
+
+    element("game-test-4k")?.addEventListener("click", () => {
+      send("chat", { text: "A".repeat(4000) }, "4kb-test");
+    });
+    element("game-test-over")?.addEventListener("click", () => {
+      send("chat", { text: "A".repeat(5000) }, "oversize-test");
+    });
+    element("game-ping")?.addEventListener("click", () => {
+      send("ping", { nonce: Date.now() });
+    });
+    element("game-sync")?.addEventListener("click", () => {
+      send("sync", { hashes: ["a1", "b2", "c3"] });
+    });
+    element("game-emote")?.addEventListener("click", () => {
+      send("emote", { emote: "wave" });
+    });
+    element("game-trade")?.addEventListener("click", () => {
+      send("trade", { item: "potion" });
+    });
+
+    element("game-chat-form")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = element("game-chat-input");
+      const text = input?.value?.trim() || "";
+      if (!text) return;
+      send("chat", { text });
+      if (input) input.value = "";
+    });
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    canvas.addEventListener("mousemove", (event) => {
+      const point = canvasPoint(event);
+      state.mouse = point;
+      const now = performance.now();
+      if (now - state.lastLook > 100) {
+        state.lastLook = now;
+        send("look", point);
+      }
+    });
+    canvas.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      const point = canvasPoint(event);
+      send(event.button === 2 ? "right_click" : "left_click", point);
+      if (event.button === 0) send("score", { delta: 1 });
+    });
+  }
+
+  function canvasPoint(event) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * width,
+      y: ((event.clientY - rect.top) / rect.height) * height,
+    };
+  }
+
+  function tick(delta) {
+    state.time += delta;
+    const speed = 230;
+    let dx = 0;
+    let dy = 0;
+    if (keys.has("a") || keys.has("arrowleft")) dx -= 1;
+    if (keys.has("d") || keys.has("arrowright")) dx += 1;
+    if (keys.has("w") || keys.has("arrowup")) dy -= 1;
+    if (keys.has("s") || keys.has("arrowdown")) dy += 1;
+
+    if (dx || dy) {
+      const length = Math.hypot(dx, dy) || 1;
+      state.player.x = Math.max(24, Math.min(width - 24, state.player.x + (dx / length) * speed * delta));
+      state.player.y = Math.max(24, Math.min(height - 24, state.player.y + (dy / length) * speed * delta));
+      const now = performance.now();
+      if (now - state.lastMove > 90) {
+        state.lastMove = now;
+        send("move", { x: Math.round(state.player.x), y: Math.round(state.player.y) });
+      }
+    }
+
+    const botDistance = Math.hypot(state.bot.targetX - state.bot.x, state.bot.targetY - state.bot.y);
+    if (botDistance < 8) {
+      state.bot.targetX = 70 + Math.random() * (width - 140);
+      state.bot.targetY = 70 + Math.random() * (height - 140);
+    } else {
+      const step = 80 * delta;
+      state.bot.x += ((state.bot.targetX - state.bot.x) / botDistance) * step;
+      state.bot.y += ((state.bot.targetY - state.bot.y) / botDistance) * step;
+    }
+
+    for (const click of state.clicks) click.life -= delta * 1.8;
+    state.clicks = state.clicks.filter((click) => click.life > 0);
+
+    if (state.time - state.lastSnapshot > 0.8) {
+      state.lastSnapshot = state.time;
+      send("snapshot", {
+        bot: { x: Math.round(state.bot.x), y: Math.round(state.bot.y), hp: state.bot.hp },
+        player: { x: Math.round(state.player.x), y: Math.round(state.player.y) },
+      });
+    }
+  }
+
+  function render() {
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#070b14";
+    context.fillRect(0, 0, width, height);
+
+    context.strokeStyle = "#172238";
+    context.lineWidth = 1;
+    for (let x = 0; x < width; x += 40) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, height);
+      context.stroke();
+    }
+    for (let y = 0; y < height; y += 40) {
+      context.beginPath();
+      context.moveTo(0, y);
+      context.lineTo(width, y);
+      context.stroke();
+    }
+
+    context.strokeStyle = "#7dd3fc";
+    context.lineWidth = 3;
+    context.strokeRect(6, 6, width - 12, height - 12);
+
+    context.fillStyle = "#fb7185";
+    context.fillRect(state.bot.x - 18, state.bot.y - 18, 36, 36);
+    context.fillStyle = "#0b1220";
+    context.fillRect(state.bot.x - 16, state.bot.y - 16, 32, 32);
+    context.fillStyle = "#fb7185";
+    context.fillRect(state.bot.x - 14, state.bot.y - 14, 28, 28);
+
+    context.fillStyle = "#6ee7a0";
+    context.fillRect(state.bot.x - 22, state.bot.y - 30, 44, 5);
+    context.fillStyle = "#6ee7a0";
+    context.fillRect(state.bot.x - 22, state.bot.y - 30, (44 * state.bot.hp) / 100, 5);
+
+    context.beginPath();
+    context.arc(state.player.x, state.player.y, 20, 0, Math.PI * 2);
+    context.fillStyle = "#7dd3fc";
+    context.fill();
+    context.beginPath();
+    context.moveTo(state.player.x, state.player.y);
+    context.lineTo(
+      state.player.x + Math.cos(Math.atan2(state.mouse.y - state.player.y, state.mouse.x - state.player.x)) * 30,
+      state.player.y + Math.sin(Math.atan2(state.mouse.y - state.player.y, state.mouse.x - state.player.x)) * 30,
+    );
+    context.strokeStyle = "#fbbf24";
+    context.lineWidth = 3;
+    context.stroke();
+
+    for (const click of state.clicks) {
+      context.globalAlpha = Math.max(0, click.life);
+      context.strokeStyle = click.button === 0 ? "#6ee7a0" : "#f472b6";
+      context.lineWidth = 3;
+      context.beginPath();
+      context.arc(click.x, click.y, 18 + (1 - click.life) * 24, 0, Math.PI * 2);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+
+    context.fillStyle = "#f4f7ff";
+    context.font = "bold 18px ui-monospace, monospace";
+    context.fillText(`SCORE ${state.player.score}`, 24, 38);
+    context.fillText(`ITEMS ${state.player.items}`, 24, 64);
+    context.fillStyle = "#a7b6cc";
+    context.font = "12px ui-monospace, monospace";
+    context.fillText(state.running ? "RUNNING // WASD / LPM / PPM / CHAT" : "PAUSED // START", 24, height - 24);
+
+    state.messages.forEach((message, index) => {
+      context.fillStyle = index === state.messages.length - 1 ? "#fbbf24" : "#a7b6cc";
+      context.fillText(message, width - 360, 28 + index * 18);
+    });
+  }
+
+  function frame(now) {
+    if (state.destroyed || !canvas.isConnected) return;
+    const delta = Math.min(0.05, Math.max(0, (now - (frame.last || now)) / 1000));
+    frame.last = now;
+    if (state.running) tick(delta);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  bind();
+  renderStats();
+  renderSystems();
+  showPacket(null);
+  render();
+  if (new URLSearchParams(location.search).get("still") !== "1") {
+    requestAnimationFrame(frame);
+  }
+
+  return {
+    get destroyed() {
+      return state.destroyed;
+    },
+    set destroyed(value) {
+      state.destroyed = value;
+    },
+  };
+}
+
+document.addEventListener("rweb:rendered", initGame);
+initGame();

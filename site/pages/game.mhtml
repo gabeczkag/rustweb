@@ -1,0 +1,65 @@
+<section class="game-page">
+  <div class="game-head">
+    <div>
+      <p class="eyebrow">06 // GAME LAB // PACKET SYSTEMS</p>
+      <h1>PACKET<br><span>ARENA.</span></h1>
+      <p class="lead">Mini gra do testu systemow pakietowych. Kazdy pakiet ma maksymalnie 4096 B, a kazdy kanal jest funkcja z mozliwoscia nadpisania pakietu.</p>
+    </div>
+    <div class="badges">
+      <span class="badge">MAX 4096 B</span>
+      <span class="badge">9 SYSTEMOW</span>
+      <span class="badge">LOG NA ZYWO</span>
+      <span class="badge">UDP/TCPS TEST</span>
+    </div>
+  </div>
+
+  <div class="game-shell">
+    <div class="game-stage">
+      <canvas id="game-canvas" class="game-canvas" width="960" height="540" tabindex="0"></canvas>
+      <div class="game-toolbar">
+        <button id="game-start" class="button" type="button">START / PAUSE</button>
+        <button id="game-reset" class="badge" type="button">RESET</button>
+        <button id="game-clear" class="badge" type="button">CZYSC LOG</button>
+        <button id="game-ping" class="badge" type="button">PING</button>
+        <button id="game-sync" class="badge" type="button">SYNC</button>
+        <button id="game-emote" class="badge" type="button">EMOTE</button>
+        <button id="game-trade" class="badge" type="button">TRADE</button>
+        <button id="game-test-4k" class="badge" type="button">TEST 4 KB</button>
+        <button id="game-test-over" class="badge" type="button">TEST &gt; 4 KB</button>
+      </div>
+    </div>
+
+    <aside class="game-side">
+      <div class="spec-board game-stats">
+        <div class="spec-cell"><strong id="game-status">PAUSED</strong><span>STATUS</span></div>
+        <div class="spec-cell"><strong id="game-packets">0 / 0</strong><span>OUT / IN</span></div>
+        <div class="spec-cell"><strong id="game-bytes">0 B</strong><span>BANDWIDTH</span></div>
+        <div class="spec-cell"><strong id="game-oversize">0</strong><span>OVERSIZE</span></div>
+        <div class="spec-cell"><strong id="game-packet-types">0</strong><span>PAKETY</span></div>
+        <div class="spec-cell"><strong id="game-max-packet">4096 B</strong><span>LIMIT</span></div>
+      </div>
+
+      <div>
+        <p class="eyebrow">SYSTEMY</p>
+        <div id="game-systems" class="game-systems"></div>
+      </div>
+
+      <form id="game-chat-form" class="game-chat">
+        <input id="game-chat-input" maxlength="180" placeholder="Napisz na /game_chat..." autocomplete="off">
+        <button class="badge" type="submit">WYSLIJ</button>
+      </form>
+    </aside>
+  </div>
+
+  <div class="game-bottom">
+    <section>
+      <p class="eyebrow">LOG PAKIETOW</p>
+      <div id="game-log" class="game-log"></div>
+    </section>
+    <section>
+      <p class="eyebrow">OSTATNI PAKIET</p>
+      <pre><code id="game-packet">// brak pakietu</code></pre>
+      <p class="note">WASD / strzalki = move. LPM = left_click. PPM = right_click. Mysz = look. Chat = /game_chat.</p>
+    </section>
+  </div>
+</section>

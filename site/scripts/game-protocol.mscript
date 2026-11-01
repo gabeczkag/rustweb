@@ -1,0 +1,155 @@
+export const MAX_PACKET_BYTES = 4096;
+
+export const PACKET_KINDS = {
+  move: 1,
+  look: 2,
+  left_click: 3,
+  right_click: 4,
+  chat: 5,
+  ping: 6,
+  snapshot: 7,
+  sync: 8,
+  inventory: 9,
+  score: 10,
+  emote: 11,
+  trade: 12,
+  respawn: 13,
+  metrics: 14,
+};
+
+export const default_packets = Object.freeze({
+  move: { kind: PACKET_KINDS.move },
+  look: { kind: PACKET_KINDS.look },
+  left_click: { kind: PACKET_KINDS.left_click },
+  right_click: { kind: PACKET_KINDS.right_click },
+  chat: { kind: PACKET_KINDS.chat },
+  ping: { kind: PACKET_KINDS.ping },
+  snapshot: { kind: PACKET_KINDS.snapshot },
+  sync: { kind: PACKET_KINDS.sync },
+  inventory: { kind: PACKET_KINDS.inventory },
+  score: { kind: PACKET_KINDS.score },
+  emote: { kind: PACKET_KINDS.emote },
+  trade: { kind: PACKET_KINDS.trade },
+  respawn: { kind: PACKET_KINDS.respawn },
+  metrics: { kind: PACKET_KINDS.metrics },
+});
+
+const KIND_NAMES = Object.fromEntries(
+  Object.entries(PACKET_KINDS).map(([name, kind]) => [kind, name]),
+);
+
+export const default_systems = Object.freeze([
+  { name: "/game_chat", packets: ["chat", "ping"] },
+  { name: "/emotes", packets: ["emote"] },
+  { name: "/player_packets", packets: ["move", "look", "left_click", "right_click"] },
+  { name: "/game_state", packets: ["snapshot", "respawn"] },
+  { name: "/inventory", packets: ["inventory"] },
+  { name: "/trade", packets: ["trade"] },
+  { name: "/file_sync", packets: ["sync"] },
+  { name: "/leaderboard", packets: ["score"] },
+  { name: "/metrics", packets: ["metrics"] },
+]);
+
+export function encodePacket(name, payload = {}) {
+  const packet = default_packets[name];
+  if (!packet) {
+    throw new Error(`UNKNOWN_PACKET:${name}`);
+  }
+
+  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const total = 3 + data.length;
+  if (total > MAX_PACKET_BYTES) {
+    throw new Error(`PACKET_TOO_LARGE:${total}`);
+  }
+  if (data.length > 0xffff) {
+    throw new Error(`PACKET_TOO_LARGE:${total}`);
+  }
+
+  const bytes = new Uint8Array(total);
+  bytes[0] = packet.kind;
+  bytes[1] = (data.length >> 8) & 0xff;
+  bytes[2] = data.length & 0xff;
+  bytes.set(data, 3);
+  return bytes;
+}
+
+export function decodePacket(bytes) {
+  if (bytes.length > MAX_PACKET_BYTES) {
+    throw new Error(`PACKET_TOO_LARGE:${bytes.length}`);
+  }
+  if (bytes.length < 3) {
+    throw new Error("PACKET_TOO_SHORT");
+  }
+
+  const kind = bytes[0];
+  const length = (bytes[1] << 8) | bytes[2];
+  if (length !== bytes.length - 3) {
+    throw new Error("PACKET_LENGTH_MISMATCH");
+  }
+
+  const name = KIND_NAMES[kind];
+  if (!name) {
+    throw new Error(`UNKNOWN_KIND:${kind}`);
+  }
+
+  const payloadText = new TextDecoder().decode(bytes.subarray(3));
+  let payload = {};
+  if (payloadText.length > 0) {
+    payload = JSON.parse(payloadText);
+  }
+
+  return { name, payload, bytes: bytes.length };
+}
+
+export function createRegistry() {
+  const systems = new Map();
+
+  for (const definition of default_systems) {
+    systems.set(definition.name, {
+      name: definition.name,
+      packets: [...definition.packets],
+      handler: null,
+      overrides: {},
+      count: 0,
+      bytes: 0,
+    });
+  }
+
+  return {
+    list() {
+      return Array.from(systems.values()).map((system) => ({
+        name: system.name,
+        packets: [...system.packets],
+        count: system.count,
+        bytes: system.bytes,
+      }));
+    },
+
+    implement(name, handler) {
+      const system = systems.get(name);
+      if (system) system.handler = handler;
+    },
+
+    override(name, packetName, handler) {
+      const system = systems.get(name);
+      if (system) system.overrides[packetName] = handler;
+    },
+
+    route(packet, context) {
+      for (const system of systems.values()) {
+        if (!system.packets.includes(packet.name)) continue;
+        const handler = system.overrides[packet.name] || system.handler;
+        if (!handler) continue;
+
+        system.count += 1;
+        system.bytes += packet.bytes;
+        return {
+          system: system.name,
+          result: handler(packet, context, system),
+        };
+      }
+
+      return { system: "/unrouted", result: null };
+    },
+  };
+}

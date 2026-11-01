@@ -948,3 +948,191 @@ button.badge {
 .cert-invalid {
   color: var(--red) !important;
 }
+
+.game-page {
+  display: grid;
+  gap: 22px;
+}
+
+.game-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.game-head h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(38px, 8vw, 86px);
+  line-height: 0.9;
+}
+
+.game-head h1 span {
+  color: var(--sky);
+}
+
+.game-head .lead {
+  max-width: 720px;
+}
+
+.game-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.game-stage {
+  padding: 12px;
+  border: 3px solid var(--line);
+  background: var(--panel);
+  box-shadow: 7px 7px 0 var(--line);
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid var(--line);
+  background: #070b14;
+  image-rendering: pixelated;
+}
+
+.game-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.game-toolbar button,
+button.badge {
+  cursor: pointer;
+}
+
+.game-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.game-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.game-stats .spec-cell strong {
+  font-size: 18px;
+}
+
+.game-systems {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.game-system {
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.game-system strong {
+  display: block;
+  color: var(--sky);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.game-system small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+}
+
+.game-chat {
+  display: flex;
+  gap: 6px;
+}
+
+.game-chat input {
+  min-width: 0;
+  flex: 1;
+  padding: 10px;
+  border: 3px solid var(--line);
+  background: #03050b;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  outline: none;
+}
+
+.game-chat input:focus {
+  border-color: var(--sky);
+}
+
+.game-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 20px;
+}
+
+.game-log {
+  height: 360px;
+  margin-top: 10px;
+  overflow: auto;
+  border: 3px solid var(--line);
+  background: #03050b;
+  box-shadow: 5px 5px 0 var(--line);
+  padding: 8px;
+}
+
+.game-log-entry {
+  padding: 3px 7px;
+  border-left: 3px solid var(--muted);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.game-log-entry.out {
+  border-color: var(--sky);
+  color: var(--sky);
+}
+
+.game-log-entry.in {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.game-log-entry.route {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.game-log-entry.err {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.game-log-entry.sys {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+#game-packet {
+  max-height: 360px;
+  overflow: auto;
+}
+
+@media (max-width: 980px) {
+  .game-shell,
+  .game-bottom {
+    grid-template-columns: 1fr;
+  }
+}

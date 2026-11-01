@@ -110,6 +110,8 @@ Invalid input returns the FastAPI shape:
   the same request shape and max-2 limit as the Supabase backend.
 - `tcps`: a separate per-user TCP/HTTP file sync and UDP player supervisor with
   manifests, missing-file sync, debug paths, and bandwidth limits.
+- `/game`: a browser packet lab with 4096-byte packet limits, nine pre-made
+  systems, channel functions, packet overrides, and a live log.
 
 ## How it works
 
@@ -233,7 +235,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **54 KiB** (~17 KB gzipped on Pages) and contains ASCII only
+compiles to about **72 KiB** (~22 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.
@@ -342,8 +344,30 @@ document is reduced to its `<body>`.
 
 ```bash
 rweb inspect site/site.rweb
-# RustWeb — 0.1.0, 5 routes: /, /about, /bench, /viewer, /cert
+# RustWeb — 0.1.0, 6 routes: /, /about, /bench, /viewer, /cert, /game
 ```
+
+### Game Lab
+
+`/game` is a browser test bench for the packet/channel model. It has a small
+canvas arena, WASD movement, left/right clicks, chat, packet logs, and a live
+registry of nine systems:
+
+```text
+/game_chat  /emotes  /player_packets  /game_state
+/inventory  /trade   /file_sync       /leaderboard
+/metrics
+```
+
+The default packet set includes `move`, `look`, `left_click`, `right_click`,
+`chat`, `ping`, `snapshot`, `sync`, `inventory`, `score`, `emote`, `trade`,
+`respawn`, and `metrics`. Every packet is limited to **4096 bytes** at encode
+and decode time. A channel is a function; a system can import the default
+packets and override one by defining a function named after the packet inside
+its channel function.
+
+The game is a local browser simulation. TCPs remains a separate service; this
+page tests the packet/channel logic without requiring the UDP server.
 
 ### Byrust protocol
 
