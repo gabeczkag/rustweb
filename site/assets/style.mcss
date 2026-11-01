@@ -2707,3 +2707,48 @@ button.badge {
   font-size: 8px;
   letter-spacing: 0.12em;
 }
+
+.reel-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(244, 241, 232, 0.025) 0,
+      rgba(244, 241, 232, 0.025) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  opacity: 0.65;
+  animation: reel-scanline 3.2s linear infinite;
+}
+
+.reel-hud {
+  z-index: 2;
+}
+
+.reel-live-ticker.beat {
+  animation: reel-ticker-beat 240ms ease;
+}
+
+@keyframes reel-scanline {
+  from { transform: translateY(-8px); }
+  to { transform: translateY(8px); }
+}
+
+@keyframes reel-ticker-beat {
+  50% {
+    background: var(--reel-lime);
+    color: #0f1115;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-stage::after,
+  .reel-live-ticker.beat {
+    animation: none;
+  }
+}

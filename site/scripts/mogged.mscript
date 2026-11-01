@@ -87,6 +87,11 @@ function createReel(canvas, ctx) {
   let destroyed = false;
   let previous = 0;
   let raf = 0;
+  let lastScene = -1;
+  const previousCanvas = document.createElement("canvas");
+  previousCanvas.width = W;
+  previousCanvas.height = H;
+  const previousCtx = previousCanvas.getContext("2d");
 
   function clamp01(value) {
     return Math.max(0, Math.min(1, value));
@@ -302,8 +307,9 @@ function createReel(canvas, ctx) {
       ["PLAIN AXUM", "208 173", 0.99, C.lime],
       ["FASTAPI", "14 000", 0.07, C.coral],
     ];
+    const reveal = 0.18 + 0.82 * easeOutCubic(clamp01(p * 2));
     for (const [index, [name, value, fraction, color]] of bars.entries()) {
-      bar(name, value, fraction * easeOutCubic(clamp01(p * 2)), 90, 630 + index * 76, 810, color);
+      bar(name, value, Math.max(0.035, fraction * reveal), 90, 630 + index * 76, 810, color);
     }
 
     code(
@@ -673,6 +679,79 @@ function createReel(canvas, ctx) {
 
   }
 
+  function drawTransition(scene, local) {
+    if (!previousCtx || scene === 0 || local > 0.18) return;
+
+    const strength = 1 - local / 0.18;
+    const eased = easeOutCubic(strength);
+    const style = scene % 4;
+
+    ctx.save();
+    if (style === 0) {
+      const cut = H * (1 - eased);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(W, 0);
+      ctx.lineTo(W, cut);
+      ctx.lineTo(0, cut + 90);
+      ctx.closePath();
+      ctx.clip();
+      ctx.globalAlpha = 0.94;
+      ctx.drawImage(previousCanvas, 0, 0);
+    } else if (style === 1) {
+      const bars = 14;
+      const barHeight = H / bars;
+      for (let index = 0; index < bars; index += 1) {
+        const offset = (index % 2 === 0 ? 1 : -1) * eased * 150;
+        ctx.drawImage(
+          previousCanvas,
+          0,
+          index * barHeight,
+          W,
+          barHeight,
+          offset,
+          index * barHeight,
+          W,
+          barHeight,
+        );
+      }
+    } else if (style === 2) {
+      const columns = 12;
+      const columnWidth = W / columns;
+      for (let index = 0; index < columns; index += 1) {
+        const offset = (index % 2 === 0 ? 1 : -1) * eased * 120;
+        ctx.drawImage(
+          previousCanvas,
+          index * columnWidth,
+          0,
+          columnWidth,
+          H,
+          index * columnWidth + offset,
+          0,
+          columnWidth,
+          H,
+        );
+      }
+    } else {
+      ctx.globalAlpha = eased * 0.75;
+      ctx.drawImage(previousCanvas, 0, 0);
+      ctx.fillStyle = C.coral;
+      ctx.globalAlpha = eased * 0.22;
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = C.lime;
+    ctx.globalAlpha = eased * 0.9;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, H * (1 - eased));
+    ctx.lineTo(W, H * (1 - eased) - 70);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawOutro(local) {
     clear();
     const p = clamp01(local);
@@ -715,6 +794,12 @@ function createReel(canvas, ctx) {
     const end = scene + 1 < SCENES.length ? SCENES[scene + 1].start : DURATION;
     const local = (value - start) / (end - start);
 
+    if (scene !== lastScene && lastScene !== -1 && previousCtx) {
+      previousCtx.clearRect(0, 0, W, H);
+      previousCtx.drawImage(canvas, 0, 0);
+    }
+    lastScene = scene;
+
     if (scene === 0) drawIntro(local);
     else if (scene === 1) drawApi(local);
     else if (scene === 2) drawMhtml(local);
@@ -726,6 +811,8 @@ function createReel(canvas, ctx) {
     else if (scene === 8) drawBench(local);
     else drawOutro(local);
 
+    drawTransition(scene, local);
+
     const frame = Math.min(FRAMES - 1, Math.floor(value * FPS));
     const seconds = Math.floor(value);
     const frameInSecond = frame % FPS;
@@ -735,7 +822,15 @@ function createReel(canvas, ctx) {
       timecode.textContent = `00:00:${String(seconds).padStart(2, "0")}:${String(frameInSecond).padStart(2, "0")}`;
     }
     if (sceneHud) sceneHud.textContent = SCENES[scene].label;
-    if (liveTicker) liveTicker.textContent = `RUSTWEB // ${TICKER[Math.floor(value * 4) % TICKER.length]}`;
+    if (liveTicker) {
+      const ticker = `RUSTWEB // ${TICKER[Math.floor(value * 4) % TICKER.length]}`;
+      if (liveTicker.textContent !== ticker) {
+        liveTicker.textContent = ticker;
+        liveTicker.classList.remove("beat");
+        void liveTicker.offsetWidth;
+        liveTicker.classList.add("beat");
+      }
+    }
     if (playhead) playhead.style.setProperty("--playhead", `${(value / DURATION) * 100}%`);
     if (scrub && document.activeElement !== scrub) scrub.value = String(frame);
     if (timeline) {
