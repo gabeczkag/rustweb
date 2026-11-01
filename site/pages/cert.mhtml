@@ -2,7 +2,7 @@
   <div class="hero-copy">
     <p class="eyebrow">CERTIFICATION DB // AES-256</p>
     <h1>CERTYFIKATY<br><span>W JEDNYM MIEJSCU.</span></h1>
-    <p class="lead">Zarejestruj aplikacje, zaszyfruj UUID i private key, opublikuj fingerprint. 128-znakowe haslo pokazuje sie raz i nie jest nigdzie zapisywane.</p>
+    <p class="lead">Zarejestruj aplikacje, zaszyfruj UUID i private key, opublikuj fingerprint w Supabase. 128-znakowe haslo pokazuje sie raz i nie jest nigdzie zapisywane.</p>
     <div class="badges">
       <span class="badge">AES-256-GCM</span>
       <span class="badge">PBKDF2 210K</span>
@@ -65,6 +65,7 @@
   <div>
     <p class="eyebrow">04 // DATABASE</p>
     <h2>PUBLICZNE WPISY</h2>
+    <div id="cert-api-status" class="note">LACZENIE Z SUPABASE...</div>
     <div id="cert-db" class="cert-list"></div>
     <div class="actions">
       <button id="cert-export" class="badge" type="button">EKSPORT LOKALNYCH</button>
@@ -76,7 +77,7 @@
   <p class="eyebrow">05 // SECURITY</p>
   <h2>CO JEST PUBLICZNE</h2>
   <p>Baza pokazuje app, public key, fingerprint, commitment UUID i zaszyfrowany payload. UUID i private key sa w AES-256-GCM; commitment pozwala sprawdzic claimed UUID bez trzymania go plaintextem.</p>
-  <p class="note">Static Pages: rejestracje sa lokalne i eksportowalne. Wspolna DB = dodaj wyeksportowany wpis do <code>linker.json</code> (data.certifications) lub zrob PR. Utrata hasla = brak recovery.</p>
+  <p class="note">Supabase: publiczny odczyt i zapis przez RPC. Limit 2 aplikacje na uzytkownika (IP + HWID + fingerprint), egzekwowany po stronie bazy. Gdy Supabase jest niedostepne, wpis zostaje lokalnie i nie jest publiczny. Utrata hasla = brak recovery.</p>
 </section>
 
-<textarea id="cert-seed" hidden>{{{ certifications }}}</textarea>
+<textarea id="cert-seed" hidden data-supabase-url="{{ supabase_url }}" data-supabase-key="{{ supabase_key }}">{{{ certifications }}}</textarea>

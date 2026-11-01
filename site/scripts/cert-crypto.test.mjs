@@ -10,6 +10,10 @@ if ("uuid" in entry) {
   throw new Error("UUID leaked into the public entry");
 }
 
+if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(entry.app_id)) {
+  throw new Error(`invalid public app_id ${entry.app_id}`);
+}
+
 const result = await checkEntry(entry, password);
 
 if (!result.valid) {

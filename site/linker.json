@@ -110,6 +110,8 @@
     "protocol_json": "\"protocol\": {\n  \"name\": \"byrust\",\n  \"version\": 1,\n  \"https\": true,\n  \"alias\": \"byrust\"\n}",
     "memory_note": "Pomiar RSS po starcie, bez ruchu: ~6,6 MB dla rustweb i ~153 MB dla FastAPI + uvicorn z dwoma workerami. Jeden proces, jeden plik HTML, zero runtime'owego templatingu.",
     "linker_note": "linker.json wskazuje strony, style, skrypty i assety. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript i zamienia obrazy na data URI. Wynik to jeden plik .rweb.",
+    "supabase_url": "https://cupqcdjwhwhqiwqpamft.supabase.co",
+    "supabase_key": "sb_publishable_1P--g-axixiM9pH4RQQhww_1LgV6TJq",
     "certifications": [
       {
         "version": 1,
@@ -124,7 +126,8 @@
         "status": "SEALED",
         "created": "2026-11-01T15:23:11.552Z",
         "trust": "app",
-        "algo": "AES-256-GCM/PBKDF2-SHA256/ECDSA-P-256"
+        "algo": "AES-256-GCM/PBKDF2-SHA256/ECDSA-P-256",
+        "app_id": "9f1c2d3e-4b5a-4c6d-8e7f-0123456789ab"
       }
     ]
   },

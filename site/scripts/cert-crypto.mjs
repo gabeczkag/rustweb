@@ -106,6 +106,7 @@ export async function registerApp(appName, uuidInput = "") {
   const iv = randomBytes(12);
   const key = await deriveKey(password, salt);
   const marker = MARKERS[crypto.getRandomValues(new Uint8Array(1))[0] & 1];
+  const appId = crypto.randomUUID();
   const payload = {
     uuid,
     private_key: toBase64(privateKey),
@@ -129,6 +130,7 @@ export async function registerApp(appName, uuidInput = "") {
     password,
     entry: {
       version: 1,
+      app_id: appId,
       app: name,
       public_key: toBase64(publicKey),
       key_fingerprint: fingerprint,

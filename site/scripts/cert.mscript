@@ -1,7 +1,10 @@
 import { registerApp, checkEntry, selfTest } from "./cert-crypto.mjs";
+import { fetchPublicEntries, normalizePublicEntry, publishEntry, supabaseConfigured } from "./cert-supabase.mjs";
 
 const STORAGE = "byrust.certifications.v1";
 let lastRegistration = null;
+let remoteEntries = [];
+let remoteStatus = "unconfigured";
 
 function el(id) {
   return document.getElementById(id);
@@ -35,13 +38,22 @@ function saveLocal(entries) {
 function allEntries() {
   const entries = new Map();
 
-  for (const entry of [...readSeed(), ...readLocal()]) {
-    if (entry?.key_fingerprint) {
-      entries.set(entry.key_fingerprint, entry);
+  for (const entry of [...readSeed(), ...readLocal(), ...remoteEntries]) {
+    const normalized = normalizePublicEntry(entry);
+    if (normalized?.key_fingerprint) {
+      entries.set(normalized.key_fingerprint, normalized);
     }
   }
 
   return Array.from(entries.values());
+}
+
+function mergeRemote(entries, entry) {
+  const merged = new Map(entries.map((item) => [item.key_fingerprint, item]));
+  if (entry?.key_fingerprint) {
+    merged.set(entry.key_fingerprint, normalizePublicEntry(entry));
+  }
+  return Array.from(merged.values());
 }
 
 function addLocal(entry) {
@@ -53,7 +65,7 @@ function addLocal(entry) {
 }
 
 function formatEntry(entry) {
-  return JSON.stringify(entry, null, 2);
+  return JSON.stringify(normalizePublicEntry(entry), null, 2);
 }
 
 function download(name, text) {
@@ -88,6 +100,14 @@ function showRegisterError(message) {
   if (node) node.textContent = message;
 }
 
+function setApiStatus(message, valid) {
+  const node = el("cert-api-status");
+  if (!node) return;
+  node.textContent = message;
+  node.classList.toggle("cert-valid", valid);
+  node.classList.toggle("cert-invalid", !valid);
+}
+
 function renderDb() {
   const container = el("cert-db");
   if (!container) return;
@@ -95,7 +115,9 @@ function renderDb() {
   container.replaceChildren();
   const entries = allEntries();
   const count = el("cert-count");
-  if (count) count.textContent = `${entries.length} ENTRIES // PUBLIC`;
+  if (count) {
+    count.textContent = `${entries.length} ENTRIES // ${remoteStatus === "ok" ? "PUBLIC" : "LOCAL"}`;
+  }
 
   if (!entries.length) {
     const note = document.createElement("div");
@@ -114,6 +136,9 @@ function renderDb() {
 
     const meta = document.createElement("small");
     meta.textContent = `${entry.status || "SEALED"} // ${entry.key_fingerprint || ""}`;
+
+    const appId = document.createElement("small");
+    appId.textContent = entry.app_id ? `APP ID ${entry.app_id}` : "";
 
     const created = document.createElement("small");
     created.textContent = entry.created || "";
@@ -144,7 +169,7 @@ function renderDb() {
     });
 
     actions.append(check, copyButton);
-    item.append(title, meta, created, actions);
+    item.append(title, meta, appId, created, actions);
     container.append(item);
   }
 }
@@ -161,6 +186,32 @@ function renderRegistration(result) {
   if (output) output.hidden = false;
 }
 
+async function refreshRemote() {
+  if (!supabaseConfigured()) {
+    remoteStatus = "unconfigured";
+    setApiStatus("BAZA LOKALNA: SUPABASE NIE SKONFIGUROWANE", false);
+    renderDb();
+    return;
+  }
+
+  setApiStatus("LACZENIE Z SUPABASE...", true);
+  const result = await fetchPublicEntries();
+
+  if (result.status === "ok") {
+    remoteStatus = "ok";
+    remoteEntries = result.entries;
+    setApiStatus(`SUPABASE: ${remoteEntries.length} PUBLICZNYCH WPISOW`, true);
+  } else {
+    remoteStatus = result.status;
+    setApiStatus(
+      `SUPABASE NIEDOSTEPNE: ${result.error || result.status} — FALLBACK LOKALNY`,
+      false,
+    );
+  }
+
+  renderDb();
+}
+
 function attach() {
   const form = el("cert-register-form");
   if (!form) return;
@@ -174,10 +225,33 @@ function attach() {
         el("cert-app-name")?.value || "",
         el("cert-app-uuid")?.value || "",
       );
-      addLocal(result.entry);
       renderRegistration(result);
+
+      const published = await publishEntry(result.entry);
+
+      if (published.status === "ok") {
+        addLocal(result.entry);
+        remoteEntries = mergeRemote(remoteEntries, published.entry || result.entry);
+        remoteStatus = "ok";
+        setApiStatus("WPIS PUBLICZNY W SUPABASE", true);
+        showRegisterError(
+          "APP ZAREJESTROWANA PUBLICZNIE. HASLO POKAZANO RAZ — ZAPISZ JE.",
+        );
+      } else if (published.status === "limit") {
+        showRegisterError(
+          "LIMIT OSIAGNIETY: MAKSYMALNIE 2 APLIKACJE NA UZYTKOWNIKA (IP + HWID + FINGERPRINT).",
+        );
+      } else if (published.status === "unconfigured" || published.status === "offline") {
+        addLocal(result.entry);
+        setApiStatus("SUPABASE NIEDOSTEPNE — FALLBACK LOKALNY", false);
+        showRegisterError(
+          "SUPABASE NIEDOSTEPNE. WPIS ZAPISANY LOKALNIE; NIE JEST PUBLICZNY.",
+        );
+      } else {
+        showRegisterError(`BLAD PUBLIKACJI: ${published.error}`);
+      }
+
       renderDb();
-      showRegisterError("APP ZAREJESTROWANA LOKALNIE. HASLO POKAZANO RAZ — ZAPISZ JE.");
     } catch (error) {
       showRegisterError(`BLAD: ${error.message || error}`);
     }
@@ -250,6 +324,7 @@ function attach() {
   });
 
   renderDb();
+  refreshRemote();
 
   if (new URLSearchParams(location.search).get("cert-test") === "1") {
     selfTest().then((result) => {

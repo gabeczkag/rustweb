@@ -103,9 +103,9 @@ Invalid input returns the FastAPI shape:
   document.
 - `/viewer`: drag-and-drop `.rweb` inspector with metadata, size, gzip, source,
   and a sandboxed preview.
-- `/cert`: browser-side certification registry. Each entry seals its UUID and
-  ECDSA P-256 private key with AES-256-GCM and publishes only the public key,
-  fingerprint, and UUID commitment.
+- `/cert`: Supabase-backed public certification registry. Each entry seals its
+  UUID and ECDSA P-256 private key with AES-256-GCM and publishes a separate
+  public `app_id`, public key, fingerprint, and UUID commitment.
 
 ## How it works
 
@@ -224,7 +224,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **49 KiB** (~16 KB gzipped on Pages) and contains ASCII only
+compiles to about **53 KiB** (~17 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.
@@ -256,35 +256,48 @@ SPA fallback only handles unmatched routes.
 
 ### Certification Database
 
-`/cert` is a static, browser-side registry for app identities. Registering an
-app generates an ECDSA P-256 keypair and a 128-character one-time password
-(shown once, never stored). The UUID, private key, and a marker are serialized
-and sealed with AES-256-GCM. The encryption key is derived from the password
-with PBKDF2-SHA256 (210,000 iterations) and a random 16-byte salt. The public
-entry contains only the app name, public key, SHA-256 key fingerprint, salt,
-IV, ciphertext, and a UUID commitment:
+`/cert` is a public registry backed by Supabase when configured. Registering
+an app generates an ECDSA P-256 keypair and a 128-character one-time password
+(shown once, never stored). The UUID, private key, and a marker are sealed with
+AES-256-GCM. The public entry contains `app_id` (a separate public UUID),
+`uuid_commitment`, `encrypted_key`, `public_key`, `key_fingerprint`, salt, IV,
+iterations, and the encrypted payload. The private UUID stays inside the
+ciphertext.
 
-```text
-SHA-256("byrust-uuid-v1:" + uuid + ":" + salt)
-```
+The browser calls two Postgres RPCs with the publishable key:
 
-The checker takes the public entry and the one-time password, decrypts the
-payload, and verifies the marker (`POPRAWNE` or the randomly chosen
-`as10sign edi5nbaseApro3ved`), the UUID commitment, the key fingerprint, and an
-ECDSA signature made with the recovered private key. A successful check prints
-`POPRAWNE`, the UUID, and the PKCS#8 private key. A wrong password or a tampered
-entry fails without revealing the UUID.
+- `POST /rest/v1/rpc/get_certinfo` returns the public list.
+- `POST /rest/v1/rpc/register_certification` stores one entry. Body:
+  `{"payload": entry, "hwid": "...", "fingerprint": "..."}`.
 
-On GitHub Pages there is no writable server database: registrations live in
-`localStorage`, can be exported as JSON, and become part of the shared public
-registry by adding the entry to `linker.json` under `data.certifications` (or
-by opening a PR). The bundled registry contains the public `RustWeb Site`
-entry; its one-time password is not in this repository. Losing a password means
-losing the ability to decrypt that entry; there is no recovery.
+The RPC hashes IP (from `x-forwarded-for`), HWID, and the device fingerprint,
+and allows at most **2 applications per identity, HWID, fingerprint, and IP**.
+Raw identifiers are never stored. Direct table writes are blocked; `anon` can
+only execute the two security-definer functions. The limit is best-effort:
+VPN/proxy changes IP, and browser HWID/fingerprint values can be spoofed.
 
-This is client-side cryptography on a static page, so the hosting origin can
-always serve different JavaScript. Treat the checker as a convenience and
-verify high-value identities with a server-side implementation.
+The checker decrypts the payload and verifies the marker (`POPRAWNE` or
+`as10sign edi5nbaseApro3ved`), the UUID commitment, key fingerprint, and ECDSA
+signature. A successful check prints `POPRAWNE`, the UUID, and the PKCS#8
+private key. A wrong password or tampered entry fails without revealing the
+UUID. The bundled `RustWeb Site` seed is public; its one-time password is not
+in this repository.
+
+#### Supabase setup
+
+1. Open the Supabase SQL Editor for the project and run
+   [`supabase/schema.sql`](supabase/schema.sql).
+2. Put the project URL and **publishable** key in `site/linker.json` under
+   `data.supabase_url` / `data.supabase_key`.
+3. Never put `sb_secret_...` in the browser, `site.rweb`, or git. The secret key
+   is not needed for registration; rotate it if it was exposed.
+4. Run `bash site/build.sh` and deploy.
+
+Without Supabase config, or when the RPC is unavailable, `/cert` falls back to
+`localStorage`; those entries are not public. An exact `/certinfo/` path on
+GitHub Pages is not available because Pages serves only static files. The
+Supabase RPC URL is the public endpoint; a RustWeb/Worker proxy is required for
+an exact `/certinfo/` path on your own domain.
 
 ```bash
 node site/scripts/cert-crypto.test.mjs
@@ -411,6 +424,7 @@ rustweb/          core framework: builder, extractors, errors, OpenAPI
 rustweb-macros/   route/model/query procedural macros
 mhtml/            MHTML parser, page compiler, .rweb bundler, rweb CLI
 site/             mini site sources and the built site/site.rweb
+supabase/         SQL schema and RPCs for the public certification registry
 bench-load/       small hyper-based load generator
 bench/            benchmark script and results
 ```
