@@ -14,6 +14,7 @@ mod app;
 mod error;
 mod extract;
 mod route;
+mod spec;
 
 pub use app::RustWeb;
 pub use error::{ApiError, ApiErrorBody, ApiResult};

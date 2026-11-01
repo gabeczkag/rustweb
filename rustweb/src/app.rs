@@ -1,7 +1,10 @@
 use axum::Router;
 use utoipa::openapi::{path::Operation, schema::Schema, RefOr};
+use utoipa_swagger_ui::SwaggerUi;
 
+use crate::error::ApiError;
 use crate::route::Route;
+use crate::spec;
 
 pub(crate) struct RouteMeta {
     pub method: axum::http::Method,
@@ -24,6 +27,8 @@ pub struct RustWeb {
     version: String,
     router: Router,
     routes: Vec<RouteMeta>,
+    docs_path: Option<String>,
+    openapi_path: String,
 }
 
 impl RustWeb {
@@ -34,6 +39,8 @@ impl RustWeb {
             version: version.into(),
             router: Router::new(),
             routes: Vec::new(),
+            docs_path: Some("/docs".to_owned()),
+            openapi_path: "/openapi.json".to_owned(),
         }
     }
 
@@ -49,9 +56,39 @@ impl RustWeb {
         self
     }
 
+    /// Change the Swagger UI path (default: `/docs`).
+    pub fn docs(mut self, path: impl Into<String>) -> Self {
+        self.docs_path = Some(path.into());
+        self
+    }
+
+    /// Change the OpenAPI JSON path (default: `/openapi.json`).
+    pub fn openapi_path(mut self, path: impl Into<String>) -> Self {
+        self.openapi_path = path.into();
+        self
+    }
+
+    /// Disable both Swagger UI and the OpenAPI endpoint.
+    pub fn no_docs(mut self) -> Self {
+        self.docs_path = None;
+        self
+    }
+
     /// Finish the application and return the underlying axum router.
     pub fn into_router(self) -> Router {
-        let _ = (&self.title, &self.version, &self.routes);
-        self.router
+        let spec = spec::build(&self.title, &self.version, &self.routes);
+
+        let mut router = self.router;
+        if let Some(docs_path) = self.docs_path {
+            router = router.merge(SwaggerUi::new(docs_path).url(self.openapi_path, spec));
+        }
+
+        router.fallback(|| async { ApiError::not_found("Not Found") })
+    }
+
+    /// Bind a TCP listener and serve the application.
+    pub async fn serve(self, address: impl tokio::net::ToSocketAddrs) -> std::io::Result<()> {
+        let listener = tokio::net::TcpListener::bind(address).await?;
+        axum::serve(listener, self.into_router()).await
     }
 }
