@@ -4,6 +4,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{bracketed, Error, FnArg, Ident, ItemFn, LitInt, LitStr, ReturnType, Token, Type};
 
+use crate::openapi_codegen;
+
 #[derive(Clone, Copy)]
 pub enum Method {
     Get,
@@ -119,10 +121,16 @@ pub fn expand(method: Method, args: RouteArgs, item: ItemFn) -> syn::Result<Toke
         sig,
         block,
     } = item;
-    let fn_ident = sig.ident;
-    let output = sig.output;
+
+    let route_path = args.path.value();
+    let metadata = openapi_codegen::analyze(&sig, &route_path)?;
+    let operation_body = openapi_codegen::operation_tokens(&metadata, args.status);
+    let schemas_body = openapi_codegen::schemas_tokens(&metadata);
+
+    let fn_ident = &sig.ident;
+    let output = &sig.output;
     let status = status_expr(args.status);
-    let is_result = is_result(&output);
+    let is_result = is_result(output);
 
     let mut wrapper_inputs = Vec::new();
     let mut arg_names = Vec::new();
@@ -208,16 +216,17 @@ pub fn expand(method: Method, args: RouteArgs, item: ItemFn) -> syn::Result<Toke
             }
 
             fn operation(&self) -> ::rustweb::openapi::path::Operation {
-                ::rustweb::openapi::path::OperationBuilder::new()
+                let mut __builder = ::rustweb::openapi::path::OperationBuilder::new()
                     .operation_id(Some(#operation_id))
                     .summary(#summary)
                     .description(#description)
-                    .tags(#tags)
-                    .build()
+                    .tags(#tags);
+                #operation_body
+                __builder.build()
             }
 
             fn schemas(&self) -> Vec<(String, ::rustweb::openapi::RefOr<::rustweb::openapi::schema::Schema>)> {
-                Vec::new()
+                #schemas_body
             }
 
             fn register(self, router: ::rustweb::axum::Router) -> ::rustweb::axum::Router {

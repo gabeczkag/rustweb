@@ -3,6 +3,7 @@ use syn::{parse_macro_input, ItemFn};
 
 mod derive;
 mod model;
+mod openapi_codegen;
 mod query;
 mod route;
 
