@@ -1,0 +1,81 @@
+<header class="nav">
+  <a class="brand" href="/">
+    <img src="/assets/logo.svg" alt="" width="28" height="28">
+    RustWeb
+  </a>
+  <nav>
+    <a href="/about">MHTML</a>
+    <a href="/bench">Benchmark</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Rust · FastAPI style · low latency</p>
+    <h1>{{ headline }}</h1>
+    <p class="lead">{{ tagline }}</p>
+    <div class="actions">
+      <a class="button" href="/bench">Zobacz benchmark</a>
+      <a class="button ghost" href="/about">Jak działa MHTML</a>
+    </div>
+    <p class="hint">Ta strona jest skompilowana do jednego pliku <code>site.rweb</code> i serwowana przez RustWeb. Zero templatingu w request path.</p>
+  </section>
+
+  <section class="grid">
+    @for feature in features {
+      <article class="card">
+        <span class="dot"></span>
+        <h2>{{ feature.title }}</h2>
+        <p>{{ feature.text }}</p>
+      </article>
+    }
+  </section>
+
+  <section class="split">
+    <div>
+      <p class="eyebrow">DX</p>
+      <h2>Pisz jak w FastAPI</h2>
+      <p>{{ code_note }}</p>
+    </div>
+    <pre><code>{{ code }}</code></pre>
+  </section>
+
+  <section class="bench">
+    <p class="eyebrow">Pomiar, nie obietnica</p>
+    <h2>RustWeb vs axum vs FastAPI</h2>
+    <p>{{ bench.note }}</p>
+    <table>
+      <thead>
+        <tr><th>Serwer</th><th>Throughput</th><th>p99</th></tr>
+      </thead>
+      <tbody>
+        @for row in bench.rows {
+          <tr>
+            <td>
+              {{ row.name }}
+              <div class="bar"><span style="--bar: {{ row.bar }}"></span></div>
+            </td>
+            <td>{{ row.throughput }}</td>
+            <td>{{ row.p99 }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="note">RustWeb i axum są w granicach szumu. FastAPI jest wolniejsze, bo płaci za Pythona i runtime Pydantic — nie za sam kształt API.</p>
+  </section>
+
+  <section class="split">
+    <div>
+      <p class="eyebrow">MHTML → .rweb</p>
+      <h2>Jeden plik, zero zależności</h2>
+      <p>Strony piszesz w MHTML-u, budujesz komendą <code>{{ build_command }}</code>, a RustWeb uruchamia wynik przez <code>rustweb site/site.rweb</code>.</p>
+      <p>{{ linker_note }}</p>
+    </div>
+    <pre><code>{{ mhtml_syntax }}</code></pre>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
+  <span><a href="/">start</a> · <a href="/about">MHTML</a> · <a href="/bench">benchmark</a></span>
+</footer>

@@ -1,3 +1,5 @@
+use axum::body::Bytes;
+use axum::http::{header, HeaderValue};
 use axum::Router;
 use utoipa::openapi::{path::Operation, schema::Schema, RefOr};
 use utoipa_swagger_ui::SwaggerUi;
@@ -29,7 +31,7 @@ pub struct RustWeb {
     pub(crate) routes: Vec<RouteMeta>,
     pub(crate) docs_path: Option<String>,
     pub(crate) openapi_path: String,
-    pub(crate) pack_stats: Option<rtml::PackStats>,
+    pub(crate) spa: Option<Bytes>,
 }
 
 impl RustWeb {
@@ -42,7 +44,7 @@ impl RustWeb {
             routes: Vec::new(),
             docs_path: Some("/docs".to_owned()),
             openapi_path: "/openapi.json".to_owned(),
-            pack_stats: None,
+            spa: None,
         }
     }
 
@@ -85,7 +87,21 @@ impl RustWeb {
             router = router.merge(SwaggerUi::new(docs_path).url(self.openapi_path, spec));
         }
 
-        router.fallback(|| async { ApiError::not_found("Not Found") })
+        match self.spa {
+            Some(html) => router.fallback(move || {
+                let html = html.clone();
+                async move {
+                    (
+                        [(
+                            header::CONTENT_TYPE,
+                            HeaderValue::from_static("text/html; charset=utf-8"),
+                        )],
+                        html,
+                    )
+                }
+            }),
+            None => router.fallback(|| async { ApiError::not_found("Not Found") }),
+        }
     }
 
     /// Bind a TCP listener and serve the application.

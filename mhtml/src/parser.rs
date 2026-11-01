@@ -9,7 +9,7 @@ const VOID_ELEMENTS: &[&str] = &[
 
 const RAW_TEXT_ELEMENTS: &[&str] = &["script", "style"];
 
-/// Parse an RTML template into a node tree.
+/// Parse an MHTML template into a node tree.
 pub fn parse(input: &str) -> Result<Vec<Node>, Error> {
     Parser::new(input).parse_nodes(Until::Eof)
 }
@@ -158,7 +158,7 @@ impl<'a> Parser<'a> {
             .find("*@")
             .ok_or_else(|| Error::Parse {
                 offset: self.pos,
-                message: "unterminated RTML comment".to_owned(),
+                message: "unterminated MHTML comment".to_owned(),
             })?;
         self.pos += 2 + end + 2;
         Ok(())

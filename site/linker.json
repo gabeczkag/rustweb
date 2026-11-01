@@ -2,22 +2,27 @@
   "site": {
     "title": "RustWeb",
     "version": "0.1.0",
-    "description": "FastAPI-style web framework for Rust with low-latency defaults."
+    "description": "FastAPI-style web framework for Rust with MHTML single-file sites."
   },
+  "lang": "pl",
+  "output": "site.rweb",
+  "styles": ["assets/style.css"],
+  "scripts": ["scripts/app.ts"],
+  "assets": ["assets/logo.svg"],
   "pages": [
     {
       "route": "/",
-      "source": "index.rtml",
+      "file": "pages/index.mhtml",
       "title": "RustWeb — FastAPI dla Rusta"
     },
     {
       "route": "/about",
-      "source": "about.rtml",
-      "title": "RTML i rpack — RustWeb"
+      "file": "pages/about.mhtml",
+      "title": "MHTML i .rweb — RustWeb"
     },
     {
       "route": "/bench",
-      "source": "bench.rtml",
+      "file": "pages/bench.mhtml",
       "title": "Benchmark — RustWeb"
     }
   ],
@@ -34,8 +39,8 @@
         "text": "ApiJson, ApiPath i ApiQuery zwracają 422 z detail[]{type, loc, msg, ctx}. Kształt znany z FastAPI, bez ręcznego klejenia JSON-a."
       },
       {
-        "title": "Dokumentacja bez dekoratorów",
-        "text": "OpenAPI 3.1 i Swagger UI powstają z metadanych tras. Nie piszesz #[utoipa::path] przy każdym handlerze."
+        "title": "MHTML zamiast szablonów",
+        "text": "Mini-HTML z interpolacją, @if i @for. Kompilator rweb składa strony, CSS, TypeScript i assety w jeden plik .rweb."
       },
       {
         "title": "Zero narzutu w hot path",
@@ -67,10 +72,10 @@
         }
       ]
     },
-    "rtml_syntax": "<h1>{{ title }}</h1>\n@if show_badge {\n  <span class=\"badge\">{{ version }}</span>\n}\n@for feature in features {\n  <article>{{ feature.title }}</article>\n}",
+    "mhtml_syntax": "<h1>{{ title }}</h1>\n@if show_badge {\n  <span class=\"badge\">{{ version }}</span>\n}\n@for feature in features {\n  <article>{{ feature.title }}</article>\n}",
     "interp_syntax": "{{ expression }}",
-    "rpack_json": "{\n  \"site\": { \"title\": \"RustWeb\", \"version\": \"0.1.0\" },\n  \"pages\": [\n    { \"route\": \"/\", \"source\": \"index.rtml\" }\n  ]\n}",
-    "pack_command": "rpack build site -o site/site.rpack",
-    "manifest_note": "Manifest zawiera trasy, typy MIME, offsety i statystyki. HTML i assety są gzipowane w jednym payloadzie, a RustWeb ładuje je do pamięci przy starcie."
+    "build_command": "rweb build site",
+    "inspect_command": "rweb inspect site/site.rweb",
+    "linker_note": "linker.json wskazuje strony, style, skrypty i assety. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript i zamienia obrazy na data URI. Wynik to jeden plik .rweb."
   }
 }

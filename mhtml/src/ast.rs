@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-/// A node in an RTML template.
+/// A node in an MHTML template.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
     /// Literal template text. Trusted; interpolations are what get escaped.

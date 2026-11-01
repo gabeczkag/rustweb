@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-cargo run -p rtml --bin rpack -- build site -o site/site.rpack
+cargo run -p mhtml --bin rweb -- build site

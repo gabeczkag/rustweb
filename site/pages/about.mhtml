@@ -1,0 +1,81 @@
+<header class="nav">
+  <a class="brand" href="/">
+    <img src="/assets/logo.svg" alt="" width="28" height="28">
+    RustWeb
+  </a>
+  <nav>
+    <a href="/">Start</a>
+    <a href="/bench">Benchmark</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">MHTML · mini-HTML</p>
+    <h1>HTML, który kompiluje się w jeden plik.</h1>
+    <p class="lead">MHTML to nasz mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> składa strony, CSS, TypeScript i assety w jeden <code>.rweb</code>, który uruchamia RustWeb.</p>
+  </section>
+
+  <section class="grid">
+    <article class="card">
+      <span class="dot"></span>
+      <h2>{{ interp_syntax }}</h2>
+      <p>Wartości pochodzą z JSON-a w <code>linker.json</code> i są escapowane w tekście oraz atrybutach. Dane użytkownika nie wstrzykną HTML-a.</p>
+    </article>
+    <article class="card">
+      <span class="dot"></span>
+      <h2>&#64;if i &#64;for</h2>
+      <p>Warunki i pętle działają na danych projektu. W pętli masz <code>loop.index</code>, <code>loop.first</code> i <code>loop.last</code>.</p>
+    </article>
+    <article class="card">
+      <span class="dot"></span>
+      <h2>linker.json</h2>
+      <p>Jeden manifest wskazuje strony, style, skrypty i assety. Wszystkie ścieżki są rozwiązywane względem pliku manifestu.</p>
+    </article>
+    <article class="card">
+      <span class="dot"></span>
+      <h2>Zero runtime templatingu</h2>
+      <p>Strony są renderowane przy budowaniu. RustWeb serwuje gotowy HTML, więc request nie płaci za parser ani evaluator.</p>
+    </article>
+  </section>
+
+  <section class="split">
+    <div>
+      <p class="eyebrow">Składnia</p>
+      <h2>Mały język, który wystarcza</h2>
+      <p>Bez wbudowanego JavaScriptu, bez setek helperów. HTML, interpolacja, <code>&#64;if</code>, <code>&#64;else</code> i <code>&#64;for</code> — dokładnie tyle, ile potrzebuje strona.</p>
+      <p class="note">Literalny szablon jest zaufany; escapowane są tylko wartości interpolowane. Dzięki temu możesz pisać encje HTML i własne znaczniki bez podwójnego escapowania.</p>
+    </div>
+    <pre><code>{{ mhtml_syntax }}</code></pre>
+  </section>
+
+  <section class="split">
+    <div>
+      <p class="eyebrow">Kompilacja</p>
+      <h2>Jeden plik .rweb</h2>
+      <p><code>linker.json</code> opisuje strony i zasoby. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript przez <code>tsc</code> i zamienia obrazy na data URI.</p>
+      <p>Build: <code>{{ build_command }}</code>. Podgląd: <code>{{ inspect_command }}</code>. Uruchomienie: <code>rustweb site/site.rweb</code>.</p>
+    </div>
+    <pre><code>{
+  "site": { "title": "RustWeb", "version": "0.1.0" },
+  "styles": ["assets/style.css"],
+  "scripts": ["scripts/app.ts"],
+  "assets": ["assets/logo.svg"],
+  "pages": [
+    { "route": "/", "file": "pages/index.mhtml" }
+  ]
+}</code></pre>
+  </section>
+
+  <section class="bench">
+    <p class="eyebrow">Hostowanie</p>
+    <h2>Jeden plik, mniej RAM-u</h2>
+    <p><code>.rweb</code> jest zwykłym plikiem HTML. RustWeb ładuje go raz i serwuje jako fallback dla wszystkich tras SPA. Nie ma runtime'owego bundlera, drzewa szablonów ani osobnych assetów.</p>
+    <p class="note">To celowe rozdzielenie: autor strony ufa swojemu HTML-owi, ale nie danym, które podstawia. Hosting to jeden plik, a nie katalog z dziesiątkami zależności.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
+  <span><a href="/">start</a> · <a href="/bench">benchmark</a></span>
+</footer>

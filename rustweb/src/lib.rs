@@ -2,7 +2,8 @@
 //!
 //! The framework is a thin layer over [`axum`]: routes are declared with
 //! attribute macros, inputs are validated, and OpenAPI documentation is
-//! generated once at startup.
+//! generated once at startup. Compiled `.rweb` single-file sites are served as
+//! a fallback with zero template work in the request path.
 
 #![forbid(unsafe_code)]
 
@@ -16,15 +17,14 @@ mod app;
 mod error;
 mod extract;
 mod route;
-mod rpack;
+mod rweb;
 mod spec;
 
 pub use app::RustWeb;
 pub use error::{ApiError, ApiErrorBody, ApiResult};
 pub use extract::{ApiJson, ApiPath, ApiQuery};
+pub use mhtml;
 pub use route::Route;
-pub use rtml;
-pub use rtml::{PackStats, SitePack};
 
 pub use rustweb_macros::{delete, get, model, patch, post, put, query};
 

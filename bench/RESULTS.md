@@ -55,7 +55,7 @@ the relative result stayed in the same band.
 | RustWeb | 201,963 req/s | 268 µs | 496 µs | 717 µs | 2,295 µs | 3,523 µs |
 | plain axum | 200,677 req/s | 269 µs | 512 µs | 735 µs | 1,364 µs | 3,563 µs |
 
-### Run 5 (quiet machine, after RTML integration)
+### Run 5 (quiet machine, after MHTML integration)
 
 | Server | Throughput | p50 | p90 | p99 | p99.9 | max |
 |---|---:|---:|---:|---:|---:|---:|

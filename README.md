@@ -98,8 +98,8 @@ Invalid input returns the FastAPI shape:
 - JSON 404 fallback.
 - No per-request framework overhead; routes use axum's `matchit` router
   directly.
-- RTML templates and `.rpack` site packages: pre-rendered pages, assets, and
-  metadata in one compressed file.
+- MHTML templates and `.rweb` single-file sites: pages, CSS, TypeScript, and
+  assets compiled into one standalone HTML document.
 
 ## How it works
 
@@ -150,31 +150,34 @@ cargo run -p rustweb --example demo
 
 Then open <http://127.0.0.1:3000/docs>.
 
-## RTML and .rpack
+## MHTML and .rweb
 
-RTML is an HTML-like template language: `{{ expression }}`, `@if`, `@for`.
-The `rpack` CLI renders pages with data from `site.json`, minifies them, and
-packs the HTML plus every file under `assets/` into one gzip-compressed
-`.rpack`. RustWeb loads the pack into memory and serves pre-rendered bytes;
-there is no template parser or evaluator in the request path.
+MHTML is a mini-HTML: ordinary markup plus `{{ expression }}`, `@if`, and
+`@for`. The `rweb` compiler reads `linker.json`, renders every page, inlines
+CSS, transpiles TypeScript with `tsc`, turns images and fonts into data URIs,
+and writes one self-contained `.rweb` HTML file. RustWeb serves that file as an
+SPA fallback: one cached document, client-side routing, no template work in the
+request path.
 
 ```bash
-bash site/build.sh                 # builds site/site.rpack
-cargo run -p rustweb --example site
+bash site/build.sh                      # builds site/site.rweb
+rustweb site/site.rweb                  # or: cargo run -p rustweb --bin rustweb -- site/site.rweb
 # open http://127.0.0.1:3000
 ```
 
-The repository ships a built `site/site.rpack`, so the example runs
-immediately. Rebuild it after editing RTML or CSS. `rpack inspect
-site/site.rpack` lists pages, assets, MIME types, and compression stats.
-
-`site/site.json` defines the site, routes, and page data:
+`linker.json` links every page, stylesheet, script, and asset:
 
 ```json
 {
   "site": { "title": "RustWeb", "version": "0.1.0" },
+  "lang": "pl",
+  "output": "site.rweb",
+  "styles": ["assets/style.css"],
+  "scripts": ["scripts/app.ts"],
+  "assets": ["assets/logo.svg"],
   "pages": [
-    { "route": "/", "source": "index.rtml", "title": "Start" }
+    { "route": "/", "file": "pages/index.mhtml", "title": "Start" },
+    { "route": "/about", "file": "pages/about.mhtml", "title": "MHTML" }
   ],
   "data": { "headline": "API w Rustcie..." }
 }
@@ -183,12 +186,25 @@ site/site.rpack` lists pages, assets, MIME types, and compression stats.
 A page can use `{{ headline }}`, `{{ site.title }}`, `{{ page.route }}`,
 `@if show { ... }`, and `@for item in items { ... }` with `loop.index`,
 `loop.first`, and `loop.last`. Literal template markup is trusted; interpolated
-values are escaped for text and attributes.
+values are escaped for text and attributes. To show a literal `@if` or `@for`
+in prose, write `&#64;if` / `&#64;for` so the parser does not treat it as a
+directive.
 
-Pages in a pack are pre-rendered at build time. Anything dynamic belongs in a
-normal RustWeb handler, like `/api/health` in the site example. To show a
-literal `@if` or `@for` in prose, write `&#64;if` / `&#64;for` so the parser
-does not treat it as a directive.
+The compiled `.rweb` is valid HTML. It contains a `<template>` per route, the
+styles, the scripts, and a tiny router that swaps templates on navigation. It
+can be opened as a static file by an SPA-capable host or served directly by
+RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
+handles unmatched routes.
+
+Scripts can be `.js`, `.mjs`, or `.ts`; `.ts` is transpiled with `tsc` at build
+time (install TypeScript or use `.js`). Styles and assets are inlined, so the
+compiled page makes no external requests for its own CSS, JS, or images. Pages
+can be `.mhtml` or plain `.html`; a full document is reduced to its `<body>`.
+
+```bash
+rweb inspect site/site.rweb
+# RustWeb — 0.1.0, 3 routes: /, /about, /bench
+```
 
 ## Benchmarks
 
@@ -230,8 +246,8 @@ comparison, not just an API-shape comparison. The detailed runs are in
 ```
 rustweb/          core framework: builder, extractors, errors, OpenAPI
 rustweb-macros/   route/model/query procedural macros
-rtml/             RTML parser, renderer, .rpack format, rpack CLI
-site/             mini site sources and the built site/site.rpack
+mhtml/            MHTML parser, page compiler, .rweb bundler, rweb CLI
+site/             mini site sources and the built site/site.rweb
 bench-load/       small hyper-based load generator
 bench/            benchmark script and results
 ```
