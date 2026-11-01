@@ -167,6 +167,11 @@ that file as an SPA fallback: one cached document, client-side routing, no
 template work in the request path.
 
 ```bash
+# one command: build the site and serve it over local HTTPS
+./run.sh
+# PORT=3460 ./run.sh
+
+# or manually:
 bash site/build.sh
 rustweb site/site.rweb
 # first run creates ~/.config/byrust/ca.crt and a CA-signed app certificate
