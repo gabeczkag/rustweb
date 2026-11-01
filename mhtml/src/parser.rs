@@ -107,6 +107,8 @@ impl<'a> Parser<'a> {
                 self.skip_html_comment()?;
             } else if self.starts_with("<!") {
                 nodes.push(Node::Raw(self.take_doctype()?));
+            } else if self.starts_with("{{{") {
+                nodes.push(Node::RawInterp(self.parse_raw_interpolation()?));
             } else if self.starts_with("{{") {
                 nodes.push(Node::Interp(self.parse_interpolation()?));
             } else if self.starts_with("@*") {
@@ -188,6 +190,20 @@ impl<'a> Parser<'a> {
         let source = self.input[self.pos..self.pos + end].trim();
         self.pos += end + 2;
 
+        expr::parse(source)
+    }
+
+    fn parse_raw_interpolation(&mut self) -> Result<crate::ast::Expr, Error> {
+        let start = self.pos;
+        self.consume("{{{");
+        let end = self.input[self.pos..]
+            .find("}}}")
+            .ok_or_else(|| Error::Parse {
+                offset: start,
+                message: "unterminated raw interpolation".to_owned(),
+            })?;
+        let source = self.input[self.pos..self.pos + end].trim();
+        self.pos += end + 3;
         expr::parse(source)
     }
 

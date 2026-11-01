@@ -2,7 +2,7 @@
   <div class="hero-copy">
     <p class="eyebrow">MHTML // MINI-HTML // ONE FILE</p>
     <h1>HTML.<br><span>ALE W BLOKACH.</span></h1>
-    <p class="lead">MHTML to mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> sklada strony, CSS, TypeScript i assety w jeden <code>.rweb</code>, ktory uruchamia RustWeb.</p>
+    <p class="lead">MHTML to mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> sklada strony, MCSS, MScript, TypeScript i assety w jeden <code>.rweb</code>, ktory uruchamia RustWeb.</p>
     <div class="actions">
       <a class="button" href="/bench">ZOBACZ WYNIKI</a>
       <a class="button ghost" href="/">WRÓC NA START</a>
@@ -10,8 +10,8 @@
     <div class="badges">
       <span class="badge">MHTML</span>
       <span class="badge">LINKER.JSON</span>
-      <span class="badge">TSC</span>
-      <span class="badge">ASCII</span>
+      <span class="badge">MCSS</span>
+      <span class="badge">MSCRIPT</span>
     </div>
   </div>
 
@@ -20,7 +20,7 @@
       <div class="spec-cell"><strong>3</strong><span>STRONY W JEDNYM PLIKU</span></div>
       <div class="spec-cell"><strong>1</strong><span>PLIK .RWEB</span></div>
       <div class="spec-cell"><strong>0</strong><span>RUNTIME TEMPLATING</span></div>
-      <div class="spec-cell"><strong>30 KB</strong><span>WAGA PLIKU .RWEB</span></div>
+      <div class="spec-cell"><strong>37 KB</strong><span>WAGA PLIKU .RWEB</span></div>
     </div>
     <div class="art-tag">BUILD<br><strong>RWEB</strong></div>
   </div>
@@ -53,8 +53,8 @@
   <div>
     <p class="eyebrow">01 // SKLADNIA</p>
     <h2>MALY JEZYK, KTORY WYSTARCZA</h2>
-    <p>Bez wbudowanego JavaScriptu i setek helperow. HTML, interpolacja, <code>&#64;if</code>, <code>&#64;else</code> i <code>&#64;for</code>.</p>
-    <p class="note">Literalny szablon jest zaufany; escapowane sa tylko wartosci interpolowane. Mozesz pisac encje HTML i wlasne znaczniki bez podwojnego escapowania.</p>
+    <p>Bez wbudowanego JavaScriptu i setek helperow. HTML, interpolacja, <code>&#64;if</code>, <code>&#64;else</code> i <code>&#64;for</code>. Pelny HTML jest wspierany — kompilator redukuje dokument do <code>&lt;body&gt;</code>.</p>
+    <p class="note">Literalny szablon jest zaufany; escapowane sa tylko wartosci interpolowane. <code>&#123;&#123;&#123; trusted_html &#125;&#125;&#125;</code> wstawia surowy HTML bez escapowania — uzywaj tylko dla zaufanych fragmentow.</p>
   </div>
   <pre><code>{{ mhtml_syntax }}</code></pre>
 </section>
@@ -81,8 +81,27 @@
 }</code></pre>
 </section>
 
+<section class="split">
+  <div>
+    <p class="eyebrow">03 // MCSS + MSCRIPT</p>
+    <h2>MINI STACK, NIE FRAMEWORK</h2>
+    <p><code>.mcss</code> to CSS ze zmiennymi <code>$name</code>. Kompilator rozwiazuje je przed minifikacja, wiec w <code>.rweb</code> zostaje zwykly, maly CSS.</p>
+    <p><code>.mscript</code> to Node-owy styl modulow dla MHTML: relatywne <code>import</code>, <code>export</code> i <code>require</code> sa bundlowane do jednego klasycznego skryptu. Nie emuluje built-inow Node'a — dziala na API przegladarki.</p>
+    <p class="note">Viewer na tej stronie jest napisany w MScript i importuje <code>format.mscript</code>.</p>
+    <div class="actions">
+      <a class="button" href="/viewer">OTWORZ VIEWER</a>
+    </div>
+  </div>
+  <pre><code>$sky: #7dd3fc;
+$line: #05070d;
+.button { background: $sky; border: 3px solid $line; }
+
+import { bytes } from "./format.mscript";
+export function size(n) { return bytes(n); }</code></pre>
+</section>
+
 <section class="bench">
-  <p class="eyebrow">03 // BYRUST</p>
+  <p class="eyebrow">04 // BYRUST</p>
   <h2>HTTPS, KTORE MOWI WICEJ</h2>
   <p><code>linker.json</code> ustawia <code>protocol.name = "byrust"</code>, wersje, wymog HTTPS, alias i wlasne naglowki. Kompilator wpisuje je do <code>.rweb</code> jako meta i <code>byrust-config</code>.</p>
 
@@ -98,7 +117,7 @@
 </section>
 
 <section class="bench">
-  <p class="eyebrow">04 // HOSTING</p>
+  <p class="eyebrow">05 // HOSTING</p>
   <h2>JEDEN PLIK, MNIEJ RAM-U</h2>
   <p>{{ memory_note }}</p>
   <p class="note">GitHub Pages serwuje ten sam <code>.rweb</code> statycznie przez certyfikat GitHuba. Lokalny Byrust CA, klucze aplikacji i Universal CA zostaja poza repozytorium.</p>

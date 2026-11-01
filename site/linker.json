@@ -22,10 +22,11 @@
     }
   },
   "styles": [
-    "assets/style.css"
+    "assets/style.mcss"
   ],
   "scripts": [
-    "scripts/app.ts"
+    "scripts/app.ts",
+    "scripts/viewer.mscript"
   ],
   "assets": [],
   "pages": [
@@ -43,6 +44,11 @@
       "route": "/bench",
       "file": "pages/bench.mhtml",
       "title": "Benchmark — RustWeb"
+    },
+    {
+      "route": "/viewer",
+      "file": "pages/viewer.mhtml",
+      "title": "RWeb Viewer - RustWeb"
     }
   ],
   "data": {
@@ -59,7 +65,7 @@
       },
       {
         "title": "MHTML zamiast szablonów",
-        "text": "Mini-HTML z interpolacją, @if i @for. Kompilator rweb składa strony, CSS, TypeScript i assety w jeden plik .rweb."
+        "text": "Mini-HTML z interpolacja, @if i @for, pelny HTML, MCSS ze zmiennymi i MScript z modulami. Kompilator sklada wszystko w jeden plik .rweb."
       },
       {
         "title": "Zero narzutu w hot path",
@@ -91,7 +97,7 @@
         }
       ]
     },
-    "mhtml_syntax": "<h1>{{ title }}</h1>\n@if show_badge {\n  <span class=\"badge\">{{ version }}</span>\n}\n@for feature in features {\n  <article>{{ feature.title }}</article>\n}",
+    "mhtml_syntax": "<h1>{{ title }}</h1>\n@if show_badge {\n  <span class=\"badge\">{{ version }}</span>\n}\n@for feature in features {\n  <article>{{ feature.title }}</article>\n}\n{{{ trusted_html }}}",
     "interp_syntax": "{{ expression }}",
     "build_command": "rweb build site",
     "inspect_command": "rweb inspect site/site.rweb",

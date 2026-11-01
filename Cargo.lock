@@ -869,6 +869,7 @@ dependencies = [
  "base64 0.22.1",
  "clap",
  "mime_guess",
+ "regex",
  "serde",
  "serde_json",
  "tempfile",

@@ -12,6 +12,8 @@ pub mod ast;
 pub mod compile;
 pub mod expr;
 pub mod linker;
+pub mod mcss;
+pub mod mscript;
 pub mod parser;
 pub mod render;
 

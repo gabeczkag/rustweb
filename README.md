@@ -98,8 +98,11 @@ Invalid input returns the FastAPI shape:
 - JSON 404 fallback.
 - No per-request framework overhead; routes use axum's `matchit` router
   directly.
-- MHTML templates and `.rweb` single-file sites: pages, CSS, TypeScript, and
-  assets compiled into one standalone HTML document.
+- MHTML templates and `.rweb` single-file sites: full HTML, MCSS variables,
+  MScript modules, TypeScript, and assets compiled into one standalone HTML
+  document.
+- `/viewer`: drag-and-drop `.rweb` inspector with metadata, size, gzip, source,
+  and a sandboxed preview.
 
 ## How it works
 
@@ -189,8 +192,8 @@ refuses to start if the port is already taken. Stop the old process or use
   "frame": "frame.mhtml",
   "base": "/rustweb",
   "ascii": true,
-  "styles": ["assets/style.css"],
-  "scripts": ["scripts/app.ts"],
+  "styles": ["assets/style.mcss"],
+  "scripts": ["scripts/app.ts", "scripts/viewer.mscript"],
   "assets": ["assets/logo.svg"],
   "pages": [
     { "route": "/", "file": "pages/index.mhtml", "title": "Start" },
@@ -209,12 +212,35 @@ directive.
 
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
-navigation. The blocky redesign compiles to about **30 KiB** and contains ASCII
-only (`ascii: true` transliterates Polish diacritics). The earlier compact
-build was 19.5 KiB (21% smaller), but it had a much plainer visual layer; the
-zero-image blocky UI trades some bytes for the layout. It
-can be opened as a static file by an SPA-capable host or served directly by
-RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
+navigation. The blocky redesign with the viewer compiles to about **37 KiB**
+(~11 KB gzipped on Pages) and contains ASCII only (`ascii: true` transliterates
+Polish diacritics). The earlier compact build was 19.5 KiB (21% smaller), but
+it had a much plainer visual layer; the zero-image blocky UI and viewer trade
+some bytes for the layout.
+
+**MHTML syntax.** Full HTML documents are supported; a full document is reduced
+to its `<body>` when embedded. Use `{{{ trusted_html }}}` for raw, unescaped
+HTML, and `{{ value }}` for escaped interpolation.
+
+**MCSS.** `.mcss` styles add `$variables`; they are resolved before CSS
+minification:
+
+```mcss
+$sky: #7dd3fc;
+.button { background: $sky; }
+```
+
+**MScript.** `.mscript` files are a small Node-flavoured module dialect:
+relative `import`/`export` and `require()` are bundled at build time into one
+classic script. It targets browser globals; Node built-ins are not emulated:
+
+```js
+import { bytes } from "./format.mscript";
+export function size(value) { return bytes(value); }
+```
+
+The compiled file can be opened as a static file by an SPA-capable host or
+served directly by RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
 handles unmatched routes.
 
 Startup RSS in this repository's measurement was ~6.6 MiB for the
@@ -223,14 +249,15 @@ Startup RSS in this repository's measurement was ~6.6 MiB for the
 server holds one HTML document and does no runtime templating. Details and
 caveats are in [`bench/RESULTS.md`](bench/RESULTS.md).
 
-Scripts can be `.js`, `.mjs`, or `.ts`; `.ts` is transpiled with `tsc` at build
-time (install TypeScript or use `.js`). Styles and assets are inlined, so the
-compiled page makes no external requests for its own CSS, JS, or images. Pages
-can be `.mhtml` or plain `.html`; a full document is reduced to its `<body>`.
+Scripts can be `.js`, `.mjs`, `.ts`, or `.mscript`; `.ts` is transpiled with
+`tsc` and `.mscript` modules are bundled by `rweb`. Styles can be `.css` or
+`.mcss`; assets are inlined, so the compiled page makes no external requests
+for its own CSS, JS, or images. Pages can be `.mhtml` or plain `.html`; a full
+document is reduced to its `<body>`.
 
 ```bash
 rweb inspect site/site.rweb
-# RustWeb — 0.1.0, 3 routes: /, /about, /bench
+# RustWeb — 0.1.0, 4 routes: /, /about, /bench, /viewer
 ```
 
 ### Byrust protocol

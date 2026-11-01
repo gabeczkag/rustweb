@@ -1,0 +1,120 @@
+import { bytes } from "./format.mscript";
+
+const base = document.querySelector('meta[name="rweb-base"]')?.content || "";
+
+function el(id) {
+  return document.getElementById(id);
+}
+
+function inspect(html) {
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const templates = Array.from(document.querySelectorAll("template[data-rweb-route]"));
+  const routes = templates.map((template) => template.dataset.rwebRoute);
+  const config = document.querySelector("#byrust-config");
+  let parsed = {};
+
+  try {
+    parsed = JSON.parse(config?.textContent || "{}");
+  } catch {}
+
+  const protocol = parsed.protocol
+    ? `${parsed.protocol.name} v${parsed.protocol.version} (https=${parsed.protocol.https})`
+    : "none";
+  const app = parsed.app
+    ? `${parsed.app.name} / ${parsed.app.uuid} / ${parsed.app.trust}`
+    : "none";
+
+  return {
+    routes,
+    protocol,
+    app,
+    size: new TextEncoder().encode(html).length,
+    ascii: Array.from(html).every((character) => character.charCodeAt(0) < 128),
+  };
+}
+
+async function gzipSize(html) {
+  if (!("CompressionStream" in window)) return "--";
+  const stream = new Blob([html]).stream().pipeThrough(new CompressionStream("gzip"));
+  const buffer = await new Response(stream).arrayBuffer();
+  return bytes(buffer.byteLength);
+}
+
+async function load(html, name, withPreview = true) {
+  const info = inspect(html);
+  const code = el("viewer-code");
+  const meta = el("viewer-meta");
+  const preview = el("viewer-preview");
+  const drop = el("viewer-drop");
+
+  const set = (id, value) => {
+    const element = el(id);
+    if (element) element.textContent = value;
+  };
+
+  set("viewer-bytes", bytes(info.size));
+  set("viewer-routes", String(info.routes.length));
+  set("viewer-ascii", info.ascii ? "YES" : "NO");
+
+  if (code) {
+    code.textContent = html.length > 120000
+      ? `${html.slice(0, 120000)}\n...`
+      : html;
+  }
+
+  if (meta) {
+    meta.textContent = `${name} | ${info.protocol} | ${info.app} | routes: ${info.routes.join(", ")}`;
+  }
+
+  if (preview && withPreview) preview.srcdoc = html;
+  if (drop) drop.textContent = `ZALADOWANO: ${name} (${bytes(info.size)})`;
+
+  set("viewer-gzip", await gzipSize(html));
+}
+
+function init() {
+  const input = el("rweb-file");
+  const drop = el("viewer-drop");
+  const loadButton = el("load-current");
+
+  input?.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (file) load(await file.text(), file.name);
+  });
+
+  loadButton?.addEventListener("click", async () => {
+    const meta = el("viewer-meta");
+    try {
+      const response = await fetch(`${location.origin}${base}/`, { cache: "no-store" });
+      load(await response.text(), "current .rweb");
+    } catch (error) {
+      if (meta) meta.textContent = `Nie udalo sie pobrac: ${error}`;
+    }
+  });
+
+  for (const event of ["dragenter", "dragover"]) {
+    drop?.addEventListener(event, (event) => {
+      event.preventDefault();
+      drop.classList.add("active");
+    });
+  }
+
+  for (const event of ["dragleave", "drop"]) {
+    drop?.addEventListener(event, (event) => {
+      event.preventDefault();
+      drop.classList.remove("active");
+    });
+  }
+
+  drop?.addEventListener("drop", async (event) => {
+    const file = event.dataTransfer?.files?.[0];
+    if (file) load(await file.text(), file.name);
+  });
+
+  if (el("viewer-bytes")?.textContent === "--") {
+    load(`<!doctype html>\n${document.documentElement.outerHTML}`, "current DOM", false);
+  }
+}
+
+document.addEventListener("rweb:rendered", init);
+init();

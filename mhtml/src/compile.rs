@@ -9,6 +9,8 @@ use serde_json::{json, Map, Value};
 use crate::linker::{
     AppIdentity, ByrustConfig, LinkerConfig, PageConfig, ProtocolConfig, TrustLevel,
 };
+use crate::mcss;
+use crate::mscript;
 use crate::{parser, render, Error};
 
 #[derive(Debug, Clone, Copy)]
@@ -128,8 +130,15 @@ pub fn build_from_config(
     let mut css = String::new();
     for style in &config.styles {
         let path = resolve_path(&root, style)?;
-        let source = fs::read_to_string(&path)?;
+        let mut source = fs::read_to_string(&path)?;
         source_bytes += source.len();
+        if path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("mcss"))
+        {
+            source = mcss::compile(&source)?;
+        }
         css.push_str(&inline_css_assets(&source, &assets));
         css.push('\n');
     }
@@ -157,6 +166,7 @@ pub fn build_from_config(
 
         let source = match extension.as_str() {
             "ts" => transpile_typescript(&path, index)?,
+            "mscript" => mscript::bundle(&path, &root)?,
             "js" | "cjs" | "mjs" => fs::read_to_string(&path)?,
             other => {
                 return Err(Error::Compile(format!(

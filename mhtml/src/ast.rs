@@ -9,6 +9,8 @@ pub enum Node {
     Raw(String),
     /// `{{ expression }}`.
     Interp(Expr),
+    /// `{{{ expression }}}` - trusted raw HTML, never escaped.
+    RawInterp(Expr),
     /// An HTML-like element.
     Element(Element),
     /// `@if condition { ... } @else { ... }`.

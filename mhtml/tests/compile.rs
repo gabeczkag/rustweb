@@ -116,3 +116,33 @@ fn universal_uuid_marks_the_page_as_unsafe() {
         Some(TrustLevel::Universal)
     );
 }
+
+#[test]
+fn compiles_full_html_pages_and_trusted_raw_html() {
+    let directory = tempfile::tempdir().unwrap();
+    fs::create_dir_all(directory.path().join("pages")).unwrap();
+    fs::write(
+        directory.path().join("linker.json"),
+        r#"{
+            "site": {"title": "Full", "version": "1.0.0"},
+            "pages": [{"route": "/", "file": "pages/index.html"}],
+            "data": {"name": "Ada", "raw": "<b>ok</b>"}
+        }"#,
+    )
+    .unwrap();
+    fs::write(
+        directory.path().join("pages/index.html"),
+        "<html><head><title>Full HTML</title></head><body><h1>{{ name }}</h1>{{{ raw }}}</body></html>",
+    )
+    .unwrap();
+
+    let bundle = build(
+        directory.path().join("linker.json"),
+        BuildOptions::default(),
+    )
+    .unwrap();
+
+    assert!(bundle.html.contains("<h1>Ada</h1><b>ok</b>"));
+    assert!(bundle.html.contains("data-rweb-title=\"Full HTML\""));
+    assert!(!bundle.html.contains("<html><head><title>Full HTML"));
+}

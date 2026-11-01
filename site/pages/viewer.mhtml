@@ -1,0 +1,42 @@
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">RWEB VIEWER // LOCAL ONLY</p>
+    <h1>WGLAD<br><span>W .RWEB.</span></h1>
+    <p class="lead">Wrzuc plik <code>.rweb</code> albo zaladuj biezaca strone. Viewer pokaze trasy, protokol, APP UUID, rozmiar, gzip i podglad w sandboxie.</p>
+    <div class="actions">
+      <label class="button" for="rweb-file">WYBIERZ .RWEB</label>
+      <button class="button ghost" id="load-current" type="button">ZALADUJ TA STRONE</button>
+      <a class="button gold" href="/site.rweb" download>POBIERZ .RWEB</a>
+    </div>
+    <input id="rweb-file" type="file" accept=".rweb,text/html" hidden>
+    <p class="note">Plik nie jest wysylany na serwer. Parsowanie i preview dzieja sie w przegladarce.</p>
+  </div>
+
+  <div class="hero-art" aria-hidden="true">
+    <div class="spec-board">
+      <div class="spec-cell"><strong id="viewer-bytes">--</strong><span>ROZMIAR</span></div>
+      <div class="spec-cell"><strong id="viewer-routes">--</strong><span>TRASY</span></div>
+      <div class="spec-cell"><strong id="viewer-gzip">--</strong><span>GZIP</span></div>
+      <div class="spec-cell"><strong id="viewer-ascii">--</strong><span>ASCII</span></div>
+    </div>
+    <div class="art-tag">SANDBOX<br><strong>PREVIEW</strong></div>
+  </div>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">01 // METADANE</p>
+    <h2>CO JEST W SRODKU</h2>
+    <div id="viewer-meta" class="note">Zaladuj plik .rweb albo biezaca strone.</div>
+    <p>Viewer czyta meta tagi, <code>byrust-config</code>, trasy z <code>&lt;template&gt;</code> i liczy rozmiar oraz gzip w przegladarce.</p>
+    <div id="viewer-drop" class="drop-zone">PRZECIAGNIJ .RWEB TUTAJ</div>
+  </div>
+  <pre><code id="viewer-code">// .rweb source</code></pre>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">02 // PREVIEW</p>
+  <h2>SANDBOX</h2>
+  <p>Iframe ma <code>sandbox="allow-scripts"</code>, wiec podglad nie dostaje dostepu do rodzica ani do danych strony.</p>
+  <iframe id="viewer-preview" class="viewer-frame" sandbox="allow-scripts" title="RWeb preview"></iframe>
+</section>

@@ -57,7 +57,7 @@ fn space_is_meaningful(nodes: &[Node], index: usize) -> bool {
 
 fn is_inline_node(node: &Node) -> bool {
     match node {
-        Node::Interp(_) | Node::Text(_) => true,
+        Node::Interp(_) | Node::RawInterp(_) | Node::Text(_) => true,
         Node::Element(element) => is_inline_tag(&element.tag),
         Node::Raw(_) => false,
         Node::If { .. } | Node::For { .. } => true,
@@ -105,6 +105,10 @@ fn render_node(
         Node::Interp(expression) => {
             let value = evaluate(expression, context);
             escape_text(output, &to_text(&value));
+        }
+        Node::RawInterp(expression) => {
+            let value = evaluate(expression, context);
+            output.push_str(&to_text(&value));
         }
         Node::Element(element) => render_element(element, context, output, minify),
         Node::If {
@@ -307,6 +311,12 @@ mod tests {
     fn escapes_interpolated_values() {
         let html = render_str("<p>{{ name }}</p>", json!({"name": "<script>"}));
         assert_eq!(html, "<p>&lt;script&gt;</p>");
+    }
+
+    #[test]
+    fn renders_trusted_raw_html() {
+        let html = render_str("<div>{{{ html }}}</div>", json!({"html": "<b>ok</b>"}));
+        assert_eq!(html, "<div><b>ok</b></div>");
     }
 
     #[test]
