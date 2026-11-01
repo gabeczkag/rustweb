@@ -92,6 +92,18 @@ function initMarket() {
     });
   }
 
+  const hero = document.getElementById("market-hero");
+  hero?.addEventListener("pointermove", (event) => {
+    const rect = hero.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    hero.style.setProperty("--mx", `${((event.clientX - rect.left) / rect.width) * 100}%`);
+    hero.style.setProperty("--my", `${((event.clientY - rect.top) / rect.height) * 100}%`);
+  });
+  hero?.addEventListener("pointerleave", () => {
+    hero.style.setProperty("--mx", "50%");
+    hero.style.setProperty("--my", "50%");
+  });
+
   grid.addEventListener("pointerenter", () => {
     hoverPaused = true;
     stop();

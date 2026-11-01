@@ -4,6 +4,15 @@
     <div class="baner-orb orb-a" aria-hidden="true"></div>
     <div class="baner-orb orb-b" aria-hidden="true"></div>
     <div class="baner-orb orb-c" aria-hidden="true"></div>
+    <div class="baner-spotlight" aria-hidden="true"></div>
+    <div class="baner-particles" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div class="baner-scan" aria-hidden="true"></div>
+    <span class="baner-chip chip-a" aria-hidden="true">API</span>
+    <span class="baner-chip chip-b" aria-hidden="true">CERT</span>
+    <span class="baner-chip chip-c" aria-hidden="true">UDP</span>
+    <span class="baner-chip chip-d" aria-hidden="true">ZSTD</span>
 
     <div class="baner-copy">
       <p class="eyebrow">RUSTWEB // BANNER ENGINE // 500 MS</p>

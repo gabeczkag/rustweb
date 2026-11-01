@@ -1,4 +1,7 @@
-<section class="market-hero">
+<section class="market-hero" id="market-hero">
+  <div class="market-spotlight" aria-hidden="true"></div>
+  <div class="market-orb market-orb-a" aria-hidden="true"></div>
+  <div class="market-orb market-orb-b" aria-hidden="true"></div>
   <p class="eyebrow">RUSTWEB // MARKET // MODULES</p>
   <h1>MODUŁY,<br><span>NIE OBIETNICE.</span></h1>
   <p class="lead">Wybierz kawalek stacku, ktory naprawde istnieje w repo. Kazda karta ma dowod, test i komende startowa.</p>

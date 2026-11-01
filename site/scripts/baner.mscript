@@ -143,6 +143,16 @@ function initBaner() {
   document.getElementById("baner-next")?.addEventListener("click", () => step(1));
 
   const stage = document.getElementById("baner-stage");
+  stage?.addEventListener("pointermove", (event) => {
+    const rect = stage.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    stage.style.setProperty("--mx", `${((event.clientX - rect.left) / rect.width) * 100}%`);
+    stage.style.setProperty("--my", `${((event.clientY - rect.top) / rect.height) * 100}%`);
+  });
+  stage?.addEventListener("pointerleave", () => {
+    stage.style.setProperty("--mx", "50%");
+    stage.style.setProperty("--my", "50%");
+  });
   stage?.addEventListener("pointerenter", () => {
     hoverPaused = true;
     stop();
