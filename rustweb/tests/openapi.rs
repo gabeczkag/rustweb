@@ -28,12 +28,18 @@ async fn create_user(ApiJson(body): ApiJson<User>) -> ApiResult<Json<User>> {
     Ok(Json(body))
 }
 
+#[rustweb::get("/ping")]
+async fn ping() -> Json<String> {
+    Json("pong".to_owned())
+}
+
 #[tokio::test]
 async fn openapi_contains_paths_params_and_schemas() {
     let app = RustWeb::new("Test API", "1.0.0")
         .route(list_users)
         .route(get_user)
         .route(create_user)
+        .route(ping)
         .into_router();
 
     let response = app
@@ -62,6 +68,11 @@ async fn openapi_contains_paths_params_and_schemas() {
         "Created"
     );
     assert!(doc["components"]["schemas"]["User"].is_object());
+    assert_eq!(
+        doc["paths"]["/ping"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+            ["type"],
+        "string"
+    );
 
     let list = app
         .clone()

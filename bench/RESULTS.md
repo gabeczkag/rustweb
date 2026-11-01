@@ -37,15 +37,28 @@ bash bench/run.sh
 | RustWeb | 182,958 req/s | 295 µs | 538 µs | 742 µs | 1,547 µs | 3,547 µs |
 | plain axum | 178,759 req/s | 295 µs | 557 µs | 862 µs | 1,761 µs | 5,239 µs |
 
+### Run 3 (machine under background load)
+
+Run 3 was executed while the desktop had a browser, Xorg, and the editor running
+(load average 4.7 on 6 cores). Absolute throughput dropped for both servers, but
+the relative result stayed in the same band.
+
+| Server | Throughput | p50 | p90 | p99 | p99.9 | max |
+|---|---:|---:|---:|---:|---:|---:|
+| RustWeb | 116,651 req/s | 441 µs | 820 µs | 1,979 µs | 3,919 µs | 13,519 µs |
+| plain axum | 120,417 req/s | 449 µs | 773 µs | 1,938 µs | 3,765 µs | 10,079 µs |
+
 ## Interpretation
 
-The difference between RustWeb and plain axum is under 2% and changes sign
-between runs — it is within run-to-run noise. For routes without validation,
-the framework adds no measurable request-path overhead.
+Across three runs the RustWeb/axum throughput ratio was 1.014, 1.023, and
+0.969 — between 3% slower and 2% faster, with no consistent direction. That is
+run-to-run noise on a shared desktop, not framework overhead. For routes without
+validation, the framework adds no measurable request-path cost.
 
-These numbers are loopback measurements on one machine, not a claim about
-absolute performance or a TechEmpower ranking. They answer one question: does
-the RustWeb layer itself cost anything? For this route, it does not.
+Absolute numbers vary with machine load: the same code measured 117k–183k
+req/s depending on what else was running. The comparative result is the useful
+one. These are loopback measurements on one machine, not a claim about absolute
+performance or a TechEmpower ranking.
 
 Validation cost is not included in this benchmark. `ApiJson<T>` adds
 deserialization and `validator` work, which depends on the model and payload;

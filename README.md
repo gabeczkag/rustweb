@@ -132,6 +132,13 @@ body, response schema, tags, and summary for OpenAPI.
   v0.1. State can be kept in `OnceLock`/`LazyLock` for now.
 - Schema names are global; two types with the same name in different modules
   collide (use `#[schema(as = ...)]` on the utoipa derive if needed).
+- OpenAPI path docs support a single `Path<T>` or a tuple `Path<(A, B)>` whose
+  element count matches the template. Struct/map extractors covering multiple
+  path segments are rejected at compile time.
+- Operation IDs are function names; avoid duplicate handler names across
+  modules if you consume the spec programmatically.
+- Publishing note: the `rustweb` name is already taken on crates.io. This is a
+  working name; pick a different package name before publishing.
 
 ## Demo
 
@@ -152,17 +159,21 @@ keep-alive load generator that reports throughput and p50/p90/p99/p99.9/max
 latency. Results are written to [`bench/RESULTS.md`](bench/RESULTS.md).
 
 Measured on an AMD Ryzen 5 4500U (6 cores), server pinned to 2 cores, client to
-4 cores, 64 keep-alive connections, 200k requests:
+4 cores, 64 keep-alive connections, 200k requests. Three runs, 0.97–1.02× the
+throughput of plain axum (no consistent direction):
 
 | Server | Throughput | p50 | p99 |
 |---|---:|---:|---:|
-| RustWeb | 181–183k req/s | 295 µs | 742–781 µs |
-| plain axum | 179k req/s | 295–298 µs | 786–862 µs |
+| RustWeb | 117–183k req/s | 295–441 µs | 0.74–1.98 ms |
+| plain axum | 120–179k req/s | 295–449 µs | 0.79–1.94 ms |
 
-The difference is within run-to-run noise: for a route without validation, the
-framework adds no measurable request-path overhead. These are loopback numbers
-on one machine, not a TechEmpower claim. Validation cost depends on the model
-and payload and is not included in this table.
+The range comes from machine load, not from the framework: the same code
+measured 117k req/s with a browser and editor running and 183k on a quiet
+machine. The comparative result is what matters: for a route without
+validation, RustWeb stays within a few percent of plain axum in either
+direction. These are loopback numbers on one machine, not a TechEmpower claim.
+Validation cost depends on the model and payload and is not included in this
+table.
 
 ## Project layout
 

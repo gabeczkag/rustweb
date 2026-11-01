@@ -4,6 +4,8 @@
 //! attribute macros, inputs are validated, and OpenAPI documentation is
 //! generated once at startup.
 
+#![forbid(unsafe_code)]
+
 extern crate self as rustweb;
 
 pub use axum;

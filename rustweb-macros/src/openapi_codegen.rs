@@ -197,7 +197,7 @@ fn needs_validation(metadata: &Metadata) -> bool {
 }
 
 fn schema_tokens(ty: &Type) -> TokenStream {
-    if collection_inner_types(ty).is_some() {
+    if collection_inner_types(ty).is_some() || is_primitive(ty) {
         quote!(<#ty as ::rustweb::utoipa::PartialSchema>::schema())
     } else {
         quote!(::rustweb::openapi::Ref::from_schema_name(

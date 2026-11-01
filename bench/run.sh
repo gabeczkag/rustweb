@@ -16,7 +16,7 @@ cargo build --release -p bench-load
 
 CLIENT=(./target/release/bench-load)
 SERVER_PREFIX=()
-if command -v taskset >/dev/null 2>&1; then
+if command -v taskset >/dev/null 2>&1 && [ "$(nproc)" -ge 6 ]; then
   SERVER_PREFIX=(taskset -c 0-1)
   CLIENT=(taskset -c 2-5 "${CLIENT[@]}")
 fi
