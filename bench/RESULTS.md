@@ -48,14 +48,39 @@ the relative result stayed in the same band.
 | RustWeb | 116,651 req/s | 441 µs | 820 µs | 1,979 µs | 3,919 µs | 13,519 µs |
 | plain axum | 120,417 req/s | 449 µs | 773 µs | 1,938 µs | 3,765 µs | 10,079 µs |
 
+### Run 4 (quiet machine)
+
+| Server | Throughput | p50 | p90 | p99 | p99.9 | max |
+|---|---:|---:|---:|---:|---:|---:|
+| RustWeb | 201,963 req/s | 268 µs | 496 µs | 717 µs | 2,295 µs | 3,523 µs |
+| plain axum | 200,677 req/s | 269 µs | 512 µs | 735 µs | 1,364 µs | 3,563 µs |
+
+### FastAPI comparison (adjacent run, same machine)
+
+Run immediately after Run 4, with the same route, load generator, connection
+count, and CPU pinning.
+
+- Python 3.15.1, FastAPI 0.162.0, uvicorn 0.54.0, two workers.
+- uvicorn pinned to cores `0-1`, load generator to `2-5`.
+- `GET /hello` returning a plain string, no Pydantic validation in the route.
+
+| Server | Throughput | p50 | p90 | p99 | p99.9 | max |
+|---|---:|---:|---:|---:|---:|---:|
+| RustWeb (Run 4) | 201,963 req/s | 268 µs | 496 µs | 717 µs | 2,295 µs | 3,523 µs |
+| FastAPI + uvicorn (two runs) | 13,783–14,339 req/s | 4,083–4,263 µs | 4,343–4,535 µs | 4,519–4,971 µs | 8,319–8,479 µs | 8,791–10,399 µs |
+
+In this setup RustWeb delivered roughly 14–15× the throughput and 6–7× lower
+p99. This compares runtimes under the same load, not just the shape of the API;
+it is still one machine and two runs, so treat the ratio as directional.
+
 ## Interpretation
 
-Across three runs the RustWeb/axum throughput ratio was 1.014, 1.023, and
-0.969 — between 3% slower and 2% faster, with no consistent direction. That is
+Across four runs the RustWeb/axum throughput ratio was 1.014, 1.023, 0.969, and
+1.006 — between 3% slower and 2% faster, with no consistent direction. That is
 run-to-run noise on a shared desktop, not framework overhead. For routes without
 validation, the framework adds no measurable request-path cost.
 
-Absolute numbers vary with machine load: the same code measured 117k–183k
+Absolute numbers vary with machine load: the same code measured 117k–202k
 req/s depending on what else was running. The comparative result is the useful
 one. These are loopback measurements on one machine, not a claim about absolute
 performance or a TechEmpower ranking.

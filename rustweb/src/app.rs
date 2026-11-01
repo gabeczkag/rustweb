@@ -23,12 +23,13 @@ pub(crate) struct RouteMeta {
 ///     .route(create_user);
 /// ```
 pub struct RustWeb {
-    title: String,
-    version: String,
-    router: Router,
-    routes: Vec<RouteMeta>,
-    docs_path: Option<String>,
-    openapi_path: String,
+    pub(crate) title: String,
+    pub(crate) version: String,
+    pub(crate) router: Router,
+    pub(crate) routes: Vec<RouteMeta>,
+    pub(crate) docs_path: Option<String>,
+    pub(crate) openapi_path: String,
+    pub(crate) pack_stats: Option<rtml::PackStats>,
 }
 
 impl RustWeb {
@@ -41,6 +42,7 @@ impl RustWeb {
             routes: Vec::new(),
             docs_path: Some("/docs".to_owned()),
             openapi_path: "/openapi.json".to_owned(),
+            pack_stats: None,
         }
     }
 

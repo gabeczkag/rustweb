@@ -98,6 +98,8 @@ Invalid input returns the FastAPI shape:
 - JSON 404 fallback.
 - No per-request framework overhead; routes use axum's `matchit` router
   directly.
+- RTML templates and `.rpack` site packages: pre-rendered pages, assets, and
+  metadata in one compressed file.
 
 ## How it works
 
@@ -148,38 +150,88 @@ cargo run -p rustweb --example demo
 
 Then open <http://127.0.0.1:3000/docs>.
 
+## RTML and .rpack
+
+RTML is an HTML-like template language: `{{ expression }}`, `@if`, `@for`.
+The `rpack` CLI renders pages with data from `site.json`, minifies them, and
+packs the HTML plus every file under `assets/` into one gzip-compressed
+`.rpack`. RustWeb loads the pack into memory and serves pre-rendered bytes;
+there is no template parser or evaluator in the request path.
+
+```bash
+bash site/build.sh                 # builds site/site.rpack
+cargo run -p rustweb --example site
+# open http://127.0.0.1:3000
+```
+
+The repository ships a built `site/site.rpack`, so the example runs
+immediately. Rebuild it after editing RTML or CSS. `rpack inspect
+site/site.rpack` lists pages, assets, MIME types, and compression stats.
+
+`site/site.json` defines the site, routes, and page data:
+
+```json
+{
+  "site": { "title": "RustWeb", "version": "0.1.0" },
+  "pages": [
+    { "route": "/", "source": "index.rtml", "title": "Start" }
+  ],
+  "data": { "headline": "API w Rustcie..." }
+}
+```
+
+A page can use `{{ headline }}`, `{{ site.title }}`, `{{ page.route }}`,
+`@if show { ... }`, and `@for item in items { ... }` with `loop.index`,
+`loop.first`, and `loop.last`. Literal template markup is trusted; interpolated
+values are escaped for text and attributes.
+
+Pages in a pack are pre-rendered at build time. Anything dynamic belongs in a
+normal RustWeb handler, like `/api/health` in the site example. To show a
+literal `@if` or `@for` in prose, write `&#64;if` / `&#64;for` so the parser
+does not treat it as a directive.
+
 ## Benchmarks
 
 ```bash
-bash bench/run.sh
+bash bench/run.sh      # RustWeb vs plain axum
+bash bench/fastapi.sh  # FastAPI + uvicorn comparison (creates bench/.venv)
 ```
 
-The script starts two servers — one on RustWeb, one on plain axum — and runs a
-keep-alive load generator that reports throughput and p50/p90/p99/p99.9/max
-latency. Results are written to [`bench/RESULTS.md`](bench/RESULTS.md).
+The scripts start the servers and run a keep-alive load generator that reports
+throughput and p50/p90/p99/p99.9/max latency. Results are written to
+[`bench/RESULTS.md`](bench/RESULTS.md).
 
 Measured on an AMD Ryzen 5 4500U (6 cores), server pinned to 2 cores, client to
-4 cores, 64 keep-alive connections, 200k requests. Three runs, 0.97–1.02× the
+4 cores, 64 keep-alive connections, 200k requests. Four runs, 0.97–1.02× the
 throughput of plain axum (no consistent direction):
 
 | Server | Throughput | p50 | p99 |
 |---|---:|---:|---:|
-| RustWeb | 117–183k req/s | 295–441 µs | 0.74–1.98 ms |
-| plain axum | 120–179k req/s | 295–449 µs | 0.79–1.94 ms |
+| RustWeb | 117–202k req/s | 268–441 µs | 0.72–1.98 ms |
+| plain axum | 120–201k req/s | 269–449 µs | 0.74–1.94 ms |
 
 The range comes from machine load, not from the framework: the same code
-measured 117k req/s with a browser and editor running and 183k on a quiet
+measured 117k req/s with a browser and editor running and 202k on a quiet
 machine. The comparative result is what matters: for a route without
 validation, RustWeb stays within a few percent of plain axum in either
 direction. These are loopback numbers on one machine, not a TechEmpower claim.
 Validation cost depends on the model and payload and is not included in this
 table.
 
+In an adjacent run on the same machine, FastAPI 0.162 + uvicorn 0.54 (two
+workers, same two pinned cores) served the same route at 13.8–14.3k req/s with
+p99 4.5–5.0 ms, versus 201,963 req/s and p99 0.72 ms for RustWeb. That is
+roughly 14–15× throughput and 6–7× lower p99 in this setup — a runtime
+comparison, not just an API-shape comparison. The detailed runs are in
+[`bench/RESULTS.md`](bench/RESULTS.md).
+
 ## Project layout
 
 ```
 rustweb/          core framework: builder, extractors, errors, OpenAPI
 rustweb-macros/   route/model/query procedural macros
+rtml/             RTML parser, renderer, .rpack format, rpack CLI
+site/             mini site sources and the built site/site.rpack
 bench-load/       small hyper-based load generator
 bench/            benchmark script and results
 ```

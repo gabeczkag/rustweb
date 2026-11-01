@@ -16,12 +16,15 @@ mod app;
 mod error;
 mod extract;
 mod route;
+mod rpack;
 mod spec;
 
 pub use app::RustWeb;
 pub use error::{ApiError, ApiErrorBody, ApiResult};
 pub use extract::{ApiJson, ApiPath, ApiQuery};
 pub use route::Route;
+pub use rtml;
+pub use rtml::{PackStats, SitePack};
 
 pub use rustweb_macros::{delete, get, model, patch, post, put, query};
 

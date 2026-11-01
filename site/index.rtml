@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070b14">
+  <meta name="description" content="{{ site.description }}">
+  <title>{{ title }}</title>
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="/">
+      <img src="/assets/logo.svg" alt="" width="28" height="28">
+      RustWeb
+    </a>
+    <nav>
+      <a href="/about">RTML</a>
+      <a href="/bench">Benchmark</a>
+      <a href="/docs">API docs</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Rust · FastAPI style · low latency</p>
+      <h1>{{ headline }}</h1>
+      <p class="lead">{{ tagline }}</p>
+      <div class="actions">
+        <a class="button" href="/docs">Otwórz Swagger</a>
+        <a class="button ghost" href="/about">Jak działa RTML</a>
+      </div>
+      <p class="hint">Ta strona jest spakowana w <code>site.rpack</code> i serwowana przez RustWeb. Zero templatingu w request path.</p>
+    </section>
+
+    <section class="grid">
+      @for feature in features {
+        <article class="card">
+          <span class="dot"></span>
+          <h2>{{ feature.title }}</h2>
+          <p>{{ feature.text }}</p>
+        </article>
+      }
+    </section>
+
+    <section class="split">
+      <div>
+        <p class="eyebrow">DX</p>
+        <h2>Pisz jak w FastAPI</h2>
+        <p>{{ code_note }}</p>
+      </div>
+      <pre><code>{{ code }}</code></pre>
+    </section>
+
+    <section class="bench">
+      <p class="eyebrow">Pomiar, nie obietnica</p>
+      <h2>RustWeb vs axum vs FastAPI</h2>
+      <p>{{ bench.note }}</p>
+      <table>
+        <thead>
+          <tr><th>Serwer</th><th>Throughput</th><th>p99</th></tr>
+        </thead>
+        <tbody>
+          @for row in bench.rows {
+            <tr>
+              <td>
+                {{ row.name }}
+                <div class="bar"><span style="--bar: {{ row.bar }}"></span></div>
+              </td>
+              <td>{{ row.throughput }}</td>
+              <td>{{ row.p99 }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="note">RustWeb i axum są w granicach szumu. FastAPI jest wolniejsze, bo płaci za Pythona i runtime Pydantic — nie za sam kształt API.</p>
+    </section>
+
+    <section class="split">
+      <div>
+        <p class="eyebrow">RTML → rpack</p>
+        <h2>Jedna paczka, zero zależności</h2>
+        <p>Strony piszesz w RTML-u, budujesz komendą <code>{{ pack_command }}</code>, a RustWeb montuje paczkę pod <code>.rpack_file("site.rpack")</code>.</p>
+        <p>{{ manifest_note }}</p>
+      </div>
+      <pre><code>{{ rtml_syntax }}</code></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>RustWeb {{ site.version }} · RTML + rpack</span>
+    <span><a href="/api/health">/api/health</a> · <a href="/openapi.json">/openapi.json</a> · <a href="/bench">benchmark</a></span>
+  </footer>
+</body>
+</html>
