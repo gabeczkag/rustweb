@@ -29,6 +29,7 @@ utoipa-swagger-ui = { version = "10.0", features = ["axum", "vendored"] }
 validator = { version = "0.21", features = ["derive"] }
 
 [dev-dependencies]
+futures-util = "0.3"
 http-body-util = "0.1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tower = { version = "0.5", features = ["util"] }

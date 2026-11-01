@@ -3,7 +3,8 @@
 **Date:** 2026-11-01
 **Machine:** AMD Ryzen 5 4500U (6 cores), 7.1 GiB RAM, Linux 7.0.0-38-generic
 **Toolchain:** rustc 1.99.1, release profile
-**Load generator:** `bench-load` (hyper HTTP/1.1, keep-alive, 64 connections)
+**Load generators:** `bench-load` (request throughput) and `bench-stream`
+(streaming bandwidth), both hyper HTTP/1.1.
 
 ## Method
 
@@ -79,6 +80,27 @@ count, and CPU pinning.
 In this setup RustWeb delivered roughly 14–15× the throughput and 6–7× lower
 p99. This compares runtimes under the same load, not just the shape of the API;
 it is still one machine and two runs, so treat the ratio as directional.
+
+## Streaming bandwidth
+
+Route: `GET /stream`, a 64 MiB response sent in 64 KiB chunks with an exact
+`Content-Length`. The client (`bench-stream`) reads body frames and counts bytes
+without collecting the response in memory.
+
+- 8 streams over 4 HTTP/1.1 connections = 512 MiB per server.
+- Three runs per server, same machine, server pinned to cores `0-1`, client to
+  `2-5`.
+- Run with `bash bench/streaming.sh`.
+
+| Server | MiB/s | MB/s | Gbit/s |
+|---|---:|---:|---:|
+| RustWeb | 4,536–4,672 | 4,757–4,899 | 38.05–39.19 |
+| plain axum | 4,121–4,692 | 4,321–4,920 | 34.57–39.36 |
+
+The spread is run-to-run noise on a shared desktop. Both servers stream from one
+reused 64 KiB chunk; the client never buffers the 64 MiB body. These are
+loopback numbers, so they measure the axum/hyper/tokio path and kernel copy
+cost, not a real network link.
 
 ## Memory
 

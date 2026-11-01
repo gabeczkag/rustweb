@@ -407,9 +407,15 @@ the Rust server itself, use `rustweb site/site.rweb` on a VPS/container.
 ## Benchmarks
 
 ```bash
-bash bench/run.sh      # RustWeb vs plain axum
-bash bench/fastapi.sh  # FastAPI + uvicorn comparison (creates bench/.venv)
+bash bench/run.sh        # request throughput and latency
+bash bench/streaming.sh  # streaming bandwidth in MiB/s, MB/s, and Gbit/s
+bash bench/fastapi.sh    # FastAPI + uvicorn comparison (creates bench/.venv)
 ```
+
+The streaming benchmark downloads a 64 MiB body per stream in 64 KiB
+chunks, with 8 streams over 4 HTTP/1.1 connections by default. The client
+counts body frames without buffering the whole response, so the number reflects
+transfer bandwidth rather than allocation speed. Override the concurrency with `CONNECTIONS` and `STREAMS`.
 
 The scripts start the servers and run a keep-alive load generator that reports
 throughput and p50/p90/p99/p99.9/max latency. Results are written to
