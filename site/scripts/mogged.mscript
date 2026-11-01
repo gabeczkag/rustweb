@@ -1,6 +1,6 @@
 const W = 1920;
 const H = 1080;
-const DURATION = 15;
+const DURATION = 4;
 const FPS = 60;
 const FRAMES = DURATION * FPS;
 
@@ -19,15 +19,15 @@ const C = {
 
 const SCENES = [
   { start: 0, label: "00 // RUSTWEB" },
-  { start: 1.5, label: "01 // API" },
-  { start: 3, label: "02 // MHTML" },
-  { start: 4.5, label: "03 // CERT DB" },
-  { start: 6, label: "04 // TCPs" },
-  { start: 7.5, label: "05 // UC" },
-  { start: 9, label: "06 // GAME LAB" },
-  { start: 10.5, label: "07 // DEPLOY" },
-  { start: 12, label: "08 // BENCH" },
-  { start: 13.5, label: "09 // OUTRO" },
+  { start: 0.4, label: "01 // API" },
+  { start: 0.8, label: "02 // MHTML" },
+  { start: 1.2, label: "03 // CERT DB" },
+  { start: 1.6, label: "04 // TCPs" },
+  { start: 2.0, label: "05 // UC" },
+  { start: 2.4, label: "06 // GAME LAB" },
+  { start: 2.8, label: "07 // DEPLOY" },
+  { start: 3.2, label: "08 // BENCH" },
+  { start: 3.6, label: "09 // OUTRO" },
 ];
 
 const TICKER = [
@@ -735,7 +735,7 @@ function createReel(canvas, ctx) {
       timecode.textContent = `00:00:${String(seconds).padStart(2, "0")}:${String(frameInSecond).padStart(2, "0")}`;
     }
     if (sceneHud) sceneHud.textContent = SCENES[scene].label;
-    if (liveTicker) liveTicker.textContent = `RUSTWEB // ${TICKER[Math.floor(value * 2) % TICKER.length]}`;
+    if (liveTicker) liveTicker.textContent = `RUSTWEB // ${TICKER[Math.floor(value * 4) % TICKER.length]}`;
     if (playhead) playhead.style.setProperty("--playhead", `${(value / DURATION) * 100}%`);
     if (scrub && document.activeElement !== scrub) scrub.value = String(frame);
     if (timeline) {

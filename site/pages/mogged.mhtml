@@ -1,15 +1,15 @@
 <section class="reel-page">
   <div class="reel-head">
     <div>
-      <p class="eyebrow">08 // PRODUCT REEL // RUSTWEB // 900 FRAMES</p>
+      <p class="eyebrow">08 // PRODUCT REEL // RUSTWEB // 240 FRAMES</p>
       <h1>RUSTWEB.<br><span>W RUCHU.</span></h1>
-      <p class="lead">15 sekund o tym, co faktycznie dostajesz: API, MHTML, cert DB, TCPs, UC, Game Lab, deploy i benchmark. Bez slajdow o niczym.</p>
+      <p class="lead">4 sekundy o tym, co faktycznie dostajesz: API, MHTML, cert DB, TCPs, UC, Game Lab, deploy i benchmark. Bez slajdow o niczym.</p>
     </div>
     <div class="reel-meta">
       <span>60 FPS</span>
       <span>1920 x 1080</span>
-      <span>15.0 S</span>
-      <span>900 FRAMES</span>
+      <span>4.0 S</span>
+      <span>240 FRAMES</span>
     </div>
   </div>
 
@@ -22,7 +22,7 @@
       <span class="reel-corner reel-corner-br">+</span>
       <span class="reel-hud-tl">RUSTWEB // PRODUCT REEL</span>
       <span class="reel-hud-tr">60 FPS / 1920x1080</span>
-      <span class="reel-hud-bl">FRAME <b id="reel-frame-hud">000</b> / 900</span>
+      <span class="reel-hud-bl">FRAME <b id="reel-frame-hud">000</b> / 240</span>
       <span class="reel-hud-br">NO KEYFRAMES</span>
       <span class="reel-scene-hud" id="reel-scene-hud">00 // RUSTWEB</span>
       <span class="reel-rec"><i></i> REC</span>
@@ -33,8 +33,8 @@
     <button id="reel-play" class="button" type="button">PAUSE</button>
     <button id="reel-restart" class="badge" type="button">RESTART</button>
     <button id="reel-full" class="badge" type="button">FULLSCREEN</button>
-    <input id="reel-scrub" type="range" min="0" max="900" value="0" step="1" aria-label="Klatka motion reel">
-    <span class="reel-counter"><b id="reel-frame">000</b> / 900</span>
+    <input id="reel-scrub" type="range" min="0" max="240" value="0" step="1" aria-label="Klatka motion reel">
+    <span class="reel-counter"><b id="reel-frame">000</b> / 240</span>
     <span class="reel-timecode" id="reel-timecode">00:00:00:00</span>
   </div>
 

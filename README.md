@@ -127,7 +127,7 @@ Invalid input returns the FastAPI shape:
   copyable commands.
 - `/baner` and `/market`: fast motion marketing pages with 500 ms proof/card
   rotation, scene palettes, tickers, filters, pause, and reduced-motion support.
-- `/mogged`: a 15-second product motion reel with 900 frames, API, MHTML, cert
+- `/mogged`: a 4-second product motion reel with 240 frames, API, MHTML, cert
   DB, TCPs, UC, Game Lab, deploy and bench scenes, HUD, scrubber, and frame counter.
 
 ## How it works
