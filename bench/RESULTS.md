@@ -55,6 +55,13 @@ the relative result stayed in the same band.
 | RustWeb | 201,963 req/s | 268 µs | 496 µs | 717 µs | 2,295 µs | 3,523 µs |
 | plain axum | 200,677 req/s | 269 µs | 512 µs | 735 µs | 1,364 µs | 3,563 µs |
 
+### Run 5 (quiet machine, after RTML integration)
+
+| Server | Throughput | p50 | p90 | p99 | p99.9 | max |
+|---|---:|---:|---:|---:|---:|---:|
+| RustWeb | 210,750 req/s | 259 µs | 476 µs | 699 µs | 1,268 µs | 2,883 µs |
+| plain axum | 208,173 req/s | 258 µs | 484 µs | 740 µs | 1,992 µs | 3,521 µs |
+
 ### FastAPI comparison (adjacent run, same machine)
 
 Run immediately after Run 4, with the same route, load generator, connection
@@ -75,12 +82,13 @@ it is still one machine and two runs, so treat the ratio as directional.
 
 ## Interpretation
 
-Across four runs the RustWeb/axum throughput ratio was 1.014, 1.023, 0.969, and
-1.006 — between 3% slower and 2% faster, with no consistent direction. That is
-run-to-run noise on a shared desktop, not framework overhead. For routes without
-validation, the framework adds no measurable request-path cost.
+Across five runs the RustWeb/axum throughput ratio was 1.014, 1.023, 0.969,
+1.006, and 1.012 — between 3% slower and 2% faster, with no consistent
+direction. That is run-to-run noise on a shared desktop, not framework
+overhead. For routes without validation, the framework adds no measurable
+request-path cost.
 
-Absolute numbers vary with machine load: the same code measured 117k–202k
+Absolute numbers vary with machine load: the same code measured 117k–211k
 req/s depending on what else was running. The comparative result is the useful
 one. These are loopback measurements on one machine, not a claim about absolute
 performance or a TechEmpower ranking.

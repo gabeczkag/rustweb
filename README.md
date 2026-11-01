@@ -202,16 +202,16 @@ throughput and p50/p90/p99/p99.9/max latency. Results are written to
 [`bench/RESULTS.md`](bench/RESULTS.md).
 
 Measured on an AMD Ryzen 5 4500U (6 cores), server pinned to 2 cores, client to
-4 cores, 64 keep-alive connections, 200k requests. Four runs, 0.97–1.02× the
+4 cores, 64 keep-alive connections, 200k requests. Five runs, 0.97–1.02× the
 throughput of plain axum (no consistent direction):
 
 | Server | Throughput | p50 | p99 |
 |---|---:|---:|---:|
-| RustWeb | 117–202k req/s | 268–441 µs | 0.72–1.98 ms |
-| plain axum | 120–201k req/s | 269–449 µs | 0.74–1.94 ms |
+| RustWeb | 117–211k req/s | 258–441 µs | 0.70–1.98 ms |
+| plain axum | 120–208k req/s | 258–449 µs | 0.74–1.94 ms |
 
 The range comes from machine load, not from the framework: the same code
-measured 117k req/s with a browser and editor running and 202k on a quiet
+measured 117k req/s with a browser and editor running and 211k on a quiet
 machine. The comparative result is what matters: for a route without
 validation, RustWeb stays within a few percent of plain axum in either
 direction. These are loopback numbers on one machine, not a TechEmpower claim.
@@ -220,7 +220,7 @@ table.
 
 In an adjacent run on the same machine, FastAPI 0.162 + uvicorn 0.54 (two
 workers, same two pinned cores) served the same route at 13.8–14.3k req/s with
-p99 4.5–5.0 ms, versus 201,963 req/s and p99 0.72 ms for RustWeb. That is
+p99 4.5–5.0 ms, versus 202–211k req/s and p99 0.70–0.72 ms for RustWeb. That is
 roughly 14–15× throughput and 6–7× lower p99 in this setup — a runtime
 comparison, not just an API-shape comparison. The detailed runs are in
 [`bench/RESULTS.md`](bench/RESULTS.md).

@@ -39,7 +39,7 @@
       },
       {
         "title": "Zero narzutu w hot path",
-        "text": "Cienka warstwa nad axum. Benchmark na tej samej maszynie: 201 963 req/s dla RustWeb i 200 677 req/s dla czystego axum."
+        "text": "Cienka warstwa nad axum. Benchmark na tej samej maszynie: 210 750 req/s dla RustWeb i 208 173 req/s dla czystego axum."
       }
     ],
     "code_note": "Makro rozwija się w czasie kompilacji, więc routing i dokumentacja nie kosztują nic w czasie żądania. Walidacja jest jedyną dodatkową pracą i dzieje się tylko wtedy, gdy jej użyjesz.",
@@ -49,13 +49,13 @@
       "rows": [
         {
           "name": "RustWeb",
-          "throughput": "201 963 req/s",
-          "p99": "0.72 ms",
+          "throughput": "210 750 req/s",
+          "p99": "0.70 ms",
           "bar": "100%"
         },
         {
           "name": "plain axum",
-          "throughput": "200 677 req/s",
+          "throughput": "208 173 req/s",
           "p99": "0.74 ms",
           "bar": "99%"
         },
