@@ -59,8 +59,13 @@ function createReel(canvas, ctx) {
   const timeline = document.getElementById("reel-timeline");
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-  let time = 0;
-  let playing = !reduced;
+  const query = new URLSearchParams(location.search);
+  const requestedFrame = Number(query.get("frame"));
+  const still = query.get("still") === "1";
+  let time = Number.isFinite(requestedFrame)
+    ? Math.max(0, Math.min(REEL_FRAMES - 1, requestedFrame)) / REEL_FPS
+    : 0;
+  let playing = !reduced && !still;
   let destroyed = false;
   let previous = 0;
   let raf = 0;
