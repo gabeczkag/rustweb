@@ -112,6 +112,8 @@ Invalid input returns the FastAPI shape:
   manifests, missing-file sync, debug paths, and bandwidth limits.
 - `/game`: a browser packet lab with 4096-byte packet limits, nine pre-made
   systems, channel functions, packet overrides, and a live log.
+- `uc`: binary compression packs for many small packets, with zstd, CRC32,
+  a 4 KiB packet limit, a 4 MiB pack limit, CLI tools, and a local HTTP service.
 
 ## How it works
 
@@ -369,6 +371,24 @@ its channel function.
 The game is a local browser simulation. TCPs remains a separate service; this
 page tests the packet/channel logic without requiring the UDP server.
 
+### UC compression packs
+
+`uc` packs many small packets into one binary `UC01` blob, optionally
+compressing the whole pack with zstd. The decoder verifies lengths and a CRC32,
+then returns the original packets. Per-packet limit is **4096 B**; per-pack
+limit is **4 MiB**.
+
+```bash
+cargo run -p uc -- pack packets.json packets.uc --level 9
+cargo run -p uc -- inspect packets.uc
+cargo run -p uc -- unpack packets.uc packets.out.json
+
+cargo run -p uc -- serve --listen 127.0.0.1:4200
+```
+
+The service exposes `/status`, `/uc/pack`, and `/uc/unpack`. This is framing and
+compression, not encryption; a human sees binary, but a decoder can read it.
+
 ### Byrust protocol
 
 `linker.json` can declare a protocol profile:
@@ -495,6 +515,7 @@ mhtml/            MHTML parser, page compiler, .rweb bundler, rweb CLI
 site/             mini site sources and the built site/site.rweb
 supabase/         SQL schema and RPCs for the public certification registry
 tcps/             per-user TCP file sync + UDP player sessions (separate service)
+uc/               binary compression packs for small packets
 bench-load/       small hyper-based load generator
 bench/            benchmark script and results
 ```
