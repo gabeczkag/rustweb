@@ -18,7 +18,7 @@
 <section class="stats">
   <div class="stat"><strong>1</strong><span>PLIK STRONY</span></div>
   <div class="stat"><strong>0</strong><span>RUNTIME TEMPLATING</span></div>
-  <div class="stat"><strong>55</strong><span>TESTÓW W REPO</span></div>
+  <div class="stat"><strong>56</strong><span>TESTÓW W REPO</span></div>
 </section>
 
 <section class="deploy-grid">

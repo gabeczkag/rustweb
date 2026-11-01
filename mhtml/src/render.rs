@@ -110,7 +110,9 @@ fn render_node(
             let value = evaluate(expression, context);
             output.push_str(&to_text(&value));
         }
-        Node::Element(element) => render_element(element, context, output, minify),
+        Node::Element(element) => {
+            render_element(element, context, output, minify, preserve_whitespace)
+        }
         Node::If {
             condition,
             then_branch,
@@ -163,7 +165,13 @@ fn render_node(
     }
 }
 
-fn render_element(element: &Element, context: &Value, output: &mut String, minify: bool) {
+fn render_element(
+    element: &Element,
+    context: &Value,
+    output: &mut String,
+    minify: bool,
+    preserve_parent: bool,
+) {
     output.push('<');
     output.push_str(&element.tag);
 
@@ -200,7 +208,7 @@ fn render_element(element: &Element, context: &Value, output: &mut String, minif
 
     output.push('>');
 
-    let preserve_whitespace = is_preserve_whitespace(&element.tag);
+    let preserve_whitespace = preserve_parent || is_preserve_whitespace(&element.tag);
     let raw_text = is_raw_text(&element.tag);
 
     if raw_text {
@@ -339,6 +347,12 @@ mod tests {
             json!({"value": "<x>"}),
         );
         assert_eq!(html, "<pre>line 1\n  line 2 &lt;x&gt;</pre>");
+    }
+
+    #[test]
+    fn preserves_nested_code_inside_pre() {
+        let html = render_str("<pre><code>line 1\n  line 2</code></pre>", json!({}));
+        assert_eq!(html, "<pre><code>line 1\n  line 2</code></pre>");
     }
 
     #[test]
