@@ -1,15 +1,20 @@
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, ItemFn, LitStr};
+use syn::{parse_macro_input, ItemFn};
 
+mod model;
 mod route;
 
 use route::Method;
 
 fn expand(method: Method, attr: TokenStream, item: TokenStream) -> TokenStream {
-    let path = parse_macro_input!(attr as LitStr);
     let item = parse_macro_input!(item as ItemFn);
 
-    route::expand(method, path, item)
+    let args = match route::parse_args(attr.into()) {
+        Ok(args) => args,
+        Err(error) => return error.to_compile_error().into(),
+    };
+
+    route::expand(method, args, item)
         .unwrap_or_else(|error| error.to_compile_error())
         .into()
 }
@@ -37,4 +42,9 @@ pub fn delete(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn patch(attr: TokenStream, item: TokenStream) -> TokenStream {
     expand(Method::Patch, attr, item)
+}
+
+#[proc_macro_attribute]
+pub fn model(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    model::expand(item.into()).into()
 }

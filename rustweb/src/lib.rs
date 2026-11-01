@@ -11,18 +11,22 @@ pub use utoipa;
 pub use utoipa::openapi;
 
 mod app;
+mod error;
+mod extract;
 mod route;
 
 pub use app::RustWeb;
+pub use error::{ApiError, ApiErrorBody, ApiResult};
+pub use extract::ApiJson;
 pub use route::Route;
 
-pub use rustweb_macros::{delete, get, patch, post, put};
+pub use rustweb_macros::{delete, get, model, patch, post, put};
 
 /// Common imports for application code.
 pub mod prelude {
-    pub use crate::{RustWeb, Route};
+    pub use crate::{ApiError, ApiJson, ApiResult, RustWeb, Route};
     pub use axum::extract::{Path, Query};
     pub use axum::http::StatusCode;
     pub use axum::Json;
-    pub use rustweb_macros::{delete, get, patch, post, put};
+    pub use rustweb_macros::{delete, get, model, patch, post, put};
 }

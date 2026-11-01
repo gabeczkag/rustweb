@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{Error, FnArg, ItemFn, LitStr, ReturnType, Type};
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
+use syn::{bracketed, Error, FnArg, Ident, ItemFn, LitInt, LitStr, ReturnType, Token, Type};
 
 #[derive(Clone, Copy)]
 pub enum Method {
@@ -33,7 +35,71 @@ impl Method {
     }
 }
 
-pub fn expand(method: Method, path: LitStr, item: ItemFn) -> syn::Result<TokenStream2> {
+pub struct RouteArgs {
+    pub path: LitStr,
+    pub status: u16,
+    pub summary: Option<String>,
+    pub description: Option<String>,
+    pub tags: Vec<String>,
+}
+
+impl Parse for RouteArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let path: LitStr = input.parse()?;
+        let mut status = 200;
+        let mut summary = None;
+        let mut description = None;
+        let mut tags = Vec::new();
+
+        while input.peek(Token![,]) {
+            input.parse::<Token![,]>()?;
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+
+            match key.to_string().as_str() {
+                "status" => {
+                    let literal: LitInt = input.parse()?;
+                    let code: u16 = literal.base10_parse()?;
+                    if !(100..=599).contains(&code) {
+                        return Err(Error::new(
+                            literal.span(),
+                            "status must be between 100 and 599",
+                        ));
+                    }
+                    status = code;
+                }
+                "summary" => summary = Some(input.parse::<LitStr>()?.value()),
+                "description" => description = Some(input.parse::<LitStr>()?.value()),
+                "tags" => {
+                    let content;
+                    bracketed!(content in input);
+                    let parsed = Punctuated::<LitStr, Token![,]>::parse_terminated(&content)?;
+                    tags = parsed.iter().map(LitStr::value).collect();
+                }
+                other => {
+                    return Err(Error::new(
+                        key.span(),
+                        format!("unknown route option `{other}`"),
+                    ));
+                }
+            }
+        }
+
+        Ok(Self {
+            path,
+            status,
+            summary,
+            description,
+            tags,
+        })
+    }
+}
+
+pub fn parse_args(tokens: TokenStream2) -> syn::Result<RouteArgs> {
+    syn::parse2(tokens)
+}
+
+pub fn expand(method: Method, args: RouteArgs, item: ItemFn) -> syn::Result<TokenStream2> {
     if item.sig.asyncness.is_none() {
         return Err(Error::new_spanned(
             &item.sig.ident,
@@ -55,7 +121,7 @@ pub fn expand(method: Method, path: LitStr, item: ItemFn) -> syn::Result<TokenSt
     } = item;
     let fn_ident = sig.ident;
     let output = sig.output;
-    let status = status_expr(200);
+    let status = status_expr(args.status);
     let is_result = is_result(&output);
 
     let mut wrapper_inputs = Vec::new();
@@ -103,6 +169,16 @@ pub fn expand(method: Method, path: LitStr, item: ItemFn) -> syn::Result<TokenSt
 
     let axum_fn = method.axum_fn();
     let http_method = method.http_method();
+    let path = &args.path;
+    let operation_id = fn_ident.to_string();
+    let summary = option_string(args.summary.as_deref());
+    let description = option_string(args.description.as_deref());
+    let tags = if args.tags.is_empty() {
+        quote!(None::<Vec<&str>>)
+    } else {
+        let tags = &args.tags;
+        quote!(Some(vec![#(#tags),*]))
+    };
 
     Ok(quote! {
         #(#struct_attrs)*
@@ -132,7 +208,12 @@ pub fn expand(method: Method, path: LitStr, item: ItemFn) -> syn::Result<TokenSt
             }
 
             fn operation(&self) -> ::rustweb::openapi::path::Operation {
-                ::rustweb::openapi::path::Operation::new()
+                ::rustweb::openapi::path::OperationBuilder::new()
+                    .operation_id(Some(#operation_id))
+                    .summary(#summary)
+                    .description(#description)
+                    .tags(#tags)
+                    .build()
             }
 
             fn schemas(&self) -> Vec<(String, ::rustweb::openapi::RefOr<::rustweb::openapi::schema::Schema>)> {
@@ -147,6 +228,13 @@ pub fn expand(method: Method, path: LitStr, item: ItemFn) -> syn::Result<TokenSt
             }
         }
     })
+}
+
+fn option_string(value: Option<&str>) -> TokenStream2 {
+    match value {
+        Some(value) => quote!(Some(#value)),
+        None => quote!(None::<&str>),
+    }
 }
 
 fn status_expr(code: u16) -> TokenStream2 {
@@ -179,13 +267,9 @@ fn is_result(output: &ReturnType) -> bool {
     };
 
     match &**ty {
-        Type::Path(path) => path
-            .path
-            .segments
-            .last()
-            .is_some_and(|segment| {
-                segment.ident == "Result" || segment.ident == "ApiResult"
-            }),
+        Type::Path(path) => path.path.segments.last().is_some_and(|segment| {
+            segment.ident == "Result" || segment.ident == "ApiResult"
+        }),
         _ => false,
     }
 }
