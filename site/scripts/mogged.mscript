@@ -1,0 +1,643 @@
+const REEL_WIDTH = 1920;
+const REEL_HEIGHT = 1080;
+const REEL_DURATION = 15;
+const REEL_FPS = 60;
+const REEL_FRAMES = REEL_DURATION * REEL_FPS;
+
+const REEL = {
+  bg: "#0f1115",
+  panel: "#151920",
+  line: "#2a3039",
+  ink: "#f4f1e8",
+  muted: "#8b919b",
+  coral: "#ff5a4e",
+  blue: "#4ea1ff",
+  lime: "#b7ff4a",
+  purple: "#a78bfa",
+};
+
+const REEL_SCENES = [
+  { start: 0, label: "00 // INTRO" },
+  { start: 1, label: "01 // TITLE CARD" },
+  { start: 2, label: "02 // KINETIC GRID" },
+  { start: 4, label: "03 // EASING" },
+  { start: 7, label: "04 // PROCEDURAL" },
+  { start: 10, label: "05 // CORE PHILOSOPHY" },
+  { start: 12, label: "06 // OUTRO" },
+];
+
+let activeReel = null;
+
+function initReel() {
+  const canvas = document.getElementById("reel-canvas");
+  if (!canvas || canvas.dataset.reelBound === "1") return;
+  canvas.dataset.reelBound = "1";
+
+  let context;
+  try {
+    context = canvas.getContext("2d");
+  } catch {
+    context = null;
+  }
+  if (!context) return;
+
+  if (activeReel) activeReel.destroy();
+  activeReel = createReel(canvas, context);
+}
+
+function createReel(canvas, ctx) {
+  const stage = document.getElementById("reel-stage");
+  const playButton = document.getElementById("reel-play");
+  const restartButton = document.getElementById("reel-restart");
+  const fullButton = document.getElementById("reel-full");
+  const scrub = document.getElementById("reel-scrub");
+  const frameNode = document.getElementById("reel-frame");
+  const frameHud = document.getElementById("reel-frame-hud");
+  const timecode = document.getElementById("reel-timecode");
+  const sceneHud = document.getElementById("reel-scene-hud");
+  const playhead = document.getElementById("reel-playhead");
+  const timeline = document.getElementById("reel-timeline");
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  let time = 0;
+  let playing = !reduced;
+  let destroyed = false;
+  let previous = 0;
+  let raf = 0;
+
+  function clamp01(value) {
+    return Math.max(0, Math.min(1, value));
+  }
+
+  function easeOutExpo(value) {
+    return value >= 1 ? 1 : 1 - Math.pow(2, -10 * value);
+  }
+
+  function easeOutCubic(value) {
+    return 1 - Math.pow(1 - value, 3);
+  }
+
+  function easeInOutCubic(value) {
+    return value < 0.5
+      ? 4 * value * value * value
+      : 1 - Math.pow(-2 * value + 2, 3) / 2;
+  }
+
+  function easeOutBack(value) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
+  }
+
+  function easeOutElastic(value) {
+    if (value === 0 || value === 1) return value;
+    return Math.pow(2, -10 * value) * Math.sin((value * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1;
+  }
+
+  function smoothstep(edge0, edge1, value) {
+    const x = clamp01((value - edge0) / (edge1 - edge0));
+    return x * x * (3 - 2 * x);
+  }
+
+  function clear(color = REEL.bg) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, REEL_WIDTH, REEL_HEIGHT);
+    ctx.strokeStyle = REEL.line;
+    ctx.globalAlpha = 0.32;
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= REEL_WIDTH; x += 48) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, REEL_HEIGHT);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= REEL_HEIGHT; y += 48) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(REEL_WIDTH, y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function font(size, family = '"Arial Black", Impact, sans-serif') {
+    ctx.font = `900 ${size}px ${family}`;
+    ctx.textBaseline = "middle";
+  }
+
+  function mono(size, color = REEL.muted) {
+    ctx.font = `700 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = color;
+  }
+
+  function label(text, x, y, size = 18, color = REEL.coral) {
+    mono(size, color);
+    ctx.textAlign = "left";
+    ctx.fillText(text, x, y);
+  }
+
+  function centered(text, x, y, size, color, family) {
+    font(size, family);
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.fillText(text, x, y);
+    ctx.textAlign = "left";
+  }
+
+  function drawIntro(local) {
+    clear();
+    const p = clamp01(local);
+    const radius = 4 + easeOutExpo(p) * 14;
+    const ring = 30 + easeOutCubic(p) * 230;
+
+    ctx.strokeStyle = REEL.line;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(REEL_WIDTH / 2 - 220, REEL_HEIGHT / 2);
+    ctx.lineTo(REEL_WIDTH / 2 + 220, REEL_HEIGHT / 2);
+    ctx.moveTo(REEL_WIDTH / 2, REEL_HEIGHT / 2 - 220);
+    ctx.lineTo(REEL_WIDTH / 2, REEL_HEIGHT / 2 + 220);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = REEL.blue;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, ring, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = REEL.coral;
+    ctx.beginPath();
+    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    label("RUSTWEB // MOTION STUDY", 90, 90, 16, REEL.lime);
+    mono(13, REEL.muted);
+    ctx.fillText("A SINGLE DOT. A WHOLE SYSTEM.", 90, 118);
+    mono(13, REEL.muted);
+    ctx.textAlign = "right";
+    ctx.fillText("00:00 // INTRO", REEL_WIDTH - 90, 90);
+    ctx.textAlign = "left";
+
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = REEL.ink;
+    ctx.beginPath();
+    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, 300 + Math.sin(p * Math.PI) * 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTitle(local) {
+    clear();
+    const p = clamp01(local);
+    const scale = 1.22 - easeOutExpo(p) * 0.22;
+    const alpha = clamp01(p * 4);
+
+    ctx.save();
+    ctx.translate(REEL_WIDTH / 2, REEL_HEIGHT / 2 - 30);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = alpha;
+    centered("RUSTWEB", 0, 0, 238, REEL.ink);
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(REEL_WIDTH - 108, REEL_HEIGHT / 2);
+    ctx.rotate(-Math.PI / 2);
+    mono(16, REEL.coral);
+    ctx.textAlign = "center";
+    ctx.fillText("MOTION DESIGN // PROCEDURAL", 0, 0);
+    ctx.restore();
+
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = REEL.coral;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(300, REEL_HEIGHT / 2 + 118);
+    ctx.lineTo(REEL_WIDTH - 300, REEL_HEIGHT / 2 + 118);
+    ctx.stroke();
+    mono(15, REEL.muted);
+    ctx.fillText("NO KEYFRAMES. JUST MATH.", 310, REEL_HEIGHT / 2 + 150);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawKinetic(local) {
+    ctx.fillStyle = REEL.coral;
+    ctx.fillRect(0, 0, REEL_WIDTH, REEL_HEIGHT);
+
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    mono(24, REEL.bg);
+    for (let y = 54; y < REEL_HEIGHT; y += 54) {
+      for (let x = -240; x < REEL_WIDTH + 240; x += 560) {
+        ctx.fillText("// SHAPE / FORM / MOTION /", x + ((y * 3) % 180), y);
+      }
+    }
+    ctx.restore();
+
+    const p = clamp01(local);
+    const bounce = easeOutBack(clamp01(p * 1.45));
+    const shapes = [
+      { x: 390, y: 500, size: 150, color: REEL.ink, kind: "circle" },
+      { x: 960, y: 500, size: 150, color: REEL.bg, kind: "square" },
+      { x: 1530, y: 500, size: 150, color: REEL.blue, kind: "triangle" },
+    ];
+
+    for (const [index, shape] of shapes.entries()) {
+      const scale = 0.45 + bounce * 0.55;
+      const drift = Math.sin(p * Math.PI + index) * 20;
+      ctx.save();
+      ctx.translate(shape.x, shape.y + drift);
+      ctx.rotate((p * Math.PI * 2 * (index % 2 === 0 ? 1 : -1)) / 2);
+      ctx.scale(scale, scale);
+      ctx.fillStyle = shape.color;
+      ctx.strokeStyle = REEL.bg;
+      ctx.lineWidth = 8;
+      if (shape.kind === "circle") {
+        ctx.beginPath();
+        ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else if (shape.kind === "square") {
+        ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+        ctx.strokeRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(0, -shape.size / 2);
+        ctx.lineTo(shape.size / 2, shape.size / 2);
+        ctx.lineTo(-shape.size / 2, shape.size / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    font(72);
+    ctx.fillStyle = REEL.ink;
+    ctx.textAlign = "center";
+    ctx.fillText("SHAPE / FORM / MOTION", REEL_WIDTH / 2, 150);
+    ctx.textAlign = "left";
+    mono(15, REEL.bg);
+    ctx.fillText("02 // KINETIC FORM GRID", 90, 100);
+  }
+
+  function drawEasing(local) {
+    clear();
+    font(72);
+    ctx.fillStyle = REEL.ink;
+    ctx.fillText("EASING IS A FEELING.", 90, 120);
+    mono(15, REEL.coral);
+    ctx.fillText("04 // TIMING / CURVES / NODES", 94, 160);
+
+    const tracks = [
+      { name: "LINEAR", fn: (v) => v, color: REEL.lime },
+      { name: "CUBIC.INOUT", fn: easeInOutCubic, color: REEL.blue },
+      { name: "BACK.OUT", fn: easeOutBack, color: REEL.coral },
+      { name: "ELASTIC.OUT", fn: easeOutElastic, color: REEL.gold || REEL.lime },
+    ];
+
+    const p = clamp01(local);
+    for (const [index, track] of tracks.entries()) {
+      const y = 310 + index * 145;
+      const startX = 430;
+      const width = 1250;
+      const progress = (p * 1.65 + index * 0.12) % 1;
+      const x = startX + track.fn(progress) * width;
+
+      mono(16, track.color);
+      ctx.fillText(track.name, 120, y);
+      ctx.strokeStyle = REEL.line;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(startX + width, y);
+      ctx.stroke();
+
+      ctx.strokeStyle = track.color;
+      ctx.globalAlpha = 0.28;
+      for (let tick = 0; tick <= 10; tick += 1) {
+        const tickX = startX + (tick / 10) * width;
+        ctx.beginPath();
+        ctx.moveTo(tickX, y - 8);
+        ctx.lineTo(tickX, y + 8);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.fillStyle = track.color;
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      mono(11, REEL.muted);
+      ctx.fillText(`t=${progress.toFixed(2)}`, startX + width + 26, y);
+    }
+
+    mono(14, REEL.muted);
+    ctx.fillText("p = f(t)  //  one variable, no timeline", 120, 930);
+  }
+
+  function drawProcedural(local) {
+    clear();
+    const p = clamp01(local);
+    const morph = smoothstep(0, 0.7, p);
+    const spin = p * Math.PI * 1.7;
+    const cols = 54;
+    const rows = 30;
+
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const u = (col / (cols - 1)) * 2 - 1;
+        const v = (row / (rows - 1)) * 2 - 1;
+        const planeX = u * 760;
+        const planeY = v * 360;
+        const planeZ = Math.sin(u * 4 + p * 6) * 80 + Math.cos(v * 5 + p * 3) * 50;
+
+        const theta = u * Math.PI;
+        const phi = v * Math.PI * 0.5;
+        const radius = 320;
+        const sphereX = Math.sin(theta) * Math.cos(phi) * radius;
+        const sphereY = Math.cos(theta) * radius;
+        const sphereZ = Math.sin(theta) * Math.sin(phi) * radius;
+
+        const x = planeX + (sphereX - planeX) * morph;
+        const y = planeY + (sphereY - planeY) * morph;
+        const z = planeZ + (sphereZ - planeZ) * morph;
+        const rotatedX = x * Math.cos(spin) - z * Math.sin(spin);
+        const rotatedZ = x * Math.sin(spin) + z * Math.cos(spin);
+        const perspective = 900 / (900 + rotatedZ + 420);
+        const screenX = REEL_WIDTH / 2 + rotatedX * perspective;
+        const screenY = REEL_HEIGHT / 2 + y * perspective;
+
+        const light = clamp01(0.5 + rotatedZ / 900);
+        ctx.globalAlpha = 0.22 + light * 0.78;
+        ctx.fillStyle = light > 0.62 ? REEL.lime : light > 0.36 ? REEL.blue : REEL.purple;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 1.8 + light * 2.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = REEL.coral;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(REEL_WIDTH / 2, REEL_HEIGHT / 2, 360 + Math.sin(p * Math.PI) * 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    font(64);
+    ctx.fillStyle = REEL.ink;
+    ctx.fillText("SINE FIELD → SPHERE", 90, 120);
+    mono(14, REEL.blue);
+    ctx.fillText("04 // PROCEDURAL SYSTEMS / x = sin(θ)·cos(φ), y = cos(θ), z = sin(θ)·sin(φ)", 94, 158);
+  }
+
+  function drawPanel(x, y, width, height, title, draw) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+    ctx.fillStyle = REEL.panel;
+    ctx.fillRect(x, y, width, height);
+    draw(x, y, width, height);
+    ctx.restore();
+
+    ctx.strokeStyle = REEL.line;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+    mono(12, REEL.muted);
+    ctx.fillText(title, x + 16, y + 22);
+  }
+
+  function drawCore(local) {
+    clear();
+    const p = clamp01(local);
+    const gap = 34;
+    const width = 790;
+    const height = 330;
+    const left = 118;
+    const top = 190;
+
+    drawPanel(left, top, width, height, "01 // ROTATE", (x, y, w, h) => {
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      for (let ring = 60; ring < 230; ring += 38) {
+        ctx.strokeStyle = ring % 76 === 0 ? REEL.blue : REEL.line;
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.arc(cx, cy, ring, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      const angle = p * Math.PI * 5;
+      ctx.strokeStyle = REEL.lime;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * 220, cy + Math.sin(angle) * 220);
+      ctx.stroke();
+      ctx.fillStyle = REEL.lime;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(angle) * 220, cy + Math.sin(angle) * 220, 8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    drawPanel(left + width + gap, top, width, height, "02 // SQUASH", (x, y, w, h) => {
+      const cx = x + w / 2;
+      const bounce = Math.abs(Math.sin(p * Math.PI * 3));
+      const floor = y + h - 70;
+      const cy = floor - bounce * 170;
+      const squash = 1 + (1 - bounce) * 0.55;
+      ctx.fillStyle = REEL.coral;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 58 * squash, 58 / squash, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = REEL.line;
+      ctx.beginPath();
+      ctx.moveTo(x + 60, floor + 30);
+      ctx.lineTo(x + w - 60, floor + 30);
+      ctx.stroke();
+    });
+
+    drawPanel(left, top + height + gap, width, height, "03 // OFFSET", (x, y, w, h) => {
+      ctx.save();
+      ctx.translate(x + w / 2, y + h / 2);
+      ctx.rotate(p * Math.PI);
+      for (let index = 0; index < 8; index += 1) {
+        const size = 250 - index * 27;
+        ctx.strokeStyle = index % 2 === 0 ? REEL.purple : REEL.blue;
+        ctx.globalAlpha = 0.75;
+        ctx.strokeRect(-size / 2 + index * 7, -size / 2 + index * 7, size, size);
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    });
+
+    drawPanel(left + width + gap, top + height + gap, width, height, "04 // WAVE", (x, y, w, h) => {
+      const center = y + h / 2;
+      ctx.strokeStyle = REEL.lime;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let point = 0; point <= 100; point += 1) {
+        const px = x + 40 + (point / 100) * (w - 80);
+        const py = center + Math.sin(point * 0.24 + p * Math.PI * 4) * 70;
+        if (point === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    });
+
+    font(96);
+    ctx.fillStyle = REEL.ink;
+    ctx.textAlign = "center";
+    ctx.fillText("NO KEYFRAMES.", REEL_WIDTH / 2, REEL_HEIGHT / 2 + 14);
+    ctx.fillStyle = REEL.coral;
+    ctx.fillText("JUST MATH.", REEL_WIDTH / 2, REEL_HEIGHT / 2 + 108);
+    ctx.textAlign = "left";
+  }
+
+  function drawOutro(local) {
+    clear();
+    const p = clamp01(local);
+    const alpha = easeOutExpo(p);
+    ctx.globalAlpha = alpha;
+
+    font(112);
+    ctx.fillStyle = REEL.ink;
+    ctx.textAlign = "center";
+    ctx.fillText("EVERY FRAME", REEL_WIDTH / 2, 330);
+    ctx.fillStyle = REEL.coral;
+    ctx.fillText("IS CODE.", REEL_WIDTH / 2, 456);
+
+    ctx.strokeStyle = REEL.blue;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(250, 570);
+    ctx.lineTo(REEL_WIDTH - 250, 570);
+    ctx.stroke();
+
+    mono(20, REEL.muted);
+    ctx.fillText("900 FRAMES  //  60 FPS  //  0 KEYFRAMES", REEL_WIDTH / 2, 640);
+    mono(14, REEL.lime);
+    ctx.fillText("RUSTWEB // MOTION REEL // 00:15", REEL_WIDTH / 2, 710);
+
+    ctx.fillStyle = REEL.coral;
+    ctx.beginPath();
+    ctx.arc(REEL_WIDTH / 2, 810 + Math.sin(p * Math.PI) * 8, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  }
+
+  function sceneAt(value) {
+    let index = 0;
+    for (let current = 0; current < REEL_SCENES.length; current += 1) {
+      if (value >= REEL_SCENES[current].start) index = current;
+    }
+    return index;
+  }
+
+  function render(value) {
+    const scene = sceneAt(value);
+    const start = REEL_SCENES[scene].start;
+    const end = scene + 1 < REEL_SCENES.length ? REEL_SCENES[scene + 1].start : REEL_DURATION;
+    const local = (value - start) / (end - start);
+
+    if (scene === 0) drawIntro(local);
+    else if (scene === 1) drawTitle(local);
+    else if (scene === 2) drawKinetic(local);
+    else if (scene === 3) drawEasing(local);
+    else if (scene === 4) drawProcedural(local);
+    else if (scene === 5) drawCore(local);
+    else drawOutro(local);
+
+    const frame = Math.min(REEL_FRAMES - 1, Math.floor(value * REEL_FPS));
+    const seconds = Math.floor(value);
+    const frameInSecond = frame % REEL_FPS;
+    if (frameNode) frameNode.textContent = String(frame).padStart(3, "0");
+    if (frameHud) frameHud.textContent = String(frame).padStart(3, "0");
+    if (timecode) {
+      timecode.textContent = `00:00:${String(seconds).padStart(2, "0")}:${String(frameInSecond).padStart(2, "0")}`;
+    }
+    if (sceneHud) sceneHud.textContent = REEL_SCENES[scene].label;
+    if (playhead) playhead.style.setProperty("--playhead", `${(value / REEL_DURATION) * 100}%`);
+    if (scrub && document.activeElement !== scrub) scrub.value = String(frame);
+    if (timeline) {
+      for (const item of timeline.querySelectorAll("[data-scene]")) {
+        item.classList.toggle("is-active", Number(item.dataset.scene) === scene);
+      }
+    }
+    if (stage) stage.dataset.scene = String(scene);
+  }
+
+  function startLoop() {
+    if (raf || destroyed) return;
+    raf = requestAnimationFrame(loop);
+  }
+
+  function loop(now) {
+    raf = 0;
+    if (destroyed) return;
+    if (!canvas.isConnected) {
+      destroy();
+      return;
+    }
+    if (!playing) return;
+
+    const delta = previous ? Math.min(0.1, (now - previous) / 1000) : 0;
+    previous = now;
+    time = (time + delta) % REEL_DURATION;
+    render(time);
+    startLoop();
+  }
+
+  function setPlaying(next) {
+    playing = next;
+    if (playButton) playButton.textContent = playing ? "PAUSE" : "PLAY";
+    previous = 0;
+    if (playing) startLoop();
+  }
+
+  function destroy() {
+    destroyed = true;
+    if (raf) cancelAnimationFrame(raf);
+    if (activeReel === api) activeReel = null;
+  }
+
+  playButton?.addEventListener("click", () => setPlaying(!playing));
+  restartButton?.addEventListener("click", () => {
+    time = 0;
+    render(time);
+    if (!playing) setPlaying(true);
+  });
+  fullButton?.addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await stage?.requestFullscreen();
+    } catch {}
+  });
+  scrub?.addEventListener("input", () => {
+    time = Number(scrub.value) / REEL_FPS;
+    render(time);
+  });
+  canvas.addEventListener("click", () => setPlaying(!playing));
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) previous = 0;
+  });
+
+  const api = { destroy };
+  render(time);
+  if (playing) startLoop();
+  else if (playButton) playButton.textContent = "PLAY";
+
+  return api;
+}
+
+document.addEventListener("rweb:rendered", initReel);
+initReel();

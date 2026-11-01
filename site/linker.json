@@ -30,7 +30,8 @@
     "scripts/cert.mscript",
     "scripts/game.mscript",
     "scripts/baner.mscript",
-    "scripts/market.mscript"
+    "scripts/market.mscript",
+    "scripts/mogged.mscript"
   ],
   "assets": [],
   "pages": [
@@ -81,6 +82,12 @@
       "file": "pages/market.mhtml",
       "title": "Market — RustWeb",
       "description": "Market modulow RustWeb: CORE, SERVICE, LAB, OPS."
+    },
+    {
+      "route": "/mogged",
+      "file": "pages/mogged.mhtml",
+      "title": "Mogged Motion Reel — RustWeb",
+      "description": "15 sekund proceduralnego motion designu: 900 klatek, 60 FPS, zero keyframes."
     }
   ],
   "data": {

@@ -11,6 +11,7 @@
     <a href="/cert" data-nav="cert">05 CERT</a>
     <a href="/game" data-nav="game">06 GAME</a>
     <a href="/deploy" data-nav="deploy">07 DEPLOY</a>
+    <a href="/mogged" data-nav="mogged">08 REEL</a>
   </nav>
   <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Przelacz motyw">JASNY</button>
   <span class="status"><i></i> BYRUST/1</span>
@@ -20,5 +21,5 @@
 
 <footer class="footer">
   <span>RUSTWEB {{ site.version }} // MHTML + .RWEB // <span id="year"></span></span>
-  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a><a href="/cert">CERT</a><a href="/game">GAME</a><a href="/deploy">DEPLOY</a><a href="/market">MARKET</a><a href="/baner">BANER</a></span>
+  <span class="footer-links"><a href="/">START</a><a href="/about">MHTML</a><a href="/bench">BENCH</a><a href="/viewer">VIEWER</a><a href="/cert">CERT</a><a href="/game">GAME</a><a href="/deploy">DEPLOY</a><a href="/market">MARKET</a><a href="/baner">BANER</a><a href="/mogged">REEL</a></span>
 </footer>

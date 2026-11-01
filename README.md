@@ -4,7 +4,7 @@ FastAPI-style web framework for Rust, built on axum, designed for low latency.
 
 **Live:** <https://gabeczkag.github.io/rustweb/> ·
 **Deploy:** <https://gabeczkag.github.io/rustweb/deploy> ·
-**Game Lab:** <https://gabeczkag.github.io/rustweb/game> · **Market:** <https://gabeczkag.github.io/rustweb/market> · **Banner:** <https://gabeczkag.github.io/rustweb/baner>
+**Game Lab:** <https://gabeczkag.github.io/rustweb/game> · **Market:** <https://gabeczkag.github.io/rustweb/market> · **Banner:** <https://gabeczkag.github.io/rustweb/baner> · **Reel:** <https://gabeczkag.github.io/rustweb/mogged>
 
 ```bash
 ./run.sh                 # local HTTPS
@@ -126,7 +126,9 @@ Invalid input returns the FastAPI shape:
 - `/deploy`: local HTTPS, Docker, VPS, and GitHub Pages instructions with
   copyable commands.
 - `/baner` and `/market`: fast motion marketing pages with 500 ms proof/card
-  rotation, tickers, filters, pause, and reduced-motion support.
+  rotation, scene palettes, tickers, filters, pause, and reduced-motion support.
+- `/mogged`: a 15-second procedural canvas reel with 900 frames, easing curves,
+  sine-field/sphere morph, four motion panels, HUD, scrubber, and frame counter.
 
 ## How it works
 
@@ -250,7 +252,7 @@ directive.
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
 navigation. The blocky redesign with the viewer and certification database
-compiles to about **119 KiB** (~34 KB gzipped on Pages) and contains ASCII only
+compiles to about **137 KiB** (~39 KB gzipped on Pages) and contains ASCII only
 (`ascii: true` transliterates Polish diacritics). The earlier compact build was
 19.5 KiB (21% smaller), but it had a much plainer visual layer; the zero-image
 blocky UI, viewer, and certification tools trade some bytes for the features.
@@ -359,7 +361,7 @@ document is reduced to its `<body>`.
 
 ```bash
 rweb inspect site/site.rweb
-# RustWeb — 0.1.0, 9 routes: /, /about, /bench, /viewer, /cert, /game, /deploy, /baner, /market
+# RustWeb — 0.1.0, 10 routes: /, /about, /bench, /viewer, /cert, /game, /deploy, /baner, /market, /mogged
 ```
 
 ### Game Lab

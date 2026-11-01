@@ -28,6 +28,7 @@
       <div class="actions">
         <a class="button" href="/deploy">POSTAW U SIEBIE</a>
         <a class="button ghost" href="/market">ZOBACZ MARKET</a>
+        <a class="button ghost" href="/mogged">MOTION REEL</a>
       </div>
       <div class="baner-controls">
         <button id="baner-pause" class="badge" type="button">PAUZA</button>
@@ -62,7 +63,7 @@
 
   <section class="baner-strip">
     <article>
-      <strong>122 KB</strong>
+      <strong>140 KB</strong>
       <span>CALY FRONTEND</span>
       <p>Strona, style, skrypty i routing w jednym `.rweb`. Bez CDN, bez buildu w runtime.</p>
       <a href="/viewer">OTWORZ VIEWER</a>

@@ -42,7 +42,7 @@
     <div class="market-card-top"><span class="badge">CORE</span><span>READY</span></div>
     <h2>MHTML</h2>
     <p>Mini-HTML, MCSS i MScript. Caly frontend w jednym pliku `.rweb`.</p>
-    <strong>122 KB <small>FRONTEND</small></strong>
+    <strong>140 KB <small>FRONTEND</small></strong>
     <a href="/about">POZNAJ</a>
   </article>
   <article class="market-card" data-market-card data-tags="service" data-title="CERT DB" data-scene="neon">
@@ -103,6 +103,7 @@
   <div class="actions">
     <a class="button" href="/deploy">POSTAW U SIEBIE</a>
     <a class="button ghost" href="/baner">ZOBACZ BANER</a>
+    <a class="button ghost" href="/mogged">MOTION REEL</a>
   </div>
 </section>
 
