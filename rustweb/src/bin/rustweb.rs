@@ -37,8 +37,8 @@ struct Cli {
     #[arg(long, requires = "tls_cert")]
     tls_key: Option<PathBuf>,
 
-    /// Allow HTTP even when the Byrust profile requires HTTPS.
-    #[arg(long)]
+    /// Allow HTTP even when the Byrust profile requires HTTPS (dev only).
+    #[arg(long, alias = "insecure-http")]
     allow_http: bool,
 }
 
@@ -109,6 +109,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
             )
         })?;
 
+    if let Err(error) = tokio::net::TcpListener::bind(address).await {
+        return Err(std::io::Error::new(
+            error.kind(),
+            format!(
+                "cannot bind {address}: {error}. Stop the old server on this port or choose --port <PORT>."
+            ),
+        )
+        .into());
+    }
+
     if let Some(protocol) = &info.protocol {
         println!(
             "protocol: {} v{} (https={})",
@@ -135,7 +145,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .await?;
     } else {
         if requires_https {
-            eprintln!("warning: Byrust profile downgraded to HTTP for local development");
+            eprintln!(
+                "warning: Byrust profile downgraded to HTTP for local development; open http://, not https://"
+            );
         }
         println!("serving http://{}:{}/", cli.host, cli.port);
         axum_server::bind(address)

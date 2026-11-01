@@ -1,53 +1,73 @@
 <section class="hero">
-    <p class="eyebrow">Benchmark · {{ site.version }}</p>
-    <h1>Ile kosztuje warstwa frameworka? Nic, co widać w pomiarze.</h1>
+  <div class="hero-copy">
+    <p class="eyebrow">BENCHMARK // NIE MARKETING</p>
+    <h1>ILE KOSZTUJE<br><span>WARSTWA FRAMEWORKA?</span></h1>
     <p class="lead">{{ bench.note }}</p>
-  </section>
-
-  <section class="bench">
-    <table>
-      <thead>
-        <tr><th>Serwer</th><th>Throughput</th><th>p99</th></tr>
-      </thead>
-      <tbody>
-        @for row in bench.rows {
-          <tr>
-            <td>
-              {{ row.name }}
-              <div class="bar"><span style="--bar: {{ row.bar }}"></span></div>
-            </td>
-            <td>{{ row.throughput }}</td>
-            <td>{{ row.p99 }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    <p class="note">RustWeb i axum mieszczą się w granicach szumu: raz RustWeb jest o 1–2% szybszy, raz o 1% wolniejszy. FastAPI jest wolniejsze o rząd wielkości, bo płaci za Pythona i runtime Pydantic.</p>
-  </section>
-
-  <section class="split">
-    <div>
-      <p class="eyebrow">Metodologia</p>
-      <h2>Co dokładnie zmierzono</h2>
-      <p>Trasa <code>GET /hello</code> zwracająca <code>Hello, World!</code>. 64 połączenia keep-alive, 200 000 requestów, 10 000 warmup. Serwer przypięty do rdzeni 0–1, load generator do 2–5 przez <code>taskset</code>.</p>
-      <p>FastAPI: uvicorn 0.54 z dwoma workerami na tych samych dwóch rdzeniach. To porównanie runtime’ów na jednej maszynie, nie ranking absolutny.</p>
-    </div>
-    <div>
-      <p class="eyebrow">Reprodukcja</p>
-      <h2>Uruchom to sam</h2>
-      <pre><code>bash bench/run.sh</code></pre>
-      <p>Wyniki i warianty są w <code>bench/RESULTS.md</code>. Walidacja nie jest częścią tego pomiaru — <code>ApiJson</code> dokłada deserializację i pracę <code>validator</code>, zależną od modelu i payloadu.</p>
-    </div>
-  </section>
-
-  <section class="bench">
-    <p class="eyebrow">Wniosek</p>
-    <h2>Nie „najszybszy na świecie”. Po prostu bez narzutu.</h2>
-    <p>RustWeb nie próbuje pobić axum własnym routerem. Bierze sprawdzony stos i dokłada makra, walidację oraz OpenAPI. Dlatego na trasie bez walidacji zostaje tyle samo pracy co w czystym axum.</p>
-    <p class="note">To jest cel: FastAPI-owe DX bez FastAPI-owego kosztu. Nie TechEmpower, nie benchmark marketingowy.</p>
     <div class="actions">
-      <a class="button" href="/about">Jak działa MHTML</a>
-      <a class="button ghost" href="/">Wróć na start</a>
+      <a class="button" href="/about">JAK DZIALA MHTML</a>
+      <a class="button ghost" href="/">WRÓC NA START</a>
     </div>
-  </section>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="spec-board">
+      <div class="spec-cell"><strong>210k</strong><span>RUSTWEB REQ/S</span></div>
+      <div class="spec-cell"><strong>208k</strong><span>AXUM REQ/S</span></div>
+      <div class="spec-cell"><strong>14k</strong><span>FASTAPI REQ/S</span></div>
+      <div class="spec-cell"><strong>6.6</strong><span>MB RSS SERWERA</span></div>
+    </div>
+    <div class="art-tag">P99<br><strong>0.70 MS</strong></div>
+  </div>
+</section>
 
+<section class="bench">
+  <div class="stats">
+    <div class="stat"><strong>210 750</strong><span>RUSTWEB REQ/S</span></div>
+    <div class="stat"><strong>0.70 ms</strong><span>RUSTWEB P99</span></div>
+    <div class="stat"><strong>6.6 MB</strong><span>RSS PO STARCIE</span></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>SERWER</th><th>THROUGHPUT</th><th>P99</th></tr>
+    </thead>
+    <tbody>
+      @for row in bench.rows {
+        <tr>
+          <td>
+            {{ row.name }}
+            <div class="bar"><span style="--bar: {{ row.bar }}"></span></div>
+          </td>
+          <td>{{ row.throughput }}</td>
+          <td>{{ row.p99 }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="note">RustWeb i axum mieszcza sie w granicach szumu: raz RustWeb jest o 1–2% szybszy, raz o 1% wolniejszy. FastAPI jest wolniejsze o rzad wielkosci, bo placi za Pythona i runtime Pydantic.</p>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">01 // METODOLOGIA</p>
+    <h2>CO DOKLADNIE ZMIERZONO</h2>
+    <p>Trasa <code>GET /hello</code> zwracajaca <code>Hello, World!</code>. 64 polaczenia keep-alive, 200 000 requestow, 10 000 warmup. Serwer przypiety do rdzeni 0–1, load generator do 2–5 przez <code>taskset</code>.</p>
+    <p>FastAPI: uvicorn 0.54 z dwoma workerami na tych samych dwoch rdzeniach. To porownanie runtime'ow na jednej maszynie, nie ranking absolutny.</p>
+  </div>
+  <div>
+    <p class="eyebrow">02 // REPRODUKCJA</p>
+    <h2>URUCHOM TO SAM</h2>
+    <pre><code>bash bench/run.sh</code></pre>
+    <p>Wyniki i warianty sa w <code>bench/RESULTS.md</code>. Walidacja nie jest czescia tego pomiaru — <code>ApiJson</code> doklada deserializacje i prace <code>validator</code>, zalezna od modelu i payloadu.</p>
+  </div>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">03 // WNIOSEK</p>
+  <h2>NIE NAJSZYBSZY NA SWIECIE. PO PROSTU BEZ NARZUTU.</h2>
+  <p>RustWeb nie probuje pobic axum wlasnym routerem. Bierze sprawdzony stos i doklada makra, walidacje oraz OpenAPI. Dlatego na trasie bez walidacji zostaje tyle samo pracy co w czystym axum.</p>
+  <p class="note">To jest cel: FastAPI-owe DX bez FastAPI-owego kosztu. Nie TechEmpower, nie benchmark marketingowy.</p>
+  <div class="actions">
+    <a class="button gold" href="/about">POZNAJ MHTML</a>
+    <a class="button ghost" href="/">WRÓC NA START</a>
+  </div>
+</section>

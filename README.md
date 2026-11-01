@@ -170,6 +170,14 @@ sudo update-ca-certificates
 # local dev without TLS: --allow-http
 ```
 
+If the browser says **“SSL received a record that exceeded the maximum
+permissible length”**, it is sending TLS to an HTTP server. Use the exact URL
+printed by `rustweb`: `https://` by default, `http://` only with
+`--allow-http`. A stale server on the same port is the usual cause; the CLI now
+refuses to start if the port is already taken. Stop the old process or use
+`--port <PORT>`.
+
+
 `linker.json` links every page, stylesheet, script, and asset:
 
 ```json
@@ -201,9 +209,10 @@ directive.
 
 The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
 per route, the styles, the scripts, and a tiny router that swaps templates on
-navigation. The current site compiles to **19.5 KiB — 21% smaller than the
-first build — and contains ASCII only** (`ascii: true` transliterates Polish
-diacritics). It
+navigation. The blocky redesign compiles to about **30 KiB** and contains ASCII
+only (`ascii: true` transliterates Polish diacritics). The earlier compact
+build was 19.5 KiB (21% smaller), but it had a much plainer visual layer; the
+zero-image blocky UI trades some bytes for the layout. It
 can be opened as a static file by an SPA-capable host or served directly by
 RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
 handles unmatched routes.

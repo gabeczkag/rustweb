@@ -89,7 +89,7 @@ RSS immediately after startup, no requests, release build, same machine:
 | `rustweb site/site.rweb --allow-http` | 6.6 MiB |
 | FastAPI + uvicorn, two workers (whole process tree) | 153.4 MiB |
 
-The `.rweb` server keeps one ~19.5 KiB HTML document in memory and serves it as
+The `.rweb` server keeps one ~30 KiB HTML document in memory and serves it as
 an SPA fallback; it does not parse templates or bundle assets at runtime. The
 uvicorn tree includes the master, two workers, and uvicorn's resource tracker.
 The feature sets are not identical, so this is a directional memory comparison,

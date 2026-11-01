@@ -1,77 +1,106 @@
 <section class="hero">
-    <p class="eyebrow">MHTML · mini-HTML</p>
-    <h1>HTML, który kompiluje się w jeden plik.</h1>
-    <p class="lead">MHTML to nasz mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> składa strony, CSS, TypeScript i assety w jeden <code>.rweb</code>, który uruchamia RustWeb.</p>
-  </section>
-
-  <section class="grid">
-    <article class="card">
-      <span class="dot"></span>
-      <h2>{{ interp_syntax }}</h2>
-      <p>Wartości pochodzą z JSON-a w <code>linker.json</code> i są escapowane w tekście oraz atrybutach. Dane użytkownika nie wstrzykną HTML-a.</p>
-    </article>
-    <article class="card">
-      <span class="dot"></span>
-      <h2>&#64;if i &#64;for</h2>
-      <p>Warunki i pętle działają na danych projektu. W pętli masz <code>loop.index</code>, <code>loop.first</code> i <code>loop.last</code>.</p>
-    </article>
-    <article class="card">
-      <span class="dot"></span>
-      <h2>linker.json</h2>
-      <p>Jeden manifest wskazuje strony, style, skrypty i assety. Wszystkie ścieżki są rozwiązywane względem pliku manifestu.</p>
-    </article>
-    <article class="card">
-      <span class="dot"></span>
-      <h2>Zero runtime templatingu</h2>
-      <p>Strony są renderowane przy budowaniu. RustWeb serwuje gotowy HTML, więc request nie płaci za parser ani evaluator.</p>
-    </article>
-  </section>
-
-  <section class="split">
-    <div>
-      <p class="eyebrow">Składnia</p>
-      <h2>Mały język, który wystarcza</h2>
-      <p>Bez wbudowanego JavaScriptu, bez setek helperów. HTML, interpolacja, <code>&#64;if</code>, <code>&#64;else</code> i <code>&#64;for</code> — dokładnie tyle, ile potrzebuje strona.</p>
-      <p class="note">Literalny szablon jest zaufany; escapowane są tylko wartości interpolowane. Dzięki temu możesz pisać encje HTML i własne znaczniki bez podwójnego escapowania.</p>
+  <div class="hero-copy">
+    <p class="eyebrow">MHTML // MINI-HTML // ONE FILE</p>
+    <h1>HTML.<br><span>ALE W BLOKACH.</span></h1>
+    <p class="lead">MHTML to mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> sklada strony, CSS, TypeScript i assety w jeden <code>.rweb</code>, ktory uruchamia RustWeb.</p>
+    <div class="actions">
+      <a class="button" href="/bench">ZOBACZ WYNIKI</a>
+      <a class="button ghost" href="/">WRÓC NA START</a>
     </div>
-    <pre><code>{{ mhtml_syntax }}</code></pre>
-  </section>
-
-  <section class="split">
-    <div>
-      <p class="eyebrow">Kompilacja</p>
-      <h2>Jeden plik .rweb</h2>
-      <p><code>linker.json</code> opisuje strony i zasoby. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript przez <code>tsc</code> i zamienia obrazy na data URI.</p>
-      <p>Build: <code>{{ build_command }}</code>. Podgląd: <code>{{ inspect_command }}</code>. Uruchomienie: <code>rustweb site/site.rweb</code>.</p>
+    <div class="badges">
+      <span class="badge">MHTML</span>
+      <span class="badge">LINKER.JSON</span>
+      <span class="badge">TSC</span>
+      <span class="badge">ASCII</span>
     </div>
-    <pre><code>{
+  </div>
+
+  <div class="hero-art" aria-hidden="true">
+    <div class="spec-board">
+      <div class="spec-cell"><strong>3</strong><span>STRONY W JEDNYM PLIKU</span></div>
+      <div class="spec-cell"><strong>1</strong><span>PLIK .RWEB</span></div>
+      <div class="spec-cell"><strong>0</strong><span>RUNTIME TEMPLATING</span></div>
+      <div class="spec-cell"><strong>30 KB</strong><span>WAGA PLIKU .RWEB</span></div>
+    </div>
+    <div class="art-tag">BUILD<br><strong>RWEB</strong></div>
+  </div>
+</section>
+
+<section class="feature-grid">
+  <article class="card">
+    <div class="card-icon"></div>
+    <h2>{{ interp_syntax }}</h2>
+    <p>Wartosci pochodza z JSON-a w <code>linker.json</code> i sa escapowane w tekscie oraz atrybutach. Dane uzytkownika nie wstrzykna HTML-a.</p>
+  </article>
+  <article class="card">
+    <div class="card-icon"></div>
+    <h2>&#64;if i &#64;for</h2>
+    <p>Warunki i petle dzialaja na danych projektu. W petli masz <code>loop.index</code>, <code>loop.first</code> i <code>loop.last</code>.</p>
+  </article>
+  <article class="card">
+    <div class="card-icon"></div>
+    <h2>linker.json</h2>
+    <p>Jeden manifest wskazuje strony, style, skrypty i assety. Wszystkie sciezki sa rozwiazywane wzgledem pliku manifestu.</p>
+  </article>
+  <article class="card">
+    <div class="card-icon"></div>
+    <h2>ZERO RUNTIME</h2>
+    <p>Strony sa renderowane przy budowaniu. RustWeb serwuje gotowy HTML, wiec request nie placi za parser ani evaluator.</p>
+  </article>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">01 // SKLADNIA</p>
+    <h2>MALY JEZYK, KTORY WYSTARCZA</h2>
+    <p>Bez wbudowanego JavaScriptu i setek helperow. HTML, interpolacja, <code>&#64;if</code>, <code>&#64;else</code> i <code>&#64;for</code>.</p>
+    <p class="note">Literalny szablon jest zaufany; escapowane sa tylko wartosci interpolowane. Mozesz pisac encje HTML i wlasne znaczniki bez podwojnego escapowania.</p>
+  </div>
+  <pre><code>{{ mhtml_syntax }}</code></pre>
+</section>
+
+<section class="split">
+  <div>
+    <p class="eyebrow">02 // KOMPILACJA</p>
+    <h2>JEDEN PLIK .RWEB</h2>
+    <p><code>linker.json</code> opisuje strony i zasoby. Kompilator renderuje MHTML, inline'uje CSS, transpiluje TypeScript przez <code>tsc</code> i zamienia obrazy na data URI.</p>
+    <p>Build: <code>{{ build_command }}</code>. Podglad: <code>{{ inspect_command }}</code>. Uruchomienie: <code>rustweb site/site.rweb</code>.</p>
+    <p class="note">Strony moga byc <code>.mhtml</code> albo zwyklym <code>.html</code>; pelny dokument jest redukowany do <code>&lt;body&gt;</code>.</p>
+  </div>
+  <pre><code>{
   "site": { "title": "RustWeb", "version": "0.1.0" },
+  "app": { "name": "RustWeb", "uuid": "..." },
+  "frame": "frame.mhtml",
+  "base": "/rustweb",
+  "ascii": true,
   "styles": ["assets/style.css"],
   "scripts": ["scripts/app.ts"],
-  "assets": ["assets/logo.svg"],
   "pages": [
     { "route": "/", "file": "pages/index.mhtml" }
   ]
 }</code></pre>
-  </section>
+</section>
 
-  <section class="split">
-    <div>
-      <p class="eyebrow">Protokół byrust</p>
-      <h2>HTTPS, które mówi więcej</h2>
-      <p><code>linker.json</code> ustawia <code>protocol.name = "byrust"</code>, wersję, wymóg HTTPS, alias i własne nagłówki. Kompilator wpisuje je do <code>.rweb</code> jako meta i <code>byrust-config</code>.</p>
-      <p>Tożsamość aplikacji: <code>{{ app.name }}</code> · <code>{{ app.uuid }}</code>. Puste <code>app.uuid</code> generuje stabilny UUID; <code>"universal"</code> oznacza niskie zaufanie i pokazuje „Page is not safe”.</p>
-      <p><code>rustweb</code> tworzy lokalne CA i podpisuje certyfikat per aplikacja/host. Universal UUID używa osobnego, celowo niezaufanego CA — przeglądarka ostrzega, a strona pokazuje czerwony banner.</p>
-      <p>Przeglądarka nadal widzi <code>https://</code> — tylko TLS z zaufanym certyfikatem daje bezpieczny kontekst. <code>byrust://</code> jest aliasem obsługiwanym przez router, a <code>web+byrust</code> może zarejestrować się jako handler w przeglądarce.</p>
-      <p>Spróbuj: <a href="byrust://self/bench">byrust://self/bench</a></p>
-    </div>
-    <pre><code>{{ protocol_json }}</code></pre>
-  </section>
+<section class="bench">
+  <p class="eyebrow">03 // BYRUST</p>
+  <h2>HTTPS, KTORE MOWI WICEJ</h2>
+  <p><code>linker.json</code> ustawia <code>protocol.name = "byrust"</code>, wersje, wymog HTTPS, alias i wlasne naglowki. Kompilator wpisuje je do <code>.rweb</code> jako meta i <code>byrust-config</code>.</p>
 
-  <section class="bench">
-    <p class="eyebrow">Hostowanie</p>
-    <h2>Jeden plik, mniej RAM-u</h2>
-    <p><code>.rweb</code> jest zwykłym plikiem HTML. RustWeb ładuje go raz i serwuje jako fallback dla wszystkich tras SPA. Nie ma runtime'owego bundlera, drzewa szablonów ani osobnych assetów.</p>
-    <p class="note">{{ memory_note }}</p>
-  </section>
+  <div class="stats">
+    <div class="stat"><strong>v1</strong><span>PROTOCOL BYRUST</span></div>
+    <div class="stat"><strong>{{ app.name }}</strong><span>APP // {{ app.uuid }}</span></div>
+    <div class="stat"><strong>LOCAL CA</strong><span>NO SELF-SIGNED LEAF</span></div>
+  </div>
 
+  <p>Puste <code>app.uuid</code> generuje stabilny UUID, a <code>"universal"</code> oznacza niskie zaufanie. Universal UUID dostaje certyfikat z osobnego, celowo niezaufanego CA: przegladarka ostrzega, a strona pokazuje czerwony banner <strong>Page is not safe</strong>.</p>
+  <p class="note">Przegladarka nadal widzi <code>https://</code> — tylko TLS z zaufanym certyfikatem daje bezpieczny kontekst. <code>byrust://</code> jest aliasem routera, a <code>web+byrust</code> moze byc handlerem przegladarki.</p>
+  <pre><code>{{ protocol_json }}</code></pre>
+</section>
+
+<section class="bench">
+  <p class="eyebrow">04 // HOSTING</p>
+  <h2>JEDEN PLIK, MNIEJ RAM-U</h2>
+  <p>{{ memory_note }}</p>
+  <p class="note">GitHub Pages serwuje ten sam <code>.rweb</code> statycznie przez certyfikat GitHuba. Lokalny Byrust CA, klucze aplikacji i Universal CA zostaja poza repozytorium.</p>
+  <p>Sprobuj aliasu: <a href="byrust://self/bench">byrust://self/bench</a></p>
+</section>
