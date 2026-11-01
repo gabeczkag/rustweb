@@ -17,16 +17,16 @@ mod route;
 
 pub use app::RustWeb;
 pub use error::{ApiError, ApiErrorBody, ApiResult};
-pub use extract::ApiJson;
+pub use extract::{ApiJson, ApiPath, ApiQuery};
 pub use route::Route;
 
-pub use rustweb_macros::{delete, get, model, patch, post, put};
+pub use rustweb_macros::{delete, get, model, patch, post, put, query};
 
 /// Common imports for application code.
 pub mod prelude {
-    pub use crate::{ApiError, ApiJson, ApiResult, RustWeb, Route};
+    pub use crate::{ApiError, ApiJson, ApiPath, ApiQuery, ApiResult, RustWeb, Route};
     pub use axum::extract::{Path, Query};
     pub use axum::http::StatusCode;
     pub use axum::Json;
-    pub use rustweb_macros::{delete, get, model, patch, post, put};
+    pub use rustweb_macros::{delete, get, model, patch, post, put, query};
 }

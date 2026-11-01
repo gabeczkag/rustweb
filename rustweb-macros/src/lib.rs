@@ -1,7 +1,9 @@
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, ItemFn};
 
+mod derive;
 mod model;
+mod query;
 mod route;
 
 use route::Method;
@@ -47,4 +49,9 @@ pub fn patch(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn model(_attr: TokenStream, item: TokenStream) -> TokenStream {
     model::expand(item.into()).into()
+}
+
+#[proc_macro_attribute]
+pub fn query(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    query::expand(item.into()).into()
 }
