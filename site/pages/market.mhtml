@@ -12,8 +12,8 @@
 
 <div class="market-ticker" aria-hidden="true">
   <div class="market-track">
-    <span>CORE</span><b>•</b><span>MHTML</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs</span><b>•</b><span>UC</span><b>•</b><span>GAME LAB</span><b>•</b><span>VIEWER</span><b>•</b><span>DEPLOY</span><b>•</b><span>BENCH</span><b>•</b>
-    <span>CORE</span><b>•</b><span>MHTML</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs</span><b>•</b><span>UC</span><b>•</b><span>GAME LAB</span><b>•</b><span>VIEWER</span><b>•</b><span>DEPLOY</span><b>•</b><span>BENCH</span><b>•</b>
+    <span>CORE</span><b>*</b><span>MHTML</span><b>*</b><span>CERT DB</span><b>*</b><span>TCPs</span><b>*</b><span>UC</span><b>*</b><span>GAME LAB</span><b>*</b><span>VIEWER</span><b>*</b><span>DEPLOY</span><b>*</b><span>BENCH</span><b>*</b>
+    <span>CORE</span><b>*</b><span>MHTML</span><b>*</b><span>CERT DB</span><b>*</b><span>TCPs</span><b>*</b><span>UC</span><b>*</b><span>GAME LAB</span><b>*</b><span>VIEWER</span><b>*</b><span>DEPLOY</span><b>*</b><span>BENCH</span><b>*</b>
   </div>
 </div>
 

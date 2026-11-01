@@ -15,8 +15,8 @@
       </div>
       <div class="baner-controls">
         <button id="baner-pause" class="badge" type="button">PAUZA</button>
-        <button id="baner-prev" class="badge" type="button" aria-label="Poprzedni proof">←</button>
-        <button id="baner-next" class="badge" type="button" aria-label="Nastepny proof">→</button>
+        <button id="baner-prev" class="badge" type="button" aria-label="Poprzedni proof">&lt;</button>
+        <button id="baner-next" class="badge" type="button" aria-label="Nastepny proof">&gt;</button>
         <span id="baner-index" class="baner-index">01 / 06</span>
         <span class="baner-live"><i></i> AUTO 500 MS</span>
       </div>
@@ -38,8 +38,8 @@
 
   <div class="baner-ticker" aria-hidden="true">
     <div class="baner-track">
-      <span>SINGLE FILE</span><b>•</b><span>ZERO RUNTIME TEMPLATING</span><b>•</b><span>56 TESTS</span><b>•</b><span>DOCKER READY</span><b>•</b><span>4.7 GIB/S STREAMING</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs + UDP</span><b>•</b><span>UC PACKS</span><b>•</b>
-      <span>SINGLE FILE</span><b>•</b><span>ZERO RUNTIME TEMPLATING</span><b>•</b><span>56 TESTS</span><b>•</b><span>DOCKER READY</span><b>•</b><span>4.7 GIB/S STREAMING</span><b>•</b><span>CERT DB</span><b>•</b><span>TCPs + UDP</span><b>•</b><span>UC PACKS</span><b>•</b>
+      <span>SINGLE FILE</span><b>*</b><span>ZERO RUNTIME TEMPLATING</span><b>*</b><span>56 TESTS</span><b>*</b><span>DOCKER READY</span><b>*</b><span>4.7 GIB/S STREAMING</span><b>*</b><span>CERT DB</span><b>*</b><span>TCPs + UDP</span><b>*</b><span>UC PACKS</span><b>*</b>
+      <span>SINGLE FILE</span><b>*</b><span>ZERO RUNTIME TEMPLATING</span><b>*</b><span>56 TESTS</span><b>*</b><span>DOCKER READY</span><b>*</b><span>4.7 GIB/S STREAMING</span><b>*</b><span>CERT DB</span><b>*</b><span>TCPs + UDP</span><b>*</b><span>UC PACKS</span><b>*</b>
     </div>
   </div>
 
