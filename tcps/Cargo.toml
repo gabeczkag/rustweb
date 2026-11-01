@@ -1,0 +1,19 @@
+[package]
+name = "tcps"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Per-user TCP file sync and UDP player session supervisor"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+axum = "0.8.9"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "sync", "time"] }
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = "3"

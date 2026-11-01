@@ -108,6 +108,8 @@ Invalid input returns the FastAPI shape:
   public `app_id`, public key, fingerprint, and UUID commitment.
 - Local `/certinfo/` JSON registry when the site is served by RustWeb; it uses
   the same request shape and max-2 limit as the Supabase backend.
+- `tcps`: a separate per-user TCP/HTTP file sync and UDP player supervisor with
+  manifests, missing-file sync, debug paths, and bandwidth limits.
 
 ## How it works
 
@@ -404,6 +406,21 @@ directory and the `certs/` folder are outside the repository. GitHub Actions is
 CI, not a long-running host: it builds and deploys the single-file site. To run
 the Rust server itself, use `rustweb site/site.rweb` on a VPS/container.
 
+## TCPs
+
+`tcps` is a separate service, not part of the `.rweb` site. It keeps a
+per-user content-addressed file store and a UDP player session table:
+
+```bash
+cp tcps/tcps.json tcps.json   # change token first
+cargo run -p tcps -- --config tcps.json
+```
+
+The HTTP control plane exposes `/status`, `/streaminfo`, `/manifest`, `/sync`,
+`/files/{sha256}`, and `/players`. The UDP plane accepts `hello`, `ping`,
+`state`, and `bye` datagrams and enforces the per-player bandwidth limit.
+Details and examples are in [`tcps/README.md`](tcps/README.md).
+
 ## Benchmarks
 
 ```bash
@@ -453,6 +470,7 @@ rustweb-macros/   route/model/query procedural macros
 mhtml/            MHTML parser, page compiler, .rweb bundler, rweb CLI
 site/             mini site sources and the built site/site.rweb
 supabase/         SQL schema and RPCs for the public certification registry
+tcps/             per-user TCP file sync + UDP player sessions (separate service)
 bench-load/       small hyper-based load generator
 bench/            benchmark script and results
 ```

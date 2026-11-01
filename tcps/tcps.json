@@ -1,0 +1,12 @@
+{
+  "user_id": "local-user",
+  "mode": "self_host",
+  "tcp_listen": "127.0.0.1:4100",
+  "udp_listen": "127.0.0.1:4101",
+  "public_udp_addr": "127.0.0.1:4101",
+  "store_dir": "tcps-data",
+  "max_file_size": 67108864,
+  "max_bandwidth_per_player": 1048576,
+  "player_timeout_seconds": 30,
+  "token": "change-me"
+}

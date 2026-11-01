@@ -3,5 +3,7 @@
 /certs
 /certifications.json
 /certifications.tmp
+tcps-data/
 __pycache__/
 *.pyc
+/tcps.json
