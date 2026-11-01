@@ -78,7 +78,9 @@ code {
   font-size: 17px;
 }
 
-.brand img {
+.brand .logo {
+  width: 28px;
+  height: 28px;
   border-radius: 9px;
   box-shadow: 0 0 30px rgba(125, 211, 252, 0.18);
 }
@@ -390,12 +392,3 @@ td:first-child {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .button {
-    transition: none;
-  }
-}

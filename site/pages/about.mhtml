@@ -1,16 +1,4 @@
-<header class="nav">
-  <a class="brand" href="/">
-    <img src="/assets/logo.svg" alt="" width="28" height="28">
-    RustWeb
-  </a>
-  <nav>
-    <a href="/">Start</a>
-    <a href="/bench">Benchmark</a>
-  </nav>
-</header>
-
-<main>
-  <section class="hero">
+<section class="hero">
     <p class="eyebrow">MHTML · mini-HTML</p>
     <h1>HTML, który kompiluje się w jeden plik.</h1>
     <p class="lead">MHTML to nasz mini-HTML: znaczniki, interpolacja i dwie dyrektywy. Kompilator <code>rweb</code> składa strony, CSS, TypeScript i assety w jeden <code>.rweb</code>, który uruchamia RustWeb.</p>
@@ -86,9 +74,4 @@
     <p><code>.rweb</code> jest zwykłym plikiem HTML. RustWeb ładuje go raz i serwuje jako fallback dla wszystkich tras SPA. Nie ma runtime'owego bundlera, drzewa szablonów ani osobnych assetów.</p>
     <p class="note">{{ memory_note }}</p>
   </section>
-</main>
 
-<footer class="footer">
-  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
-  <span><a href="/">start</a> · <a href="/bench">benchmark</a></span>
-</footer>

@@ -178,6 +178,9 @@ sudo update-ca-certificates
   "app": { "name": "RustWeb", "uuid": "" },
   "lang": "pl",
   "output": "site.rweb",
+  "frame": "frame.mhtml",
+  "base": "/rustweb",
+  "ascii": true,
   "styles": ["assets/style.css"],
   "scripts": ["scripts/app.ts"],
   "assets": ["assets/logo.svg"],
@@ -196,8 +199,11 @@ values are escaped for text and attributes. To show a literal `@if` or `@for`
 in prose, write `&#64;if` / `&#64;for` so the parser does not treat it as a
 directive.
 
-The compiled `.rweb` is valid HTML. It contains a `<template>` per route, the
-styles, the scripts, and a tiny router that swaps templates on navigation. It
+The compiled `.rweb` is valid HTML. It contains a shared frame, a `<template>`
+per route, the styles, the scripts, and a tiny router that swaps templates on
+navigation. The current site compiles to **19.5 KiB — 21% smaller than the
+first build — and contains ASCII only** (`ascii: true` transliterates Polish
+diacritics). It
 can be opened as a static file by an SPA-capable host or served directly by
 RustWeb. Dynamic APIs belong in normal RustWeb handlers; the SPA fallback only
 handles unmatched routes.
@@ -266,6 +272,18 @@ browser warns, and the compiled page includes a sticky **“Page is not safe”*
 banner. The UUID alone does not create TLS trust — the CA does. For production,
 pass a real certificate with `--tls-cert` and `--tls-key` (for example from
 Let’s Encrypt).
+
+## Deployment
+
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds `site.rweb`
+with the Rust `rweb` compiler and deploys it to GitHub Pages. The live URL is
+<https://gabeczkag.github.io/rustweb/> (after the Pages workflow completes).
+
+GitHub Pages serves the static `.rweb` over GitHub's TLS certificate. No Byrust
+CA, leaf certificate, or private key is uploaded — the local `~/.config/byrust`
+directory and the `certs/` folder are outside the repository. GitHub Actions is
+CI, not a long-running host: it builds and deploys the single-file site. To run
+the Rust server itself, use `rustweb site/site.rweb` on a VPS/container.
 
 ## Benchmarks
 

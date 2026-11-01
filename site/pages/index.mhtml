@@ -1,16 +1,4 @@
-<header class="nav">
-  <a class="brand" href="/">
-    <img src="/assets/logo.svg" alt="" width="28" height="28">
-    RustWeb
-  </a>
-  <nav>
-    <a href="/about">MHTML</a>
-    <a href="/bench">Benchmark</a>
-  </nav>
-</header>
-
-<main>
-  <section class="hero">
+<section class="hero">
     <p class="eyebrow">Rust · FastAPI style · low latency</p>
     <h1>{{ headline }}</h1>
     <p class="lead">{{ tagline }}</p>
@@ -73,9 +61,4 @@
     </div>
     <pre><code>{{ mhtml_syntax }}</code></pre>
   </section>
-</main>
 
-<footer class="footer">
-  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
-  <span><a href="/">start</a> · <a href="/about">MHTML</a> · <a href="/bench">benchmark</a></span>
-</footer>

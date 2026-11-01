@@ -83,6 +83,7 @@ pub fn build_from_config(
 ) -> Result<CompiledBundle, Error> {
     config.validate()?;
     let root = fs::canonicalize(root)?;
+    let base = normalize_base(&config.base);
     let app = config
         .app
         .as_ref()
@@ -104,6 +105,26 @@ pub fn build_from_config(
         });
     }
 
+    let frame = if let Some(frame) = &config.frame {
+        let path = resolve_path(&root, frame)?;
+        let source = fs::read_to_string(&path)?;
+        source_bytes += source.len();
+        let nodes = parser::parse(&source)?;
+        let context = shell_context(config, app.as_ref());
+        let mut rendered = String::new();
+        render::render(&nodes, &context, &mut rendered, options.minify);
+        let rendered = inline_html_assets(&rendered, &assets);
+        let rendered = apply_base(&rendered, &base);
+        if !rendered.contains("id=\"rweb-app\"") && !rendered.contains("id='rweb-app'") {
+            return Err(Error::Compile(
+                "frame must contain a container with id=\"rweb-app\"".to_owned(),
+            ));
+        }
+        rendered
+    } else {
+        "<div id=\"rweb-app\"></div>".to_owned()
+    };
+
     let mut css = String::new();
     for style in &config.styles {
         let path = resolve_path(&root, style)?;
@@ -118,6 +139,11 @@ pub fn build_from_config(
          background:#7f1d1d;color:#fff;font:600 13px/1.4 system-ui,sans-serif;\
          text-align:center}\n",
     );
+    let css = if options.minify {
+        minify_css(&css)
+    } else {
+        css
+    };
 
     let mut classic_scripts = String::new();
     let mut module_scripts = String::new();
@@ -165,6 +191,7 @@ pub fn build_from_config(
         let mut rendered = String::new();
         render::render(&nodes, &context, &mut rendered, options.minify);
         let rendered = inline_html_assets(&rendered, &assets);
+        let rendered = apply_base(&rendered, &base);
         let (body, embedded_title) = extract_body_and_title(&rendered);
         let title = page
             .title
@@ -189,26 +216,9 @@ pub fn build_from_config(
     if let Some(protocol) = &config.protocol {
         byrust_meta.push_str(&format!(
             "<meta name=\"byrust\" content=\"{}\">\n\
-<meta name=\"byrust-version\" content=\"{}\">\n\
-<meta name=\"byrust-https\" content=\"{}\">\n\
 <meta name=\"byrust-alias\" content=\"{}\">\n",
             escape_html(&protocol.name),
-            protocol.version,
-            protocol.https,
             escape_html(protocol.alias.as_deref().unwrap_or("")),
-        ));
-    }
-    if let Some(app) = &app {
-        byrust_meta.push_str(&format!(
-            "<meta name=\"byrust-app\" content=\"{}\">\n\
-<meta name=\"byrust-uuid\" content=\"{}\">\n\
-<meta name=\"byrust-trust\" content=\"{}\">\n",
-            escape_html(&app.name),
-            escape_html(&app.uuid),
-            match app.trust {
-                TrustLevel::App => "app",
-                TrustLevel::Universal => "universal",
-            }
         ));
     }
     if config.protocol.is_some() || app.is_some() {
@@ -253,26 +263,35 @@ pub fn build_from_config(
 <meta charset=\"utf-8\">\n\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <meta name=\"rweb-version\" content=\"{version}\">\n\
+<meta name=\"rweb-base\" content=\"{base}\">\n\
 <meta name=\"description\" content=\"{description}\">\n\
 {byrust_meta}\
 <title>{title}</title>\n\
 <style>{css}</style>\n\
 </head>\n\
 <body>\n\
-{warning}<div id=\"rweb-app\"></div>\n\
-<noscript>This MHTML app needs JavaScript for client-side routing.</noscript>\n\
+{warning}{frame}\n\
+<noscript>MHTML needs JavaScript.</noscript>\n\
 {templates}{script_tags}</body>\n\
 </html>\n",
         lang = escape_html(&config.lang),
+        base = escape_html(&base),
         byrust_meta = byrust_meta,
         version = escape_html(&config.site.version),
         description = escape_html(&config.site.description),
         title = escape_html(&home_title),
         css = css,
         warning = warning,
+        frame = frame,
         templates = templates,
         script_tags = script_tags,
     );
+
+    let html = if config.ascii {
+        to_ascii_html(&html)
+    } else {
+        html
+    };
 
     let stats = BundleStats {
         pages: config.pages.len(),
@@ -313,6 +332,159 @@ pub fn inspect(html: &str) -> BundleInfo {
         routes,
         bytes: html.len(),
     }
+}
+
+fn normalize_base(base: &str) -> String {
+    let base = base.trim();
+    if base == "/" {
+        return String::new();
+    }
+    base.trim_end_matches('/').to_owned()
+}
+
+fn apply_base(source: &str, base: &str) -> String {
+    if base.is_empty() {
+        return source.to_owned();
+    }
+
+    source
+        .replace("href=\"/", &format!("href=\"{base}/"))
+        .replace("src=\"/", &format!("src=\"{base}/"))
+}
+
+fn shell_context(config: &LinkerConfig, app: Option<&AppIdentity>) -> Value {
+    let mut map = match &config.data {
+        Value::Object(map) => map.clone(),
+        _ => Map::new(),
+    };
+
+    map.insert(
+        "site".to_owned(),
+        serde_json::to_value(&config.site).unwrap_or(Value::Null),
+    );
+    map.insert("title".to_owned(), Value::String(config.site.title.clone()));
+    if let Some(app) = app {
+        map.insert(
+            "app".to_owned(),
+            serde_json::to_value(app).unwrap_or(Value::Null),
+        );
+    }
+
+    Value::Object(map)
+}
+
+fn minify_css(source: &str) -> String {
+    let mut output = String::with_capacity(source.len());
+    let mut characters = source.chars().peekable();
+    let mut quote: Option<char> = None;
+    let mut in_comment = false;
+    let mut pending_space = false;
+
+    while let Some(character) = characters.next() {
+        if in_comment {
+            if character == '*' && characters.peek() == Some(&'/') {
+                characters.next();
+                in_comment = false;
+            }
+            continue;
+        }
+
+        if let Some(active_quote) = quote {
+            output.push(character);
+            if character == '\\' {
+                if let Some(next) = characters.next() {
+                    output.push(next);
+                }
+            } else if character == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+
+        if character == '/' && characters.peek() == Some(&'*') {
+            characters.next();
+            in_comment = true;
+            continue;
+        }
+
+        if matches!(character, '"' | '\'') {
+            if pending_space && needs_css_space(output.chars().last(), character) {
+                output.push(' ');
+            }
+            pending_space = false;
+            quote = Some(character);
+            output.push(character);
+            continue;
+        }
+
+        if character.is_whitespace() {
+            pending_space = true;
+            continue;
+        }
+
+        if pending_space {
+            if needs_css_space(output.chars().last(), character) {
+                output.push(' ');
+            }
+            pending_space = false;
+        }
+
+        output.push(character);
+    }
+
+    output.replace(";}", "}")
+}
+
+fn needs_css_space(previous: Option<char>, next: char) -> bool {
+    let Some(previous) = previous else {
+        return false;
+    };
+
+    if matches!(previous, '{' | '}' | ';' | ',' | ':') {
+        return false;
+    }
+    if matches!(next, '{' | '}' | ';' | ',' | ':') {
+        return false;
+    }
+
+    true
+}
+
+fn to_ascii_html(source: &str) -> String {
+    source
+        .chars()
+        .map(|character| {
+            if character.is_ascii() {
+                return character;
+            }
+
+            match character {
+                'ą' => 'a',
+                'ć' => 'c',
+                'ę' => 'e',
+                'ł' => 'l',
+                'ń' => 'n',
+                'ó' => 'o',
+                'ś' => 's',
+                'ź' => 'z',
+                'ż' => 'z',
+                'Ą' => 'A',
+                'Ć' => 'C',
+                'Ę' => 'E',
+                'Ł' => 'L',
+                'Ń' => 'N',
+                'Ó' => 'O',
+                'Ś' => 'S',
+                'Ź' => 'Z',
+                'Ż' => 'Z',
+                '—' | '–' | '·' => '-',
+                '„' | '”' | '“' => '"',
+                '’' => '\'',
+                '…' => '.',
+                _ => '?',
+            }
+        })
+        .collect()
 }
 
 fn page_context(config: &LinkerConfig, page: &PageConfig, app: Option<&AppIdentity>) -> Value {
@@ -506,82 +678,7 @@ fn escape_html(value: &str) -> String {
         .replace('\'', "&#39;")
 }
 
-const ROUTER_JS: &str = r#"
-(() => {
-  const templates = new Map();
-  document.querySelectorAll('template[data-rweb-route]').forEach((template) => {
-    templates.set(template.dataset.rwebRoute, template);
-  });
-  const app = document.getElementById('rweb-app');
-  const fallback = templates.get('/');
-  const normalize = (path) => {
-    if (!path || path === '/') return '/';
-    return path.replace(/\/+$/, '') || '/';
-  };
-  const hasByrust = !!document.querySelector('meta[name="byrust"]');
-  const alias = document.querySelector('meta[name="byrust-alias"]')?.content || 'byrust';
-  const scheme = `${alias}:`;
-  const webScheme = `web+${alias}:`;
-  const render = (pathOverride) => {
-    const path = normalize(pathOverride || location.pathname);
-    const template = templates.get(path) || fallback;
-    if (!template || !app) return;
-    app.replaceChildren(template.content.cloneNode(true));
-    document.title = template.dataset.rwebTitle || document.title;
-    document.dispatchEvent(new CustomEvent('rweb:rendered', { detail: { path } }));
-    window.scrollTo({ top: 0 });
-  };
-  const parseByrust = (raw) => {
-    try {
-      const parsed = new URL(raw);
-      if (parsed.protocol !== scheme && parsed.protocol !== webScheme) return null;
-      if (parsed.hostname && parsed.hostname !== 'self' && parsed.hostname !== location.hostname) return null;
-      return parsed;
-    } catch {
-      return null;
-    }
-  };
-  if (hasByrust) {
-    try {
-      const external = new URLSearchParams(location.search).get(alias);
-      const parsed = external ? parseByrust(external) : null;
-      if (parsed) {
-        const target = parsed.pathname + parsed.search + parsed.hash;
-        history.replaceState({}, '', target);
-        render(parsed.pathname);
-      }
-    } catch {}
-    if (navigator.registerProtocolHandler) {
-      try {
-        navigator.registerProtocolHandler(webScheme.slice(0, -1), `${location.origin}/?${encodeURIComponent(alias)}=%s`);
-      } catch {}
-    }
-  }
-  document.addEventListener('click', (event) => {
-    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const anchor = event.target.closest('a');
-    if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
-    const href = anchor.getAttribute('href') || '';
-    if (hasByrust && (href.startsWith(`${alias}://`) || href.startsWith(`web+${alias}://`))) {
-      const parsed = parseByrust(href);
-      if (parsed) {
-        event.preventDefault();
-        history.pushState({}, '', parsed.pathname + parsed.search + parsed.hash);
-        render(parsed.pathname);
-      }
-      return;
-    }
-    const url = new URL(anchor.href, location.href);
-    if (url.origin !== location.origin || url.hash) return;
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/docs') || url.pathname === '/openapi.json') return;
-    event.preventDefault();
-    history.pushState({}, '', url);
-    render();
-  });
-  window.addEventListener('popstate', () => render());
-  render();
-})();
-"#;
+const ROUTER_JS: &str = r#"(()=>{const t=new Map;document.querySelectorAll('template[data-rweb-route]').forEach(e=>t.set(e.dataset.rwebRoute,e));const base=document.querySelector('meta[name="rweb-base"]')?.content||'',a=document.getElementById('rweb-app'),f=t.get('/'),n=e=>{if(!e)e='/';if(base&&e.startsWith(base))e=e.slice(base.length)||'/';return e==='/'?'/':e.replace(/\/+$/,'')||'/'};const has=!!document.querySelector('meta[name="byrust"]'),al=document.querySelector('meta[name="byrust-alias"]')?.content||'byrust',sc=`${al}:`,ws=`web+${al}:`;const render=p=>{const q=n(p||location.pathname),x=t.get(q)||f;if(!x||!a)return;a.replaceChildren(x.content.cloneNode(!0));document.title=x.dataset.rwebTitle||document.title;document.dispatchEvent(new CustomEvent('rweb:rendered',{detail:{path:q}}));scrollTo(0,0)};const parse=u=>{try{const p=new URL(u);if(p.protocol!==sc&&p.protocol!==ws)return null;if(p.hostname&&p.hostname!=='self'&&p.hostname!==location.hostname)return null;return p}catch{return null}};if(has){try{const e=new URLSearchParams(location.search).get(al),p=e?parse(e):null;if(p){const u=base+p.pathname+p.search+p.hash;history.replaceState({},'',u);render(p.pathname)}}catch{}if(navigator.registerProtocolHandler){try{navigator.registerProtocolHandler(ws.slice(0,-1),`${location.origin}${base||''}/?${encodeURIComponent(al)}=%s`)}catch{}}}document.addEventListener('click',e=>{if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const c=e.target.closest('a');if(!c||c.target||c.hasAttribute('download'))return;const h=c.getAttribute('href')||'';if(has&&(h.startsWith(`${al}://`)||h.startsWith(`web+${al}://`))){const p=parse(h);if(p){e.preventDefault();history.pushState({},'',base+p.pathname+p.search+p.hash);render(p.pathname)}return}const u=new URL(c.href,location.href);if(u.origin!==location.origin||u.hash)return;const q=n(u.pathname);if(q.startsWith('/api/')||q.startsWith('/docs')||q==='/openapi.json')return;e.preventDefault();history.pushState({},'',u);render()});addEventListener('popstate',()=>render());render()})();"#;
 
 #[cfg(test)]
 mod tests {

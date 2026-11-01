@@ -1,16 +1,4 @@
-<header class="nav">
-  <a class="brand" href="/">
-    <img src="/assets/logo.svg" alt="" width="28" height="28">
-    RustWeb
-  </a>
-  <nav>
-    <a href="/">Start</a>
-    <a href="/about">MHTML</a>
-  </nav>
-</header>
-
-<main>
-  <section class="hero">
+<section class="hero">
     <p class="eyebrow">Benchmark · {{ site.version }}</p>
     <h1>Ile kosztuje warstwa frameworka? Nic, co widać w pomiarze.</h1>
     <p class="lead">{{ bench.note }}</p>
@@ -62,9 +50,4 @@
       <a class="button ghost" href="/">Wróć na start</a>
     </div>
   </section>
-</main>
 
-<footer class="footer">
-  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
-  <span><a href="/">start</a> · <a href="/about">MHTML</a></span>
-</footer>

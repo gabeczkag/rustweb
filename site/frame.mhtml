@@ -1,0 +1,18 @@
+<header class="nav">
+  <a class="brand" href="/">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#0b1120"/><path d="M17 47V17h12.2c7.5 0 12 4.1 12 10.2 0 4.2-2.1 7.3-5.9 8.9L43 47h-8.2l-6.6-9.5h-3.5V47H17Zm7.7-15.9h4.1c3.2 0 5-1.5 5-4.2 0-2.7-1.8-4.1-5-4.1h-4.1v8.3Z" fill="#7dd3fc"/><circle cx="47.5" cy="17.5" r="3.5" fill="#7dd3fc"/></svg>
+    RustWeb
+  </a>
+  <nav>
+    <a href="/">Start</a>
+    <a href="/about">MHTML</a>
+    <a href="/bench">Benchmark</a>
+  </nav>
+</header>
+
+<main id="rweb-app"></main>
+
+<footer class="footer">
+  <span>RustWeb {{ site.version }} · MHTML + .rweb · <span id="year"></span></span>
+  <span><a href="/">start</a> · <a href="/about">MHTML</a> · <a href="/bench">benchmark</a></span>
+</footer>

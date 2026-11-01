@@ -149,6 +149,12 @@ pub struct LinkerConfig {
     #[serde(default)]
     pub output: Option<String>,
     #[serde(default)]
+    pub frame: Option<String>,
+    #[serde(default)]
+    pub base: String,
+    #[serde(default = "default_true")]
+    pub ascii: bool,
+    #[serde(default)]
     pub protocol: Option<ProtocolConfig>,
     #[serde(default)]
     pub app: Option<AppConfig>,
@@ -252,6 +258,24 @@ impl LinkerConfig {
             if output.trim().is_empty() {
                 return Err(Error::Linker("output must not be empty".to_owned()));
             }
+        }
+        if let Some(frame) = &self.frame {
+            if frame.trim().is_empty() {
+                return Err(Error::Linker("frame must not be empty".to_owned()));
+            }
+        }
+
+        let base = self.base.trim();
+        if !base.is_empty()
+            && (!base.starts_with('/')
+                || base.starts_with("//")
+                || base
+                    .chars()
+                    .any(|character| character.is_whitespace() || matches!(character, '?' | '#')))
+        {
+            return Err(Error::Linker(
+                "base must be empty or a root-relative path like `/rustweb`".to_owned(),
+            ));
         }
 
         if let Some(protocol) = &self.protocol {

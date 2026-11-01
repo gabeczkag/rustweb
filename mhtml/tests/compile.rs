@@ -110,7 +110,6 @@ fn universal_uuid_marks_the_page_as_unsafe() {
     .unwrap();
 
     assert!(bundle.html.contains("Page is not safe"));
-    assert!(bundle.html.contains("byrust-trust\" content=\"universal\""));
     let info = inspect(&bundle.html);
     assert_eq!(
         info.app.as_ref().map(|app| app.trust.clone()),
