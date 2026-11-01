@@ -45,8 +45,11 @@ async fn invalid_body_returns_fastapi_style_422() {
     let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(json["detail"][0]["loc"][0], "body");
     assert_eq!(json["detail"][0]["loc"][1], "name");
-    assert!(json["detail"][0]["msg"].is_string());
-    assert!(json["detail"][0]["type"].is_string());
+    assert_eq!(
+        json["detail"][0]["msg"],
+        "length must be between 3 and 20"
+    );
+    assert_eq!(json["detail"][0]["type"], "string_length");
 }
 
 #[tokio::test]

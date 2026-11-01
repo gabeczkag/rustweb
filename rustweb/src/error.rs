@@ -118,19 +118,55 @@ fn collect_errors(path: &mut Vec<Value>, errors: &ValidationErrors, output: &mut
 
 fn validation_item(location: Vec<Value>, error: &ValidationError) -> Value {
     let mut item = Map::new();
-    item.insert("type".into(), json!(error.code));
+    item.insert("type".into(), json!(validation_type(error)));
     item.insert("loc".into(), Value::Array(location));
-    item.insert(
-        "msg".into(),
-        json!(error
-            .message
-            .as_deref()
-            .unwrap_or(error.code.as_ref())),
-    );
+    item.insert("msg".into(), json!(validation_message(error)));
     if !error.params.is_empty() {
         item.insert("ctx".into(), json!(error.params));
     }
     Value::Object(item)
+}
+
+fn validation_message(error: &ValidationError) -> String {
+    if let Some(message) = error.message.as_deref() {
+        return message.to_owned();
+    }
+
+    match error.code.as_ref() {
+        "length" => match (number_param(error, "min"), number_param(error, "max")) {
+            (Some(min), Some(max)) => format!("length must be between {min} and {max}"),
+            (Some(min), None) => format!("length must be at least {min}"),
+            (None, Some(max)) => format!("length must be at most {max}"),
+            _ => "invalid length".to_owned(),
+        },
+        "range" => match (number_param(error, "min"), number_param(error, "max")) {
+            (Some(min), Some(max)) => format!("value must be between {min} and {max}"),
+            (Some(min), None) => format!("value must be at least {min}"),
+            (None, Some(max)) => format!("value must be at most {max}"),
+            _ => "value out of range".to_owned(),
+        },
+        "email" => "value is not a valid email".to_owned(),
+        "url" => "value is not a valid URL".to_owned(),
+        other => other.to_owned(),
+    }
+}
+
+fn validation_type(error: &ValidationError) -> String {
+    match error.code.as_ref() {
+        "length" => match (number_param(error, "min"), number_param(error, "max")) {
+            (Some(_), None) => "string_too_short",
+            (None, Some(_)) => "string_too_long",
+            _ => "string_length",
+        }
+        .to_owned(),
+        "range" => "value_out_of_range".to_owned(),
+        "email" | "url" => "value_error".to_owned(),
+        other => other.to_owned(),
+    }
+}
+
+fn number_param(error: &ValidationError, name: &str) -> Option<u64> {
+    error.params.get(name).and_then(Value::as_u64)
 }
 
 /// Schema of the error body used in generated OpenAPI documents.
