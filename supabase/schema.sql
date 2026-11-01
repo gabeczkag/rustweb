@@ -77,7 +77,6 @@ as $$
                 'iterations', iterations,
                 'status', status,
                 'verified', verified,
-                'algo', algo,
                 'created', created
             ) order by created desc
         ),
@@ -280,7 +279,6 @@ begin
         'iterations', v_iterations,
         'status', 'SEALED',
         'verified', true,
-        'algo', v_algo,
         'created', v_created
     );
 exception

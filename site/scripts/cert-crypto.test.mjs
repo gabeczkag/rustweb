@@ -24,6 +24,14 @@ if (!MARKERS.includes(result.marker)) {
   throw new Error(`unexpected marker ${result.marker}`);
 }
 
+if ("private_key" in result) {
+  throw new Error("decrypted private key leaked into the checker result");
+}
+
+if ("algo" in entry) {
+  throw new Error("algorithm metadata leaked into the public entry");
+}
+
 const wrong = await checkEntry(entry, "x".repeat(128));
 if (wrong.valid) {
   throw new Error("wrong password accepted");

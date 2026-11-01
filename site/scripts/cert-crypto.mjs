@@ -142,7 +142,6 @@ export async function registerApp(appName, uuidInput = "") {
       status: "SEALED",
       created: new Date().toISOString(),
       trust: "app",
-      algo: "AES-256-GCM/PBKDF2-SHA256/ECDSA-P-256",
     },
   };
 }
@@ -215,7 +214,6 @@ export async function checkEntry(entry, password) {
       uuid: payload.uuid,
       marker: payload.marker,
       fingerprint,
-      private_key: payload.private_key,
     };
   } catch (error) {
     return {

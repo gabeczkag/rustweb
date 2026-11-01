@@ -4,16 +4,16 @@ function seedNode() {
   return document.getElementById("cert-seed");
 }
 
-export function supabaseConfig() {
+export function registryConfig() {
   const node = seedNode();
   return {
-    url: (node?.dataset.supabaseUrl || "").replace(/\/+$/, ""),
-    key: node?.dataset.supabaseKey || "",
+    url: (node?.dataset.registryUrl || "").replace(/\/+$/, ""),
+    key: node?.dataset.registryKey || "",
   };
 }
 
-export function supabaseConfigured() {
-  const { url, key } = supabaseConfig();
+export function registryConfigured() {
+  const { url, key } = registryConfig();
   return Boolean(url && key);
 }
 
@@ -76,7 +76,7 @@ export function normalizePublicEntry(entry) {
 }
 
 export async function fetchPublicEntries() {
-  const { url, key } = supabaseConfig();
+  const { url, key } = registryConfig();
   if (!url || !key) {
     return { status: "unconfigured", entries: [] };
   }
@@ -111,9 +111,9 @@ export async function fetchPublicEntries() {
 }
 
 export async function publishEntry(entry) {
-  const { url, key } = supabaseConfig();
+  const { url, key } = registryConfig();
   if (!url || !key) {
-    return { status: "unconfigured", error: "SUPABASE_NOT_CONFIGURED" };
+    return { status: "unconfigured", error: "REGISTRY_NOT_CONFIGURED" };
   }
 
   try {

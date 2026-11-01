@@ -1,22 +1,22 @@
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow">CERTIFICATION DB // AES-256</p>
+    <p class="eyebrow">CERTIFICATION DB // PUBLIC</p>
     <h1>CERTYFIKATY<br><span>W JEDNYM MIEJSCU.</span></h1>
-    <p class="lead">Zarejestruj aplikacje, zaszyfruj UUID i private key, opublikuj fingerprint w Supabase. 128-znakowe haslo pokazuje sie raz i nie jest nigdzie zapisywane.</p>
+    <p class="lead">Zarejestruj aplikacje, opublikuj publiczny identyfikator i fingerprint. Klucz dostepu pokazuje sie raz i nie jest nigdzie zapisywany.</p>
     <div class="badges">
-      <span class="badge">AES-256-GCM</span>
-      <span class="badge">PBKDF2 210K</span>
-      <span class="badge">ECDSA P-256</span>
-      <span class="badge">128 CHARS</span>
+      <span class="badge">PUBLIC REGISTRY</span>
+      <span class="badge">APP ID</span>
+      <span class="badge">FINGERPRINT</span>
+      <span class="badge">ONE-TIME KEY</span>
     </div>
   </div>
 
   <div class="hero-art" aria-hidden="true">
     <div class="spec-board">
       <div class="spec-cell"><strong id="cert-count">0</strong><span>PUBLIC ENTRIES</span></div>
-      <div class="spec-cell"><strong>128</strong><span>PASSWORD CHARS</span></div>
-      <div class="spec-cell"><strong>AES</strong><span>256-GCM</span></div>
-      <div class="spec-cell"><strong>P-256</strong><span>ECDSA KEYPAIR</span></div>
+      <div class="spec-cell"><strong>2</strong><span>LIMIT APLIKACJI</span></div>
+      <div class="spec-cell"><strong>APP</strong><span>PUBLIC ID</span></div>
+      <div class="spec-cell"><strong>FP</strong><span>FINGERPRINT</span></div>
     </div>
     <div class="art-tag">ONE-TIME<br><strong>KEY</strong></div>
   </div>
@@ -29,21 +29,21 @@
     <form id="cert-register-form" class="cert-form">
       <label class="cert-field">APP NAME<input id="cert-app-name" required maxlength="64" placeholder="RustWeb"></label>
       <label class="cert-field">UUID (BLANK = GENERATE)<input id="cert-app-uuid" placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"></label>
-      <button class="button" type="submit">GENERUJ PARKE I HASLO</button>
+      <button class="button" type="submit">ZAREJESTRUJ APLIKACJE</button>
     </form>
-    <div id="cert-register-error" class="note">Puste UUID generuje nowy UUID v4. Haslo 128 znakow pokaze sie tylko raz.</div>
+    <div id="cert-register-error" class="note">Puste pole generuje nowy identyfikator. Klucz dostepu pokaze sie tylko raz.</div>
   </div>
 
   <div>
-    <p class="eyebrow">02 // ONE-TIME PASSWORD</p>
-    <h2>HASLO 128 ZNAKOW</h2>
+    <p class="eyebrow">02 // ONE-TIME KEY</p>
+    <h2>KLUCZ DOSTEPU</h2>
     <textarea id="cert-password" class="cert-secret" readonly placeholder="Pojawi sie po rejestracji"></textarea>
     <div id="cert-output" hidden>
       <div class="actions">
-        <button id="cert-copy-password" class="badge" type="button">KOPIUJ HASLO</button>
+        <button id="cert-copy-password" class="badge" type="button">KOPIUJ KLUCZ</button>
         <button id="cert-copy-entry" class="badge" type="button">KOPIUJ ENTRY</button>
         <button id="cert-download-entry" class="badge" type="button">POBIERZ ENTRY</button>
-        <button id="cert-check-now" class="badge" type="button">SPRAWDZ TERAZ</button>
+        <button id="cert-check-now" class="badge" type="button">WSTAW ENTRY</button>
       </div>
       <pre><code id="cert-entry"></code></pre>
     </div>
@@ -53,9 +53,9 @@
 <section class="split">
   <div>
     <p class="eyebrow">03 // CHECKER</p>
-    <h2>ODSZYFRUJ UUID</h2>
+    <h2>SPRAWDZ CERTYFIKAT</h2>
     <textarea id="cert-check-entry" class="cert-secret" placeholder="Wklej publiczny entry..."></textarea>
-    <input id="cert-check-password" class="cert-secret" type="password" autocomplete="off" placeholder="128-znakowe haslo">
+    <input id="cert-check-password" class="cert-secret" type="password" autocomplete="off" placeholder="Klucz dostepu">
     <div class="actions">
       <button id="cert-check-button" class="button" type="button">SPRAWDZ</button>
     </div>
@@ -65,7 +65,7 @@
   <div>
     <p class="eyebrow">04 // DATABASE</p>
     <h2>PUBLICZNE WPISY</h2>
-    <div id="cert-api-status" class="note">LACZENIE Z SUPABASE...</div>
+    <div id="cert-api-status" class="note">LACZENIE Z REJESTREM PUBLICZNYM...</div>
     <div id="cert-db" class="cert-list"></div>
     <div class="actions">
       <button id="cert-export" class="badge" type="button">EKSPORT LOKALNYCH</button>
@@ -76,8 +76,8 @@
 <section class="bench">
   <p class="eyebrow">05 // SECURITY</p>
   <h2>CO JEST PUBLICZNE</h2>
-  <p>Baza pokazuje app, public key, fingerprint, commitment UUID i zaszyfrowany payload. UUID i private key sa w AES-256-GCM; commitment pozwala sprawdzic claimed UUID bez trzymania go plaintextem.</p>
-  <p class="note">Supabase: publiczny odczyt i zapis przez RPC. Limit 2 aplikacje na uzytkownika (IP + HWID + fingerprint), egzekwowany po stronie bazy. Gdy Supabase jest niedostepne, wpis zostaje lokalnie i nie jest publiczny. Utrata hasla = brak recovery.</p>
+  <p>Baza pokazuje publiczny app ID, fingerprint i zabezpieczony wpis. Prywatne dane nie sa publikowane.</p>
+  <p class="note">Publiczny rejestr: odczyt i zapis przez API. Limit 2 aplikacje na uzytkownika. Gdy rejestr jest niedostepny, wpis zostaje lokalnie i nie jest publiczny. Utrata klucza = brak recovery.</p>
 </section>
 
-<textarea id="cert-seed" hidden data-supabase-url="{{ supabase_url }}" data-supabase-key="{{ supabase_key }}">{{{ certifications }}}</textarea>
+<textarea id="cert-seed" hidden data-registry-url="{{ registry_url }}" data-registry-key="{{ registry_key }}">{{{ certifications }}}</textarea>

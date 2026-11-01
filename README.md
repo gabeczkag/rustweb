@@ -278,17 +278,18 @@ VPN/proxy changes IP, and browser HWID/fingerprint values can be spoofed.
 
 The checker decrypts the payload and verifies the marker (`POPRAWNE` or
 `as10sign edi5nbaseApro3ved`), the UUID commitment, key fingerprint, and ECDSA
-signature. A successful check prints `POPRAWNE`, the UUID, and the PKCS#8
-private key. A wrong password or tampered entry fails without revealing the
-UUID. The bundled `RustWeb Site` seed is public; its one-time password is not
-in this repository.
+signature. A successful check prints `POPRAWNE`, the UUID, and the fingerprint.
+The decrypted private key is used only for that signature check and is not
+returned to the page or persisted. A wrong password or tampered entry fails
+without revealing the UUID. The bundled `RustWeb Site` seed is public; its
+one-time password is not in this repository.
 
 #### Supabase setup
 
 1. Open the Supabase SQL Editor for the project and run
    [`supabase/schema.sql`](supabase/schema.sql).
 2. Put the project URL and **publishable** key in `site/linker.json` under
-   `data.supabase_url` / `data.supabase_key`.
+   `data.registry_url` / `data.registry_key`.
 3. Never put `sb_secret_...` in the browser, `site.rweb`, or git. The secret key
    is not needed for registration; rotate it if it was exposed.
 4. Run `bash site/build.sh` and deploy.

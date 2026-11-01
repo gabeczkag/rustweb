@@ -1,5 +1,5 @@
 import { registerApp, checkEntry, selfTest } from "./cert-crypto.mjs";
-import { fetchPublicEntries, normalizePublicEntry, publishEntry, supabaseConfigured } from "./cert-supabase.mjs";
+import { fetchPublicEntries, normalizePublicEntry, publishEntry, registryConfigured } from "./cert-registry.mjs";
 
 const STORAGE = "byrust.certifications.v1";
 let lastRegistration = null;
@@ -175,7 +175,9 @@ function renderDb() {
 }
 
 function renderRegistration(result) {
-  lastRegistration = result;
+  // Keep only the public entry. The one-time key stays in the DOM field for
+  // this view and is never copied into module state or persistence.
+  lastRegistration = { entry: result.entry };
 
   const password = el("cert-password");
   const entry = el("cert-entry");
@@ -187,24 +189,24 @@ function renderRegistration(result) {
 }
 
 async function refreshRemote() {
-  if (!supabaseConfigured()) {
+  if (!registryConfigured()) {
     remoteStatus = "unconfigured";
-    setApiStatus("BAZA LOKALNA: SUPABASE NIE SKONFIGUROWANE", false);
+    setApiStatus("BAZA LOKALNA: REJESTR PUBLICZNY NIE SKONFIGUROWANY", false);
     renderDb();
     return;
   }
 
-  setApiStatus("LACZENIE Z SUPABASE...", true);
+  setApiStatus("LACZENIE Z REJESTREM PUBLICZNYM...", true);
   const result = await fetchPublicEntries();
 
   if (result.status === "ok") {
     remoteStatus = "ok";
     remoteEntries = result.entries;
-    setApiStatus(`SUPABASE: ${remoteEntries.length} PUBLICZNYCH WPISOW`, true);
+    setApiStatus(`REJESTR PUBLICZNY: ${remoteEntries.length} WPISOW`, true);
   } else {
     remoteStatus = result.status;
     setApiStatus(
-      `SUPABASE NIEDOSTEPNE: ${result.error || result.status} — FALLBACK LOKALNY`,
+      `REJESTR PUBLICZNY NIEDOSTEPNY — FALLBACK LOKALNY`,
       false,
     );
   }
@@ -233,9 +235,9 @@ function attach() {
         addLocal(result.entry);
         remoteEntries = mergeRemote(remoteEntries, published.entry || result.entry);
         remoteStatus = "ok";
-        setApiStatus("WPIS PUBLICZNY W SUPABASE", true);
+        setApiStatus("WPIS DODANY DO REJESTRU PUBLICZNEGO", true);
         showRegisterError(
-          "APP ZAREJESTROWANA PUBLICZNIE. HASLO POKAZANO RAZ — ZAPISZ JE.",
+          "APP ZAREJESTROWANA PUBLICZNIE. KLUCZ DOSTEPU POKAZANO RAZ — ZAPISZ GO.",
         );
       } else if (published.status === "limit") {
         showRegisterError(
@@ -243,9 +245,9 @@ function attach() {
         );
       } else if (published.status === "unconfigured" || published.status === "offline") {
         addLocal(result.entry);
-        setApiStatus("SUPABASE NIEDOSTEPNE — FALLBACK LOKALNY", false);
+        setApiStatus("REJESTR PUBLICZNY NIEDOSTEPNY — FALLBACK LOKALNY", false);
         showRegisterError(
-          "SUPABASE NIEDOSTEPNE. WPIS ZAPISANY LOKALNIE; NIE JEST PUBLICZNY.",
+          "REJESTR PUBLICZNY NIEDOSTEPNY. WPIS ZAPISANY LOKALNIE; NIE JEST PUBLICZNY.",
         );
       } else {
         showRegisterError(`BLAD PUBLIKACJI: ${published.error}`);
@@ -274,7 +276,7 @@ function attach() {
 
     if (result.valid) {
       setResult(
-        `POPRAWNE\nUUID: ${result.uuid}\nMARKER: ${result.marker}\nFINGERPRINT: ${result.fingerprint}\n\nPRIVATE KEY (PKCS8 BASE64):\n${result.private_key}`,
+        `POPRAWNE\nUUID: ${result.uuid}\nMARKER: ${result.marker}\nFINGERPRINT: ${result.fingerprint}`,
         true,
       );
     } else {
@@ -310,10 +312,8 @@ function attach() {
   el("cert-check-now")?.addEventListener("click", () => {
     if (!lastRegistration) return;
     const area = el("cert-check-entry");
-    const password = el("cert-check-password");
     if (area) area.value = formatEntry(lastRegistration.entry);
-    if (password) password.value = lastRegistration.password;
-    el("cert-check-button")?.click();
+    el("cert-check-password")?.focus();
   });
 
   el("cert-export")?.addEventListener("click", () => {
