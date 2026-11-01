@@ -11,6 +11,7 @@
     <a href="/cert" data-nav="cert">05 CERT</a>
     <a href="/game" data-nav="game">06 GAME</a>
   </nav>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Przelacz motyw">JASNY</button>
   <span class="status"><i></i> BYRUST/1</span>
 </div>
 

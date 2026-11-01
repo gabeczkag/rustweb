@@ -1136,3 +1136,86 @@ button.badge {
     grid-template-columns: 1fr;
   }
 }
+
+[data-theme="light"] {
+  --bg: #f4efe4;
+  --bg-2: #fffaf0;
+  --panel: #fff6e5;
+  --panel-2: #ffe9c7;
+  --ink: #17120a;
+  --muted: #635845;
+  --line: #17120a;
+  --sky: #0369a1;
+  --green: #15803d;
+  --gold: #b45309;
+  --pink: #be185d;
+  --red: #b91c1c;
+}
+
+[data-theme="light"] body {
+  background-image:
+    linear-gradient(rgba(23, 18, 10, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 18, 10, 0.06) 1px, transparent 1px);
+}
+
+.theme-toggle {
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 3px 3px 0 var(--line);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--gold);
+  color: var(--line);
+}
+
+[data-theme="light"] .status {
+  background: #dcfce7;
+  color: #166534;
+}
+
+[data-theme="light"] pre,
+[data-theme="light"] .drop-zone,
+[data-theme="light"] .cert-field input,
+[data-theme="light"] .cert-secret,
+[data-theme="light"] .game-chat input,
+[data-theme="light"] .game-log {
+  background: #fffdf5;
+  color: var(--ink);
+}
+
+[data-theme="light"] pre code {
+  color: #292217;
+}
+
+[data-theme="light"] .note {
+  background: #fff7d6;
+  color: #713f12;
+}
+
+[data-theme="light"] .drop-zone.active {
+  background: #e0f2fe;
+  color: var(--sky);
+}
+
+[data-theme="light"] .viewer-frame {
+  background: #fff;
+}
+
+[data-theme="light"] .split,
+[data-theme="light"] .bench,
+[data-theme="light"] .footer {
+  border-color: #d8cbb6;
+}
+
+[data-theme="light"] .topbar,
+[data-theme="light"] .footer {
+  background-color: var(--bg-2);
+}
